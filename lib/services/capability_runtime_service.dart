@@ -1,12 +1,9 @@
-// lib/services/capability_runtime_service.dart
-
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../models/rustler_gx_mode.dart';
 import 'bluetooth_service.dart';
 import 'hub_client_service.dart';
+import 'hub_discovery_service.dart';
 import 'hub_server_service.dart';
 import 'rustler_gx_config_service.dart';
 
@@ -27,6 +24,9 @@ class CapabilityRuntimeService {
 
   final HubServerService hubServer =
       HubServerService.instance;
+
+  final HubDiscoveryService discovery =
+      HubDiscoveryService.instance;
 
   bool _initialized = false;
 
@@ -126,7 +126,9 @@ class CapabilityRuntimeService {
         await bluetooth.stopScan();
       } catch (_) {}
 
-      await bluetooth.disconnect();
+      try {
+        await bluetooth.disconnect();
+      } catch (_) {}
 
       bluetooth.clearLiveDevices();
 
@@ -159,6 +161,14 @@ class CapabilityRuntimeService {
           port: port,
         );
 
+        await discovery.startBroadcasting(
+          hubId:
+              'rustler-gx-${DateTime.now().millisecondsSinceEpoch}',
+          hubName:
+              'Rustler GX Hub',
+          hubPort: port,
+        );
+
         debugPrint(
           'Hub Server enabled on port $port',
         );
@@ -172,6 +182,8 @@ class CapabilityRuntimeService {
     }
 
     if (!isEnabled && wasEnabled) {
+      await discovery.stopBroadcasting();
+
       await hubServer.stop();
 
       debugPrint(
@@ -196,6 +208,18 @@ class CapabilityRuntimeService {
 
     if (isEnabled && !wasEnabled) {
       try {
+        await discovery.startListening();
+
+        debugPrint(
+          'Hub discovery enabled',
+        );
+      } catch (error) {
+        debugPrint(
+          'Could not start Hub discovery: $error',
+        );
+      }
+
+      try {
         await hubClient.connect();
 
         debugPrint(
@@ -212,6 +236,8 @@ class CapabilityRuntimeService {
 
     if (!isEnabled && wasEnabled) {
       await hubClient.disconnect();
+
+      await discovery.stopListening();
 
       debugPrint(
         'Hub Client disabled',
@@ -236,11 +262,15 @@ class CapabilityRuntimeService {
       await bluetooth.stopScan();
     } catch (_) {}
 
-    await bluetooth.disconnect();
+    try {
+      await bluetooth.disconnect();
+    } catch (_) {}
 
     await hubClient.disconnect();
 
     await hubServer.stop();
+
+    await discovery.shutdown();
 
     _activeCapabilities.clear();
 

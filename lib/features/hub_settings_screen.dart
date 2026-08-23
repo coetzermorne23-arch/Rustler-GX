@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../models/discovered_hub.dart';
 import '../services/entity_service.dart';
 import '../services/hub_client_service.dart';
+import '../services/hub_discovery_service.dart';
 import '../services/rustler_gx_config_service.dart';
 
 class HubSettingsScreen extends StatefulWidget {
-  const HubSettingsScreen({super.key});
+  const HubSettingsScreen({
+    super.key,
+  });
 
   @override
   State<HubSettingsScreen> createState() =>
@@ -19,6 +23,9 @@ class _HubSettingsScreenState
 
   final HubClientService hub =
       HubClientService.instance;
+
+  final HubDiscoveryService discovery =
+      HubDiscoveryService.instance;
 
   final EntityService entities =
       EntityService.instance;
@@ -35,6 +42,7 @@ class _HubSettingsScreenState
   @override
   void initState() {
     super.initState();
+
     _load();
   }
 
@@ -47,6 +55,10 @@ class _HubSettingsScreenState
 
     hostController.text = host;
     portController.text = port.toString();
+
+    try {
+      await discovery.startListening();
+    } catch (_) {}
 
     if (!mounted) {
       return;
@@ -75,7 +87,7 @@ class _HubSettingsScreenState
     );
 
     if (host.isEmpty) {
-      _showMessage(
+      _message(
         'Hub address cannot be empty.',
       );
 
@@ -85,19 +97,16 @@ class _HubSettingsScreenState
     if (port == null ||
         port < 1 ||
         port > 65535) {
-      _showMessage(
-        'Hub port must be between '
-        '1 and 65535.',
+      _message(
+        'Hub port must be between 1 and 65535.',
       );
 
       return false;
     }
 
-    if (mounted) {
-      setState(() {
-        saving = true;
-      });
-    }
+    setState(() {
+      saving = true;
+    });
 
     try {
       await config.setHubHost(
@@ -110,7 +119,7 @@ class _HubSettingsScreenState
 
       return true;
     } catch (error) {
-      _showMessage(
+      _message(
         error.toString(),
       );
 
@@ -135,12 +144,27 @@ class _HubSettingsScreenState
     await hub.reconnect();
   }
 
-  Future<void> _disconnect() async {
-    await hub.disconnect();
+  Future<void> _selectHub(
+    DiscoveredHub discoveredHub,
+  ) async {
+    hostController.text =
+        discoveredHub.host;
+
+    portController.text =
+        discoveredHub.port.toString();
+
+    final bool saved =
+        await _saveSettings();
+
+    if (!saved) {
+      return;
+    }
+
+    await hub.reconnect();
   }
 
-  void _showMessage(
-    String message,
+  void _message(
+    String value,
   ) {
     if (!mounted) {
       return;
@@ -149,44 +173,26 @@ class _HubSettingsScreenState
     ScaffoldMessenger.of(context)
         .showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-        ),
+        content: Text(value),
       ),
     );
   }
 
-  String _stateLabel(
+  String _stateText(
     HubConnectionState state,
   ) {
     switch (state) {
       case HubConnectionState.disconnected:
-        return 'DISCONNECTED';
+        return 'Disconnected';
 
       case HubConnectionState.connecting:
-        return 'CONNECTING';
+        return 'Connecting';
 
       case HubConnectionState.connected:
-        return 'CONNECTED';
+        return 'Connected';
 
       case HubConnectionState.reconnecting:
-        return 'RECONNECTING';
-    }
-  }
-
-  IconData _stateIcon(
-    HubConnectionState state,
-  ) {
-    switch (state) {
-      case HubConnectionState.connected:
-        return Icons.cloud_done;
-
-      case HubConnectionState.connecting:
-      case HubConnectionState.reconnecting:
-        return Icons.sync;
-
-      case HubConnectionState.disconnected:
-        return Icons.cloud_off;
+        return 'Reconnecting';
     }
   }
 
@@ -200,7 +206,8 @@ class _HubSettingsScreenState
           ),
         ),
         body: const Center(
-          child: CircularProgressIndicator(),
+          child:
+              CircularProgressIndicator(),
         ),
       );
     }
@@ -211,73 +218,200 @@ class _HubSettingsScreenState
           'Rustler GX Hub',
         ),
       ),
-
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding:
+            const EdgeInsets.all(16),
         children: [
           const Text(
-            'Hub Connection',
+            'Discovered Hubs',
             style: TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.bold,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
 
-          const SizedBox(
-            height: 6,
-          ),
+          const SizedBox(height: 6),
 
           const Text(
-            'Connect this device to another '
-            'Rustler GX device acting as a hub.',
+            'Rustler GX automatically searches '
+            'for hubs on the local network.',
             style: TextStyle(
               color: Colors.white70,
             ),
           ),
 
-          const SizedBox(
-            height: 20,
+          const SizedBox(height: 14),
+
+          ValueListenableBuilder<
+              List<DiscoveredHub>>(
+            valueListenable:
+                discovery.hubs,
+            builder: (
+              context,
+              hubs,
+              child,
+            ) {
+              if (hubs.isEmpty) {
+                return const Card(
+                  child: Padding(
+                    padding:
+                        EdgeInsets.all(18),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.search,
+                          size: 30,
+                        ),
+                        SizedBox(
+                          width: 14,
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Searching for Rustler GX hubs...',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                children: hubs
+                    .map(
+                      (discoveredHub) =>
+                          Card(
+                        child: ListTile(
+                          leading:
+                              const Icon(
+                            Icons.hub,
+                            size: 30,
+                          ),
+                          title: Text(
+                            discoveredHub
+                                .name,
+                          ),
+                          subtitle: Text(
+                            '${discoveredHub.host}:'
+                            '${discoveredHub.port}',
+                          ),
+                          trailing:
+                              FilledButton(
+                            onPressed:
+                                saving
+                                    ? null
+                                    : () {
+                                        _selectHub(
+                                          discoveredHub,
+                                        );
+                                      },
+                            child:
+                                const Text(
+                              'CONNECT',
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
           ),
 
-          TextField(
-            controller: hostController,
-            keyboardType: TextInputType.url,
-            decoration: const InputDecoration(
-              labelText: 'Hub address',
-              hintText:
-                  'rustlergx.local or 192.168.1.50',
-              prefixIcon: Icon(
-                Icons.dns,
-              ),
-              border: OutlineInputBorder(),
+          const SizedBox(height: 26),
+
+          const Divider(),
+
+          const SizedBox(height: 18),
+
+          const Text(
+            'Manual Connection',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight:
+                  FontWeight.bold,
             ),
           ),
 
-          const SizedBox(
-            height: 14,
-          ),
+          const SizedBox(height: 14),
 
           TextField(
-            controller: portController,
+            controller:
+                hostController,
+            decoration:
+                const InputDecoration(
+              labelText: 'Hub address',
+              hintText:
+                  '192.168.1.50',
+              prefixIcon:
+                  Icon(Icons.dns),
+              border:
+                  OutlineInputBorder(),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          TextField(
+            controller:
+                portController,
             keyboardType:
                 TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Hub port',
+            decoration:
+                const InputDecoration(
+              labelText: 'Port',
               hintText: '8765',
               prefixIcon: Icon(
                 Icons.settings_ethernet,
               ),
-              border: OutlineInputBorder(),
+              border:
+                  OutlineInputBorder(),
             ),
           ),
 
-          const SizedBox(
-            height: 18,
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              Expanded(
+                child:
+                    FilledButton.icon(
+                  onPressed:
+                      saving
+                          ? null
+                          : _connect,
+                  icon: const Icon(
+                    Icons.link,
+                  ),
+                  label: const Text(
+                    'CONNECT',
+                  ),
+                ),
+              ),
+
+              const SizedBox(
+                width: 10,
+              ),
+
+              Expanded(
+                child:
+                    OutlinedButton.icon(
+                  onPressed: () {
+                    hub.disconnect();
+                  },
+                  icon: const Icon(
+                    Icons.link_off,
+                  ),
+                  label: const Text(
+                    'DISCONNECT',
+                  ),
+                ),
+              ),
+            ],
           ),
 
-          // =================================================
-          // CONNECTION STATUS
-          // =================================================
+          const SizedBox(height: 24),
 
           ValueListenableBuilder<
               HubConnectionState>(
@@ -288,128 +422,31 @@ class _HubSettingsScreenState
               state,
               child,
             ) {
-              return Card(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.all(
-                    16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        _stateIcon(
-                          state,
-                        ),
-                        size: 34,
-                      ),
-
-                      const SizedBox(
-                        width: 14,
-                      ),
-
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment
-                                  .start,
-                          children: [
-                            const Text(
-                              'Connection status',
-                              style: TextStyle(
-                                color:
-                                    Colors.white70,
-                              ),
-                            ),
-
-                            const SizedBox(
-                              height: 3,
-                            ),
-
-                            Text(
-                              _stateLabel(
-                                state,
-                              ),
-                              style:
-                                  const TextStyle(
-                                fontWeight:
-                                    FontWeight
-                                        .bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      if (state ==
-                              HubConnectionState
-                                  .connecting ||
-                          state ==
-                              HubConnectionState
-                                  .reconnecting)
-                        const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child:
-                              CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+              return _InfoTile(
+                icon: state ==
+                        HubConnectionState
+                            .connected
+                    ? Icons.cloud_done
+                    : Icons.cloud_off,
+                title:
+                    'Connection',
+                value:
+                    _stateText(state),
               );
             },
           ),
-
-          const SizedBox(
-            height: 10,
-          ),
-
-          // =================================================
-          // LAST MESSAGE
-          // =================================================
 
           ValueListenableBuilder<
-              DateTime?>(
-            valueListenable:
-                hub.lastMessageAt,
-            builder: (
-              context,
-              lastMessage,
-              child,
-            ) {
-              return _InfoCard(
-                icon: Icons.schedule,
-                label: 'Last message',
-                value:
-                    lastMessage == null
-                        ? 'Never'
-                        : _formatDateTime(
-                            lastMessage,
-                          ),
-              );
-            },
-          ),
-
-          const SizedBox(
-            height: 10,
-          ),
-
-          // =================================================
-          // REMOTE ENTITIES
-          // =================================================
-
-          ValueListenableBuilder(
+              Map<String, dynamic>>(
             valueListenable:
                 entities.entities,
             builder: (
               context,
-              value,
+              entityMap,
               child,
             ) {
-              final int remoteEntityCount =
-                  value.values
+              final int count =
+                  entityMap.values
                       .where(
                         (entity) =>
                             entity.id
@@ -419,23 +456,39 @@ class _HubSettingsScreenState
                       )
                       .length;
 
-              return _InfoCard(
-                icon: Icons.sensors,
-                label: 'Remote entities',
+              return _InfoTile(
+                icon:
+                    Icons.sensors,
+                title:
+                    'Remote entities',
                 value:
-                    remoteEntityCount
-                        .toString(),
+                    count.toString(),
               );
             },
           ),
 
-          const SizedBox(
-            height: 10,
+          ValueListenableBuilder<
+              DateTime?>(
+            valueListenable:
+                hub.lastMessageAt,
+            builder: (
+              context,
+              value,
+              child,
+            ) {
+              return _InfoTile(
+                icon:
+                    Icons.schedule,
+                title:
+                    'Last message',
+                value: value == null
+                    ? 'Never'
+                    : value
+                        .toLocal()
+                        .toString(),
+              );
+            },
           ),
-
-          // =================================================
-          // LAST ERROR
-          // =================================================
 
           ValueListenableBuilder<
               String?>(
@@ -452,283 +505,49 @@ class _HubSettingsScreenState
                     .shrink();
               }
 
-              return Card(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.all(
-                    16,
-                  ),
-                  child: Row(
-                    crossAxisAlignment:
-                        CrossAxisAlignment
-                            .start,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                      ),
-
-                      const SizedBox(
-                        width: 12,
-                      ),
-
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment
-                                  .start,
-                          children: [
-                            const Text(
-                              'Last error',
-                              style: TextStyle(
-                                fontWeight:
-                                    FontWeight
-                                        .bold,
-                              ),
-                            ),
-
-                            const SizedBox(
-                              height: 4,
-                            ),
-
-                            Text(
-                              error,
-                              style:
-                                  const TextStyle(
-                                color:
-                                    Colors.white70,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              return _InfoTile(
+                icon:
+                    Icons.error_outline,
+                title:
+                    'Last error',
+                value: error,
               );
             },
           ),
 
-          const SizedBox(
-            height: 20,
-          ),
-
-          // =================================================
-          // CONNECT / DISCONNECT
-          // =================================================
-
-          ValueListenableBuilder<
-              HubConnectionState>(
-            valueListenable:
-                hub.connectionState,
-            builder: (
-              context,
-              state,
-              child,
-            ) {
-              final bool connected =
-                  state ==
-                      HubConnectionState
-                          .connected;
-
-              final bool busy =
-                  state ==
-                          HubConnectionState
-                              .connecting ||
-                      state ==
-                          HubConnectionState
-                              .reconnecting;
-
-              return Row(
-                children: [
-                  Expanded(
-                    child:
-                        FilledButton.icon(
-                      onPressed:
-                          saving || busy
-                              ? null
-                              : _connect,
-                      icon: const Icon(
-                        Icons.link,
-                      ),
-                      label: Text(
-                        saving
-                            ? 'SAVING...'
-                            : connected
-                                ? 'RECONNECT'
-                                : 'CONNECT',
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(
-                    width: 12,
-                  ),
-
-                  Expanded(
-                    child:
-                        OutlinedButton.icon(
-                      onPressed:
-                          connected || busy
-                              ? _disconnect
-                              : null,
-                      icon: const Icon(
-                        Icons.link_off,
-                      ),
-                      label: const Text(
-                        'DISCONNECT',
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-
-          const SizedBox(
-            height: 14,
-          ),
-
-          // =================================================
-          // SAVE
-          // =================================================
-
-          OutlinedButton.icon(
-            onPressed:
-                saving
-                    ? null
-                    : () async {
-                        final bool saved =
-                            await _saveSettings();
-
-                        if (saved) {
-                          _showMessage(
-                            'Hub settings saved.',
-                          );
-                        }
-                      },
-            icon: const Icon(
-              Icons.save,
-            ),
-            label: const Text(
-              'SAVE SETTINGS',
-            ),
-          ),
-
-          const SizedBox(
-            height: 24,
-          ),
-
-          const Divider(),
-
-          const SizedBox(
-            height: 12,
-          ),
-
-          const Text(
-            'Connection example',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-
-          const SizedBox(
-            height: 8,
-          ),
-
-          const Text(
-            'Pi Zero 2 W:\n'
-            '192.168.1.50 : 8765\n\n'
-            'Tablet:\n'
-            'Local Bluetooth remains active while '
-            'remote Hub entities are received over '
-            'the local network.',
-            style: TextStyle(
-              color: Colors.white70,
-            ),
-          ),
-
-          const SizedBox(
-            height: 30,
-          ),
+          const SizedBox(height: 30),
         ],
       ),
     );
   }
-
-  static String _formatDateTime(
-    DateTime value,
-  ) {
-    final DateTime local =
-        value.toLocal();
-
-    String two(
-      int value,
-    ) {
-      return value
-          .toString()
-          .padLeft(
-            2,
-            '0',
-          );
-    }
-
-    return '${two(local.day)}/'
-        '${two(local.month)}/'
-        '${local.year} '
-        '${two(local.hour)}:'
-        '${two(local.minute)}:'
-        '${two(local.second)}';
-  }
 }
 
-class _InfoCard extends StatelessWidget {
+class _InfoTile
+    extends StatelessWidget {
   final IconData icon;
-  final String label;
+  final String title;
   final String value;
 
-  const _InfoCard({
+  const _InfoTile({
     required this.icon,
-    required this.label,
+    required this.title,
     required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(
-          16,
+      margin:
+          const EdgeInsets.only(
+        bottom: 10,
+      ),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          size: 28,
         ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 30,
-            ),
-
-            const SizedBox(
-              width: 14,
-            ),
-
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-
-            Text(
-              value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+        title: Text(title),
+        subtitle: Text(value),
       ),
     );
   }
