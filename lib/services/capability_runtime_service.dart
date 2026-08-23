@@ -5,6 +5,7 @@ import 'bluetooth_service.dart';
 import 'hub_client_service.dart';
 import 'hub_discovery_service.dart';
 import 'hub_server_service.dart';
+import 'installation_identity_service.dart';
 import 'rustler_gx_config_service.dart';
 
 class CapabilityRuntimeService {
@@ -27,6 +28,9 @@ class CapabilityRuntimeService {
 
   final HubDiscoveryService discovery =
       HubDiscoveryService.instance;
+
+  final InstallationIdentityService identity =
+      InstallationIdentityService.instance;
 
   bool _initialized = false;
 
@@ -108,10 +112,6 @@ class CapabilityRuntimeService {
     if (isEnabled && !wasEnabled) {
       try {
         await bluetooth.startScan();
-
-        debugPrint(
-          'Local Bluetooth enabled',
-        );
       } catch (error) {
         debugPrint(
           'Could not start Bluetooth scan: $error',
@@ -131,10 +131,6 @@ class CapabilityRuntimeService {
       } catch (_) {}
 
       bluetooth.clearLiveDevices();
-
-      debugPrint(
-        'Local Bluetooth disabled',
-      );
     }
   }
 
@@ -157,20 +153,20 @@ class CapabilityRuntimeService {
         final int port =
             await config.getHubPort();
 
+        final String hubId =
+            await identity.getInstallationId();
+
+        final String hubName =
+            await identity.getInstallationName();
+
         await hubServer.start(
           port: port,
         );
 
         await discovery.startBroadcasting(
-          hubId:
-              'rustler-gx-${DateTime.now().millisecondsSinceEpoch}',
-          hubName:
-              'Rustler GX Hub',
+          hubId: hubId,
+          hubName: hubName,
           hubPort: port,
-        );
-
-        debugPrint(
-          'Hub Server enabled on port $port',
         );
       } catch (error) {
         debugPrint(
@@ -183,12 +179,7 @@ class CapabilityRuntimeService {
 
     if (!isEnabled && wasEnabled) {
       await discovery.stopBroadcasting();
-
       await hubServer.stop();
-
-      debugPrint(
-        'Hub Server disabled',
-      );
     }
   }
 
@@ -209,10 +200,6 @@ class CapabilityRuntimeService {
     if (isEnabled && !wasEnabled) {
       try {
         await discovery.startListening();
-
-        debugPrint(
-          'Hub discovery enabled',
-        );
       } catch (error) {
         debugPrint(
           'Could not start Hub discovery: $error',
@@ -221,10 +208,6 @@ class CapabilityRuntimeService {
 
       try {
         await hubClient.connect();
-
-        debugPrint(
-          'Hub Client enabled',
-        );
       } catch (error) {
         debugPrint(
           'Could not start Hub Client: $error',
@@ -236,12 +219,7 @@ class CapabilityRuntimeService {
 
     if (!isEnabled && wasEnabled) {
       await hubClient.disconnect();
-
       await discovery.stopListening();
-
-      debugPrint(
-        'Hub Client disabled',
-      );
     }
   }
 
@@ -257,6 +235,31 @@ class CapabilityRuntimeService {
     );
   }
 
+  Future<void> restartHubAdvertising() async {
+    if (!_activeCapabilities.contains(
+      RustlerGxCapability.hubServer,
+    )) {
+      return;
+    }
+
+    final String hubId =
+        await identity.getInstallationId();
+
+    final String hubName =
+        await identity.getInstallationName();
+
+    final int port =
+        await config.getHubPort();
+
+    await discovery.stopBroadcasting();
+
+    await discovery.startBroadcasting(
+      hubId: hubId,
+      hubName: hubName,
+      hubPort: port,
+    );
+  }
+
   Future<void> shutdown() async {
     try {
       await bluetooth.stopScan();
@@ -267,17 +270,10 @@ class CapabilityRuntimeService {
     } catch (_) {}
 
     await hubClient.disconnect();
-
     await hubServer.stop();
-
     await discovery.shutdown();
 
     _activeCapabilities.clear();
-
     _initialized = false;
-
-    debugPrint(
-      'Rustler GX runtime stopped',
-    );
   }
 }
