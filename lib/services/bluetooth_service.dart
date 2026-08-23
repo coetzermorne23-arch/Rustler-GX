@@ -10,6 +10,7 @@ import '../models/victron_device_type.dart';
 import '../models/victron_live_data.dart';
 import '../models/rustler_entity.dart';
 import '../models/entity_sources.dart';
+import '../models/rustler_device.dart';
 
 import 'adapters/legacy_gatt_adapter.dart';
 import 'adapters/victron_adapter.dart';
@@ -19,6 +20,8 @@ import 'victron_key_service.dart';
 
 import 'history_service.dart';
 import 'entity_service.dart';
+import 'device_entity_link_service.dart';
+import 'device_registry_service.dart';
 
 class VictronBluetoothService {
   VictronBluetoothService._();
@@ -307,6 +310,7 @@ class VictronBluetoothService {
       _updateLiveDevice(
         deviceId,
         decoded,
+        device: device,
       );
 
       debugPrint(
@@ -649,58 +653,106 @@ class VictronBluetoothService {
   }
 
   void _updateLiveDevice(
-  String deviceId,
-  VictronLiveData data,
-) {
-  final Map<String, VictronLiveData> updated =
-      Map<String, VictronLiveData>.from(
-    liveDevices.value,
-  );
+    String deviceId,
+    VictronLiveData data, {
+    VictronDevice? device,
+  }) {
+    final Map<String, VictronLiveData> updated =
+        Map<String, VictronLiveData>.from(
+      liveDevices.value,
+    );
 
-  updated[deviceId] = data;
+    updated[deviceId] = data;
 
-  liveDevices.value = updated;
-  liveData.value = data;
+    liveDevices.value = updated;
+    liveData.value = data;
 
-  unawaited(
-    HistoryService.instance.record(data),
-  );
+    unawaited(
+      HistoryService.instance.record(data),
+    );
 
-  _publishEntities(
-    deviceId,
-    data,
-  );
-}
+    _publishEntities(
+      deviceId,
+      data,
+      device: device,
+    );
+  }
 
   void _publishEntities(
     String deviceId,
-    VictronLiveData data,
-  ) {
+    VictronLiveData data, {
+    VictronDevice? device,
+  }) {
     final EntityService entityService =
         EntityService.instance;
 
-    final String deviceSlug =
-        _entitySlug(
-      data.name.isNotEmpty
-          ? data.name
-          : deviceId,
-    );
+    final DeviceEntityLinkService linkService =
+        DeviceEntityLinkService.instance;
+
+    final DeviceRegistryService registry =
+        DeviceRegistryService.instance;
+
+    // Device identity is based on Bluetooth ID, not the user-renamed
+    // Victron device name. Renaming a SmartShunt therefore does not
+    // create a new Rustler GX device or new entity IDs.
+    final String deviceKey =
+        _entitySlug(deviceId);
+
+    final String registryDeviceId =
+        'victron:$deviceKey';
 
     final String sourcePrefix =
-        'victron.$deviceSlug';
+        'victron.$deviceKey';
+
+    final RustlerDevice? existingDevice =
+        registry.getDevice(registryDeviceId);
+
+    linkService.registerDevice(
+      RustlerDevice(
+        id: registryDeviceId,
+        name: data.name.isNotEmpty
+            ? data.name
+            : device?.displayName ?? 'Victron Device',
+        manufacturer: 'Victron Energy',
+        model: _victronModelLabel(device),
+        type: _rustlerDeviceType(
+          device?.type,
+          data,
+        ),
+        source: EntitySources.victron,
+        available: true,
+        updatedAt: data.updatedAt,
+        entityIds: existingDevice?.entityIds ??
+            const <String>[],
+      ),
+    );
+
+    void publishEntity(
+      RustlerEntity entity,
+    ) {
+      // Keep EntityService directly available for legacy callers while
+      // also attaching the entity to the universal device registry.
+      entityService.upsert(entity);
+
+      linkService.publishEntity(
+        deviceId: registryDeviceId,
+        entity: entity,
+      );
+    }
 
     void publishDouble({
       required String key,
       required String name,
       required double? value,
       String? unit,
-      RustlerEntityType type = RustlerEntityType.sensor,
+      RustlerEntityType type =
+          RustlerEntityType.sensor,
     }) {
       if (value == null) {
         return;
       }
 
-      entityService.upsert(
+      publishEntity(
         RustlerEntity(
           id: '$sourcePrefix.$key',
           name: name,
@@ -724,7 +776,7 @@ class VictronBluetoothService {
         return;
       }
 
-      entityService.upsert(
+      publishEntity(
         RustlerEntity(
           id: '$sourcePrefix.$key',
           name: name,
@@ -747,7 +799,7 @@ class VictronBluetoothService {
         return;
       }
 
-      entityService.upsert(
+      publishEntity(
         RustlerEntity(
           id: '$sourcePrefix.$key',
           name: name,
@@ -921,6 +973,87 @@ class VictronBluetoothService {
       value: data.outputPower,
       unit: 'W',
     );
+  }
+
+  RustlerDeviceType _rustlerDeviceType(
+    VictronDeviceType? type,
+    VictronLiveData data,
+  ) {
+    switch (type) {
+      case VictronDeviceType.smartShunt:
+        return RustlerDeviceType.batteryMonitor;
+
+      case VictronDeviceType.smartSolar:
+        return RustlerDeviceType.solarCharger;
+
+      case VictronDeviceType.blueSmartCharger:
+        return RustlerDeviceType.acCharger;
+
+      case VictronDeviceType.orionSmart:
+      case VictronDeviceType.orionXs:
+        return RustlerDeviceType.dcDcCharger;
+
+      case VictronDeviceType.unknown:
+      case null:
+        break;
+    }
+
+    // Fallback for legacy data where advertisement metadata may be absent.
+    if (data.stateOfCharge != null ||
+        data.consumedAh != null ||
+        data.remainingMinutes != null) {
+      return RustlerDeviceType.batteryMonitor;
+    }
+
+    if (data.pvPower != null ||
+        data.pvVoltage != null ||
+        data.yieldToday != null) {
+      return RustlerDeviceType.solarCharger;
+    }
+
+    if (data.inputVoltage != null ||
+        data.outputVoltage != null ||
+        data.outputCurrent != null) {
+      return RustlerDeviceType.dcDcCharger;
+    }
+
+    if (data.chargeCurrent != null ||
+        data.chargeState != null ||
+        data.chargerError != null) {
+      return RustlerDeviceType.acCharger;
+    }
+
+    return RustlerDeviceType.unknown;
+  }
+
+  String? _victronModelLabel(
+    VictronDevice? device,
+  ) {
+    if (device == null) {
+      return null;
+    }
+
+    switch (device.type) {
+      case VictronDeviceType.smartShunt:
+        return 'SmartShunt / BMV';
+
+      case VictronDeviceType.smartSolar:
+        return 'SmartSolar MPPT';
+
+      case VictronDeviceType.blueSmartCharger:
+        return 'Blue Smart Charger';
+
+      case VictronDeviceType.orionSmart:
+        return 'Orion Smart';
+
+      case VictronDeviceType.orionXs:
+        return 'Orion XS';
+
+      case VictronDeviceType.unknown:
+        return device.modelId == null
+            ? null
+            : device.modelIdHex;
+    }
   }
 
   String _entitySlug(String value) {
@@ -1212,6 +1345,7 @@ class VictronBluetoothService {
       _updateLiveDevice(
         deviceId,
         identified,
+        device: victronDevice,
       );
     },
   );
@@ -1306,5 +1440,23 @@ class VictronBluetoothService {
   void clearLiveDevices() {
     liveDevices.value = {};
     liveData.value = VictronLiveData.empty();
+
+    final DeviceEntityLinkService linkService =
+        DeviceEntityLinkService.instance;
+
+    final List<RustlerDevice> victronDevices =
+        DeviceRegistryService.instance.devices.value.values
+            .where(
+              (device) =>
+                  device.source == EntitySources.victron,
+            )
+            .toList();
+
+    for (final RustlerDevice device in victronDevices) {
+      linkService.setDeviceAvailability(
+        device.id,
+        false,
+      );
+    }
   }
 }
