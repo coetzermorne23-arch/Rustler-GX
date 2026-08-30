@@ -1,19 +1,30 @@
 package com.example.rustler_gx
 
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
+import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
+import android.media.session.PlaybackState
+import android.os.Bundle
 import android.provider.Settings
+import android.view.View
+import android.view.WindowManager
+import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
 
     companion object {
-        private const val CHANNEL = "rustler_gx/media"
+        private const val MEDIA_CHANNEL =
+            "rustler_gx/media"
+
+        private const val HEAD_UNIT_CHANNEL =
+            "rustler_gx/head_unit"
+
         private const val YOUTUBE_MUSIC =
             "com.google.android.apps.youtube.music"
     }
@@ -21,104 +32,85 @@ class MainActivity : FlutterActivity() {
     private lateinit var mediaSessionManager:
         MediaSessionManager
 
-    override fun configureFlutterEngine(
-        flutterEngine: FlutterEngine
+    override fun onCreate(
+        savedInstanceState: Bundle?
     ) {
-        super.configureFlutterEngine(flutterEngine)
+        super.onCreate(
+            savedInstanceState
+        )
 
         mediaSessionManager =
             getSystemService(
-                Context.MEDIA_SESSION_SERVICE
+                MEDIA_SESSION_SERVICE
             ) as MediaSessionManager
 
+        keepScreenOn()
+        immersiveMode()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        keepScreenOn()
+        immersiveMode()
+    }
+
+    override fun configureFlutterEngine(
+        @NonNull flutterEngine:
+            FlutterEngine
+    ) {
+        super.configureFlutterEngine(
+            flutterEngine
+        )
+
         MethodChannel(
-            flutterEngine.dartExecutor.binaryMessenger,
-            CHANNEL
-        ).setMethodCallHandler { call, result ->
+            flutterEngine
+                .dartExecutor
+                .binaryMessenger,
+            MEDIA_CHANNEL
+        ).setMethodCallHandler {
+                call,
+                result ->
+
+            handleMediaMethod(
+                call,
+                result
+            )
+        }
+
+        MethodChannel(
+            flutterEngine
+                .dartExecutor
+                .binaryMessenger,
+            HEAD_UNIT_CHANNEL
+        ).setMethodCallHandler {
+                call,
+                result ->
 
             when (call.method) {
 
-                "getPlayback" -> {
+                "keepScreenOn" -> {
+                    keepScreenOn()
+
                     result.success(
-                        getPlayback()
+                        true
                     )
                 }
 
-                "playPause" -> {
-                    val controller =
-                        getYouTubeMusicController()
+                "immersiveMode" -> {
+                    immersiveMode()
 
-                    if (controller == null) {
-                        result.success(false)
-                        return@setMethodCallHandler
-                    }
-
-                    val state =
-                        controller.playbackState
-
-                    if (
-                        state?.state ==
-                        android.media.session.PlaybackState.STATE_PLAYING
-                    ) {
-                        controller.transportControls.pause()
-                    } else {
-                        controller.transportControls.play()
-                    }
-
-                    result.success(true)
-                }
-
-                "next" -> {
-                    val controller =
-                        getYouTubeMusicController()
-
-                    if (controller == null) {
-                        result.success(false)
-                    } else {
-                        controller.transportControls
-                            .skipToNext()
-
-                        result.success(true)
-                    }
-                }
-
-                "previous" -> {
-                    val controller =
-                        getYouTubeMusicController()
-
-                    if (controller == null) {
-                        result.success(false)
-                    } else {
-                        controller.transportControls
-                            .skipToPrevious()
-
-                        result.success(true)
-                    }
-                }
-
-                "hasNotificationAccess" -> {
                     result.success(
-                        hasNotificationAccess()
+                        true
                     )
                 }
 
-                "openNotificationAccess" -> {
-                    try {
-                        val intent =
-                            Intent(
-                                Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS
-                            )
+                "normalSystemUi" -> {
+                    normalSystemUi()
 
-                        startActivity(intent)
-
-                        result.success(true)
-                    } catch (error: Exception) {
-                        result.error(
-                            "SETTINGS_ERROR",
-                            error.message,
-                            null
-                        )
-                    }
+                    result.success(
+                        true
+                    )
                 }
 
                 else -> {
@@ -128,19 +120,193 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun getPlayback():
-        Map<String, Any?> {
+    private fun keepScreenOn() {
+        window.addFlags(
+            WindowManager
+                .LayoutParams
+                .FLAG_KEEP_SCREEN_ON
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun immersiveMode() {
+        window.decorView.systemUiVisibility =
+            (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun normalSystemUi() {
+        window.decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_VISIBLE
+    }
+
+    private fun handleMediaMethod(
+        call: MethodCall,
+        result: MethodChannel.Result
+    ) {
+        when (call.method) {
+
+            "getPlayback" -> {
+                result.success(
+                    getPlaybackData()
+                )
+            }
+
+            "hasNotificationAccess" -> {
+                result.success(
+                    hasNotificationAccess()
+                )
+            }
+
+            "openNotificationAccess" -> {
+                openNotificationAccess()
+
+                result.success(
+                    true
+                )
+            }
+
+            "playPause" -> {
+                val controller =
+                    getPreferredController()
+
+                if (controller == null) {
+                    result.success(
+                        false
+                    )
+
+                    return
+                }
+
+                val state =
+                    controller
+                        .playbackState
+                        ?.state
+
+                if (
+                    state ==
+                    PlaybackState.STATE_PLAYING
+                ) {
+                    controller
+                        .transportControls
+                        .pause()
+                } else {
+                    controller
+                        .transportControls
+                        .play()
+                }
+
+                result.success(
+                    true
+                )
+            }
+
+            "play" -> {
+                val controller =
+                    getPreferredController()
+
+                controller
+                    ?.transportControls
+                    ?.play()
+
+                result.success(
+                    controller != null
+                )
+            }
+
+            "pause" -> {
+                val controller =
+                    getPreferredController()
+
+                controller
+                    ?.transportControls
+                    ?.pause()
+
+                result.success(
+                    controller != null
+                )
+            }
+
+            "next" -> {
+                val controller =
+                    getPreferredController()
+
+                controller
+                    ?.transportControls
+                    ?.skipToNext()
+
+                result.success(
+                    controller != null
+                )
+            }
+
+            "previous" -> {
+                val controller =
+                    getPreferredController()
+
+                controller
+                    ?.transportControls
+                    ?.skipToPrevious()
+
+                result.success(
+                    controller != null
+                )
+            }
+
+            "seekTo" -> {
+                val controller =
+                    getPreferredController()
+
+                val positionMs =
+                    call.argument<Number>(
+                        "positionMs"
+                    )?.toLong() ?: 0L
+
+                controller
+                    ?.transportControls
+                    ?.seekTo(
+                        positionMs
+                    )
+
+                result.success(
+                    controller != null
+                )
+            }
+
+            else -> {
+                result.notImplemented()
+            }
+        }
+    }
+
+    private fun getPlaybackData():
+        Map<String, Any> {
 
         val controller =
-            getYouTubeMusicController()
+            getPreferredController()
 
         if (controller == null) {
             return mapOf(
-                "title" to "Nothing playing",
-                "artist" to "YouTube Music",
+                "title" to "",
+                "artist" to "",
                 "album" to "",
+                "packageName" to "",
                 "playing" to false,
-                "packageName" to null
+                "active" to false,
+                "positionMs" to 0L,
+                "durationMs" to 0L
             )
         }
 
@@ -150,32 +316,65 @@ class MainActivity : FlutterActivity() {
         val state =
             controller.playbackState
 
+        val title =
+            metadata
+                ?.getString(
+                    MediaMetadata
+                        .METADATA_KEY_TITLE
+                )
+                ?: ""
+
+        val artist =
+            metadata
+                ?.getString(
+                    MediaMetadata
+                        .METADATA_KEY_ARTIST
+                )
+                ?: metadata
+                    ?.getString(
+                        MediaMetadata
+                            .METADATA_KEY_ALBUM_ARTIST
+                    )
+                ?: ""
+
+        val album =
+            metadata
+                ?.getString(
+                    MediaMetadata
+                        .METADATA_KEY_ALBUM
+                )
+                ?: ""
+
+        val duration =
+            metadata
+                ?.getLong(
+                    MediaMetadata
+                        .METADATA_KEY_DURATION
+                )
+                ?: 0L
+
+        val position =
+            state?.position
+                ?: 0L
+
+        val playing =
+            state?.state ==
+                PlaybackState.STATE_PLAYING
+
         return mapOf(
-            "title" to (
-                metadata?.getString(
-                    android.media.MediaMetadata.METADATA_KEY_TITLE
-                ) ?: "Unknown track"
-            ),
-            "artist" to (
-                metadata?.getString(
-                    android.media.MediaMetadata.METADATA_KEY_ARTIST
-                ) ?: ""
-            ),
-            "album" to (
-                metadata?.getString(
-                    android.media.MediaMetadata.METADATA_KEY_ALBUM
-                ) ?: ""
-            ),
-            "playing" to (
-                state?.state ==
-                android.media.session.PlaybackState.STATE_PLAYING
-            ),
+            "title" to title,
+            "artist" to artist,
+            "album" to album,
             "packageName" to
-                controller.packageName
+                controller.packageName,
+            "playing" to playing,
+            "active" to true,
+            "positionMs" to position,
+            "durationMs" to duration
         )
     }
 
-    private fun getYouTubeMusicController():
+    private fun getPreferredController():
         MediaController? {
 
         if (!hasNotificationAccess()) {
@@ -186,18 +385,24 @@ class MainActivity : FlutterActivity() {
             val component =
                 ComponentName(
                     this,
-                    MediaNotificationListener::class.java
+                    MediaNotificationListener::
+                        class.java
                 )
 
             val controllers =
                 mediaSessionManager
-                    .getActiveSessions(component)
+                    .getActiveSessions(
+                        component
+                    )
 
             controllers.firstOrNull {
                 it.packageName ==
                     YOUTUBE_MUSIC
-            }
-        } catch (error: SecurityException) {
+            } ?: controllers.firstOrNull()
+
+        } catch (
+            exception: SecurityException
+        ) {
             null
         }
     }
@@ -211,8 +416,33 @@ class MainActivity : FlutterActivity() {
                 "enabled_notification_listeners"
             ) ?: return false
 
+        val component =
+            ComponentName(
+                this,
+                MediaNotificationListener::
+                    class.java
+            )
+
         return enabled.contains(
-            packageName
+            component.flattenToString()
         )
+    }
+
+    private fun openNotificationAccess() {
+        try {
+            startActivity(
+                Intent(
+                    "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"
+                )
+            )
+        } catch (
+            exception: Exception
+        ) {
+            startActivity(
+                Intent(
+                    Settings.ACTION_SETTINGS
+                )
+            )
+        }
     }
 }

@@ -1,6 +1,25 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Android 11 and older -->
+    <!-- ================================================== -->
+    <!-- NETWORK -->
+    <!-- ================================================== -->
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+
+    <!-- ================================================== -->
+    <!-- LOCATION / GPS -->
+    <!-- ================================================== -->
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- ================================================== -->
+    <!-- BLUETOOTH - ANDROID 11 AND OLDER -->
+    <!-- ================================================== -->
+
     <uses-permission
         android:name="android.permission.BLUETOOTH"
         android:maxSdkVersion="30" />
@@ -9,68 +28,109 @@
         android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
 
-    <uses-permission
-        android:name="android.permission.ACCESS_FINE_LOCATION"
-        android:maxSdkVersion="30" />
+    <!-- ================================================== -->
+    <!-- BLUETOOTH - ANDROID 12+ -->
+    <!-- ================================================== -->
 
-    <!-- Android 12+ -->
     <uses-permission
         android:name="android.permission.BLUETOOTH_SCAN"
         android:usesPermissionFlags="neverForLocation" />
 
-    <uses-permission
-        android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
-    <!-- Rustler GX Hub / LAN -->
-    <uses-permission
-        android:name="android.permission.INTERNET" />
+    <!-- ================================================== -->
+    <!-- HEAD UNIT AUTO START -->
+    <!-- ================================================== -->
 
-    <uses-permission
-        android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <uses-permission
-        android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- ================================================== -->
+    <!-- OPTIONAL HARDWARE -->
+    <!-- ================================================== -->
 
-    <uses-permission
-        android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-
-    <!-- BLE optional -->
     <uses-feature
         android:name="android.hardware.bluetooth_le"
+        android:required="false" />
+
+    <uses-feature
+        android:name="android.hardware.location.gps"
         android:required="false" />
 
     <application
         android:label="Rustler GX"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="true"
+        android:supportsRtl="true">
+
+        <!-- ================================================== -->
+        <!-- MAIN RUSTLER GX ACTIVITY -->
+        <!-- ================================================== -->
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="singleTask"
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize">
+            android:windowSoftInputMode="adjustResize"
+            android:screenOrientation="landscape">
 
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
 
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
         </activity>
 
-        <!-- Lets Android Auto discover this templated car app. -->
+        <!-- ================================================== -->
+        <!-- HEAD UNIT AUTO START -->
+        <!-- ================================================== -->
+
+        <receiver
+            android:name=".BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+
+        </receiver>
+
+        <!-- ================================================== -->
+        <!-- MEDIA / YOUTUBE MUSIC CONTROL -->
+        <!-- ================================================== -->
+
+        <service
+            android:name=".MediaNotificationListener"
+            android:label="Rustler GX Media Control"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+
+        </service>
+
+        <!-- ================================================== -->
+        <!-- ANDROID AUTO / CAR APP -->
+        <!-- ================================================== -->
+
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
 
-        <!-- Rustler GX Android Auto service. -->
         <service
             android:name=".RustlerCarAppService"
             android:exported="true">
@@ -83,7 +143,12 @@
                 <action android:name="androidx.car.app.CarAppService" />
                 <category android:name="androidx.car.app.category.IOT" />
             </intent-filter>
+
         </service>
+
+        <!-- ================================================== -->
+        <!-- FLUTTER -->
+        <!-- ================================================== -->
 
         <meta-data
             android:name="flutterEmbedding"
@@ -91,11 +156,27 @@
 
     </application>
 
+    <!-- ================================================== -->
+    <!-- PACKAGE VISIBILITY -->
+    <!-- ================================================== -->
+
     <queries>
+
+        <!-- YouTube Music -->
+        <package android:name="com.google.android.apps.youtube.music" />
+
+        <!-- Apps with launcher activities -->
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT"/>
-            <data android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
         </intent>
+
+        <!-- Flutter/plugin compatibility -->
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT" />
+            <data android:mimeType="text/plain" />
+        </intent>
+
     </queries>
 
 </manifest>

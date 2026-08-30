@@ -6,42 +6,75 @@ import android.content.Intent
 import android.os.Handler
 import android.os.Looper
 
-class BootReceiver : BroadcastReceiver() {
+class BootReceiver :
+    BroadcastReceiver() {
 
     override fun onReceive(
         context: Context,
         intent: Intent
     ) {
-        if (
-            intent.action != Intent.ACTION_BOOT_COMPLETED &&
-            intent.action !=
-                "android.intent.action.QUICKBOOT_POWERON" &&
-            intent.action !=
+        val action =
+            intent.action ?: return
+
+        val validAction =
+            action ==
+                Intent.ACTION_BOOT_COMPLETED ||
+            action ==
+                Intent.ACTION_LOCKED_BOOT_COMPLETED ||
+            action ==
+                "android.intent.action.QUICKBOOT_POWERON" ||
+            action ==
                 "com.htc.intent.action.QUICKBOOT_POWERON"
-        ) {
+
+        if (!validAction) {
             return
         }
+
+        val pendingResult =
+            goAsync()
 
         Handler(
             Looper.getMainLooper()
         ).postDelayed(
             {
-                val launchIntent =
-                    context.packageManager
-                        .getLaunchIntentForPackage(
-                            context.packageName
+                try {
+                    val launchIntent =
+                        context
+                            .packageManager
+                            .getLaunchIntentForPackage(
+                                context.packageName
+                            )
+
+                    launchIntent?.apply {
+                        addFlags(
+                            Intent.FLAG_ACTIVITY_NEW_TASK
                         )
 
-                launchIntent?.apply {
-                    addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                        addFlags(
                             Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    )
+                        )
 
-                    context.startActivity(this)
+                        addFlags(
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        )
+                    }
+
+                    if (
+                        launchIntent != null
+                    ) {
+                        context.startActivity(
+                            launchIntent
+                        )
+                    }
+                } catch (
+                    exception: Exception
+                ) {
+                    exception.printStackTrace()
+                } finally {
+                    pendingResult.finish()
                 }
             },
-            3000
+            5000
         )
     }
 }
