@@ -11,31 +11,24 @@ import 'rustler_gx_config_service.dart';
 class CapabilityRuntimeService {
   CapabilityRuntimeService._();
 
-  static final CapabilityRuntimeService instance =
-      CapabilityRuntimeService._();
+  static final CapabilityRuntimeService instance = CapabilityRuntimeService._();
 
-  final RustlerGxConfigService config =
-      RustlerGxConfigService.instance;
+  final RustlerGxConfigService config = RustlerGxConfigService.instance;
 
-  final VictronBluetoothService bluetooth =
-      VictronBluetoothService.instance;
+  final VictronBluetoothService bluetooth = VictronBluetoothService.instance;
 
-  final HubClientService hubClient =
-      HubClientService.instance;
+  final HubClientService hubClient = HubClientService.instance;
 
-  final HubServerService hubServer =
-      HubServerService.instance;
+  final HubServerService hubServer = HubServerService.instance;
 
-  final HubDiscoveryService discovery =
-      HubDiscoveryService.instance;
+  final HubDiscoveryService discovery = HubDiscoveryService.instance;
 
   final InstallationIdentityService identity =
       InstallationIdentityService.instance;
 
   bool _initialized = false;
 
-  Set<RustlerGxCapability> _activeCapabilities =
-      <RustlerGxCapability>{};
+  Set<RustlerGxCapability> _activeCapabilities = <RustlerGxCapability>{};
 
   Set<RustlerGxCapability> get activeCapabilities =>
       Set<RustlerGxCapability>.unmodifiable(
@@ -64,13 +57,11 @@ class CapabilityRuntimeService {
   Future<void> applyCapabilities(
     Set<RustlerGxCapability> capabilities,
   ) async {
-    final Set<RustlerGxCapability> previous =
-        Set<RustlerGxCapability>.from(
+    final Set<RustlerGxCapability> previous = Set<RustlerGxCapability>.from(
       _activeCapabilities,
     );
 
-    _activeCapabilities =
-        Set<RustlerGxCapability>.from(
+    _activeCapabilities = Set<RustlerGxCapability>.from(
       capabilities,
     );
 
@@ -99,13 +90,11 @@ class CapabilityRuntimeService {
     Set<RustlerGxCapability> previous,
     Set<RustlerGxCapability> current,
   ) async {
-    final bool wasEnabled =
-        previous.contains(
+    final bool wasEnabled = previous.contains(
       RustlerGxCapability.localBluetooth,
     );
 
-    final bool isEnabled =
-        current.contains(
+    final bool isEnabled = current.contains(
       RustlerGxCapability.localBluetooth,
     );
 
@@ -138,26 +127,21 @@ class CapabilityRuntimeService {
     Set<RustlerGxCapability> previous,
     Set<RustlerGxCapability> current,
   ) async {
-    final bool wasEnabled =
-        previous.contains(
+    final bool wasEnabled = previous.contains(
       RustlerGxCapability.hubServer,
     );
 
-    final bool isEnabled =
-        current.contains(
+    final bool isEnabled = current.contains(
       RustlerGxCapability.hubServer,
     );
 
     if (isEnabled && !wasEnabled) {
       try {
-        final int port =
-            await config.getHubPort();
+        final int port = await config.getHubPort();
 
-        final String hubId =
-            await identity.getInstallationId();
+        final String hubId = await identity.getInstallationId();
 
-        final String hubName =
-            await identity.getInstallationName();
+        final String hubName = await identity.getInstallationName();
 
         await hubServer.start(
           port: port,
@@ -187,13 +171,11 @@ class CapabilityRuntimeService {
     Set<RustlerGxCapability> previous,
     Set<RustlerGxCapability> current,
   ) async {
-    final bool wasEnabled =
-        previous.contains(
+    final bool wasEnabled = previous.contains(
       RustlerGxCapability.hubClient,
     );
 
-    final bool isEnabled =
-        current.contains(
+    final bool isEnabled = current.contains(
       RustlerGxCapability.hubClient,
     );
 
@@ -242,14 +224,11 @@ class CapabilityRuntimeService {
       return;
     }
 
-    final String hubId =
-        await identity.getInstallationId();
+    final String hubId = await identity.getInstallationId();
 
-    final String hubName =
-        await identity.getInstallationName();
+    final String hubName = await identity.getInstallationName();
 
-    final int port =
-        await config.getHubPort();
+    final int port = await config.getHubPort();
 
     await discovery.stopBroadcasting();
 

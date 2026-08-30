@@ -10,8 +10,7 @@ import '../models/navigation_place.dart';
 class NavigationPlaceService {
   NavigationPlaceService._();
 
-  static final NavigationPlaceService instance =
-      NavigationPlaceService._();
+  static final NavigationPlaceService instance = NavigationPlaceService._();
 
   Database? _database;
 
@@ -25,27 +24,22 @@ class NavigationPlaceService {
     <NavigationPlace>[],
   );
 
-  final ValueNotifier<bool> databaseInstalled =
-      ValueNotifier<bool>(
+  final ValueNotifier<bool> databaseInstalled = ValueNotifier<bool>(
     false,
   );
 
-  final ValueNotifier<String?> databasePath =
-      ValueNotifier<String?>(
+  final ValueNotifier<String?> databasePath = ValueNotifier<String?>(
     null,
   );
 
-  final ValueNotifier<String?> error =
-      ValueNotifier<String?>(
+  final ValueNotifier<String?> error = ValueNotifier<String?>(
     null,
   );
 
   Future<Directory> _navigationDirectory() async {
-    final Directory support =
-        await getApplicationSupportDirectory();
+    final Directory support = await getApplicationSupportDirectory();
 
-    final Directory directory =
-        Directory(
+    final Directory directory = Directory(
       '${support.path}/navigation',
     );
 
@@ -59,8 +53,7 @@ class NavigationPlaceService {
   }
 
   Future<String> get defaultDatabasePath async {
-    final Directory directory =
-        await _navigationDirectory();
+    final Directory directory = await _navigationDirectory();
 
     return '${directory.path}/rustler_navigation.db';
   }
@@ -70,11 +63,9 @@ class NavigationPlaceService {
       return;
     }
 
-    final String path =
-        await defaultDatabasePath;
+    final String path = await defaultDatabasePath;
 
-    final File file =
-        File(path);
+    final File file = File(path);
 
     if (!await file.exists()) {
       await _createEmptyDatabase(
@@ -92,8 +83,7 @@ class NavigationPlaceService {
   Future<void> _createEmptyDatabase(
     String path,
   ) async {
-    final Database db =
-        sqlite3.open(
+    final Database db = sqlite3.open(
       path,
     );
 
@@ -152,28 +142,21 @@ class NavigationPlaceService {
   ) {
     _database?.close();
 
-    _database =
-        sqlite3.open(
+    _database = sqlite3.open(
       path,
     );
 
-    databasePath.value =
-        path;
+    databasePath.value = path;
 
-    databaseInstalled.value =
-        true;
+    databaseInstalled.value = true;
   }
 
   Future<void> importDatabase() async {
-    error.value =
-        null;
+    error.value = null;
 
-    final PlatformFile? picked =
-        await FilePicker.pickFile(
-      type:
-          FileType.custom,
-      allowedExtensions:
-          <String>[
+    final PlatformFile? picked = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: <String>[
         'db',
         'sqlite',
         'sqlite3',
@@ -184,39 +167,32 @@ class NavigationPlaceService {
       return;
     }
 
-    final String? sourcePath =
-        picked.path;
+    final String? sourcePath = picked.path;
 
     if (sourcePath == null) {
-      error.value =
-          'Selected database has no local path.';
+      error.value = 'Selected database has no local path.';
 
       return;
     }
 
-    final File source =
-        File(
+    final File source = File(
       sourcePath,
     );
 
     if (!await source.exists()) {
-      error.value =
-          'Selected database does not exist.';
+      error.value = 'Selected database does not exist.';
 
       return;
     }
 
-    final String destinationPath =
-        await defaultDatabasePath;
+    final String destinationPath = await defaultDatabasePath;
 
     _database?.close();
 
-    _database =
-        null;
+    _database = null;
 
     try {
-      final File destination =
-          File(
+      final File destination = File(
         destinationPath,
       );
 
@@ -235,18 +211,15 @@ class NavigationPlaceService {
       if (!_validateDatabase()) {
         _database?.close();
 
-        _database =
-            null;
+        _database = null;
 
         await File(
           destinationPath,
         ).delete();
 
-        databaseInstalled.value =
-            false;
+        databaseInstalled.value = false;
 
-        databasePath.value =
-            null;
+        databasePath.value = null;
 
         throw StateError(
           'This is not a valid Rustler GX navigation database.',
@@ -255,19 +228,16 @@ class NavigationPlaceService {
 
       await refresh();
     } catch (exception) {
-      error.value =
-          exception.toString();
+      error.value = exception.toString();
 
       rethrow;
     }
   }
 
   bool _validateDatabase() {
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final ResultSet result =
-        db.select(
+    final ResultSet result = db.select(
       '''
       SELECT name
       FROM sqlite_master
@@ -282,11 +252,9 @@ class NavigationPlaceService {
   }
 
   Future<void> refresh() async {
-    favourites.value =
-        getFavourites();
+    favourites.value = getFavourites();
 
-    recent.value =
-        getRecent();
+    recent.value = getRecent();
   }
 
   Future<List<NavigationPlace>> search(
@@ -295,21 +263,17 @@ class NavigationPlaceService {
   }) async {
     await initialise();
 
-    final String cleaned =
-        query.trim();
+    final String cleaned = query.trim();
 
     if (cleaned.isEmpty) {
       return <NavigationPlace>[];
     }
 
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final String like =
-        '%$cleaned%';
+    final String like = '%$cleaned%';
 
-    final ResultSet rows =
-        db.select(
+    final ResultSet rows = db.select(
       '''
       SELECT *
       FROM places
@@ -351,8 +315,7 @@ class NavigationPlaceService {
       return <NavigationPlace>[];
     }
 
-    final ResultSet rows =
-        _database!.select(
+    final ResultSet rows = _database!.select(
       '''
       SELECT *
       FROM places
@@ -380,8 +343,7 @@ class NavigationPlaceService {
       return <NavigationPlace>[];
     }
 
-    final ResultSet rows =
-        _database!.select(
+    final ResultSet rows = _database!.select(
       '''
       SELECT *
       FROM places
@@ -407,8 +369,7 @@ class NavigationPlaceService {
       return null;
     }
 
-    final ResultSet rows =
-        _database!.select(
+    final ResultSet rows = _database!.select(
       '''
       SELECT *
       FROM places
@@ -431,8 +392,7 @@ class NavigationPlaceService {
       return null;
     }
 
-    final ResultSet rows =
-        _database!.select(
+    final ResultSet rows = _database!.select(
       '''
       SELECT *
       FROM places
@@ -462,8 +422,7 @@ class NavigationPlaceService {
   }) async {
     await initialise();
 
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
     if (isHome) {
       db.execute(
@@ -510,31 +469,19 @@ class NavigationPlaceService {
       ],
     );
 
-    final int id =
-        db.lastInsertRowId;
+    final int id = db.lastInsertRowId;
 
-    final NavigationPlace place =
-        NavigationPlace(
-      id:
-          id,
-      name:
-          name,
-      address:
-          address,
-      latitude:
-          latitude,
-      longitude:
-          longitude,
-      favourite:
-          favourite,
-      isHome:
-          isHome,
-      isWork:
-          isWork,
-      visitCount:
-          0,
-      lastVisited:
-          null,
+    final NavigationPlace place = NavigationPlace(
+      id: id,
+      name: name,
+      address: address,
+      latitude: latitude,
+      longitude: longitude,
+      favourite: favourite,
+      isHome: isHome,
+      isWork: isWork,
+      visitCount: 0,
+      lastVisited: null,
     );
 
     await refresh();
@@ -545,15 +492,13 @@ class NavigationPlaceService {
   Future<void> deletePlace(
     NavigationPlace place,
   ) async {
-    final int? id =
-        place.id;
+    final int? id = place.id;
 
     if (id == null) {
       return;
     }
 
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
     db.execute(
       '''
@@ -571,15 +516,13 @@ class NavigationPlaceService {
   Future<void> toggleFavourite(
     NavigationPlace place,
   ) async {
-    final int? id =
-        place.id;
+    final int? id = place.id;
 
     if (id == null) {
       return;
     }
 
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
     db.execute(
       '''
@@ -588,9 +531,7 @@ class NavigationPlaceService {
       WHERE id = ?;
       ''',
       <Object?>[
-        place.favourite
-            ? 0
-            : 1,
+        place.favourite ? 0 : 1,
         id,
       ],
     );
@@ -601,15 +542,13 @@ class NavigationPlaceService {
   Future<void> setHome(
     NavigationPlace place,
   ) async {
-    final int? id =
-        place.id;
+    final int? id = place.id;
 
     if (id == null) {
       return;
     }
 
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
     db.execute(
       '''
@@ -635,15 +574,13 @@ class NavigationPlaceService {
   Future<void> setWork(
     NavigationPlace place,
   ) async {
-    final int? id =
-        place.id;
+    final int? id = place.id;
 
     if (id == null) {
       return;
     }
 
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
     db.execute(
       '''
@@ -669,19 +606,15 @@ class NavigationPlaceService {
   Future<void> markVisited(
     NavigationPlace place,
   ) async {
-    final int? id =
-        place.id;
+    final int? id = place.id;
 
     if (id == null) {
       return;
     }
 
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final String now =
-        DateTime.now()
-            .toIso8601String();
+    final String now = DateTime.now().toIso8601String();
 
     db.execute(
       '''
@@ -703,42 +636,28 @@ class NavigationPlaceService {
   NavigationPlace _placeFromRow(
     Row row,
   ) {
-    final String? lastVisitedText =
-        row['last_visited'] as String?;
+    final String? lastVisitedText = row['last_visited'] as String?;
 
     return NavigationPlace(
-      id:
-          row['id'] as int,
-      name:
-          row['name'] as String,
-      address:
-          row['address'] as String?,
-      latitude:
-          (row['latitude'] as num)
-              .toDouble(),
-      longitude:
-          (row['longitude'] as num)
-              .toDouble(),
-      favourite:
-          row['favourite'] == 1,
-      isHome:
-          row['is_home'] == 1,
-      isWork:
-          row['is_work'] == 1,
-      visitCount:
-          row['visit_count'] as int,
-      lastVisited:
-          lastVisitedText == null
-              ? null
-              : DateTime.tryParse(
-                  lastVisitedText,
-                ),
+      id: row['id'] as int,
+      name: row['name'] as String,
+      address: row['address'] as String?,
+      latitude: (row['latitude'] as num).toDouble(),
+      longitude: (row['longitude'] as num).toDouble(),
+      favourite: row['favourite'] == 1,
+      isHome: row['is_home'] == 1,
+      isWork: row['is_work'] == 1,
+      visitCount: row['visit_count'] as int,
+      lastVisited: lastVisitedText == null
+          ? null
+          : DateTime.tryParse(
+              lastVisitedText,
+            ),
     );
   }
 
   Database _requireDatabase() {
-    final Database? db =
-        _database;
+    final Database? db = _database;
 
     if (db == null) {
       throw StateError(
@@ -752,10 +671,8 @@ class NavigationPlaceService {
   void close() {
     _database?.close();
 
-    _database =
-        null;
+    _database = null;
 
-    databaseInstalled.value =
-        false;
+    databaseInstalled.value = false;
   }
 }

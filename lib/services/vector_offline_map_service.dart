@@ -2,34 +2,28 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart'
-    as vt;
+import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:flutter_map_vector_tiles_mbtiles/flutter_map_vector_tiles_mbtiles.dart';
 import 'package:path_provider/path_provider.dart';
 
 class VectorOfflineMapService {
   VectorOfflineMapService._();
 
-  static final VectorOfflineMapService instance =
-      VectorOfflineMapService._();
+  static final VectorOfflineMapService instance = VectorOfflineMapService._();
 
-  final ValueNotifier<String?> mapPath =
-      ValueNotifier<String?>(
+  final ValueNotifier<String?> mapPath = ValueNotifier<String?>(
     null,
   );
 
-  final ValueNotifier<String?> mapName =
-      ValueNotifier<String?>(
+  final ValueNotifier<String?> mapName = ValueNotifier<String?>(
     null,
   );
 
-  final ValueNotifier<String?> error =
-      ValueNotifier<String?>(
+  final ValueNotifier<String?> error = ValueNotifier<String?>(
     null,
   );
 
-  final ValueNotifier<bool> loading =
-      ValueNotifier<bool>(
+  final ValueNotifier<bool> loading = ValueNotifier<bool>(
     false,
   );
 
@@ -37,22 +31,16 @@ class VectorOfflineMapService {
 
   MbTilesVectorTileProvider? _provider;
 
-  vt.Style? get style =>
-      _style;
+  vt.Style? get style => _style;
 
-  MbTilesVectorTileProvider? get provider =>
-      _provider;
+  MbTilesVectorTileProvider? get provider => _provider;
 
-  bool get ready =>
-      _style != null &&
-      _provider != null;
+  bool get ready => _style != null && _provider != null;
 
   Future<Directory> _mapDirectory() async {
-    final Directory support =
-        await getApplicationSupportDirectory();
+    final Directory support = await getApplicationSupportDirectory();
 
-    final Directory directory =
-        Directory(
+    final Directory directory = Directory(
       '${support.path}/maps',
     );
 
@@ -66,25 +54,20 @@ class VectorOfflineMapService {
   }
 
   Future<String> get defaultMapPath async {
-    final Directory directory =
-        await _mapDirectory();
+    final Directory directory = await _mapDirectory();
 
     return '${directory.path}/south_africa.mbtiles';
   }
 
   Future<void> loadDefaultMap() async {
-    final String path =
-        await defaultMapPath;
+    final String path = await defaultMapPath;
 
-    final File file =
-        File(path);
+    final File file = File(path);
 
     if (!await file.exists()) {
-      mapPath.value =
-          null;
+      mapPath.value = null;
 
-      mapName.value =
-          null;
+      mapName.value = null;
 
       return;
     }
@@ -95,15 +78,11 @@ class VectorOfflineMapService {
   }
 
   Future<void> chooseMap() async {
-    error.value =
-        null;
+    error.value = null;
 
-    final PlatformFile? picked =
-        await FilePicker.pickFile(
-      type:
-          FileType.custom,
-      allowedExtensions:
-          <String>[
+    final PlatformFile? picked = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: <String>[
         'mbtiles',
       ],
     );
@@ -112,30 +91,24 @@ class VectorOfflineMapService {
       return;
     }
 
-    final String? sourcePath =
-        picked.path;
+    final String? sourcePath = picked.path;
 
     if (sourcePath == null) {
-      error.value =
-          'Selected map has no local file path.';
+      error.value = 'Selected map has no local file path.';
 
       return;
     }
 
-    loading.value =
-        true;
+    loading.value = true;
 
     try {
-      final File source =
-          File(
+      final File source = File(
         sourcePath,
       );
 
-      final String destinationPath =
-          await defaultMapPath;
+      final String destinationPath = await defaultMapPath;
 
-      final File destination =
-          File(
+      final File destination = File(
         destinationPath,
       );
 
@@ -151,30 +124,25 @@ class VectorOfflineMapService {
         destinationPath,
       );
     } catch (exception) {
-      error.value =
-          'Could not import map: $exception';
+      error.value = 'Could not import map: $exception';
 
       rethrow;
     } finally {
-      loading.value =
-          false;
+      loading.value = false;
     }
   }
 
   Future<void> loadMap(
     String path,
   ) async {
-    loading.value =
-        true;
+    loading.value = true;
 
-    error.value =
-        null;
+    error.value = null;
 
     try {
       await _disposeCurrentMap();
 
-      final File file =
-          File(path);
+      final File file = File(path);
 
       if (!await file.exists()) {
         throw StateError(
@@ -187,19 +155,14 @@ class VectorOfflineMapService {
         path,
       );
 
-      _provider =
-          archive;
+      _provider = archive;
 
-      final vt.Style loadedStyle =
-          await vt.StyleReader(
-        uri:
-            'asset://assets/map_styles/rustler_dark.json',
-        resolveProvider:
-            (
+      final vt.Style loadedStyle = await vt.StyleReader(
+        uri: 'asset://assets/map_styles/rustler_dark.json',
+        resolveProvider: (
           String id,
         ) async {
-          if (id ==
-              'openmaptiles') {
+          if (id == 'openmaptiles') {
             return archive;
           }
 
@@ -207,69 +170,54 @@ class VectorOfflineMapService {
         },
       ).read();
 
-      _style =
-          loadedStyle;
+      _style = loadedStyle;
 
-      mapPath.value =
-          path;
+      mapPath.value = path;
 
-      mapName.value =
-          file.uri.pathSegments.isEmpty
-              ? 'South Africa'
-              : file.uri.pathSegments.last;
+      mapName.value = file.uri.pathSegments.isEmpty
+          ? 'South Africa'
+          : file.uri.pathSegments.last;
     } catch (exception) {
-      error.value =
-          'Could not load offline map: $exception';
+      error.value = 'Could not load offline map: $exception';
 
       await _disposeCurrentMap();
 
-      mapPath.value =
-          null;
+      mapPath.value = null;
 
-      mapName.value =
-          null;
+      mapName.value = null;
 
       rethrow;
     } finally {
-      loading.value =
-          false;
+      loading.value = false;
     }
   }
 
   Future<void> removeMap() async {
-    final String? path =
-        mapPath.value;
+    final String? path = mapPath.value;
 
     await _disposeCurrentMap();
 
     if (path != null) {
-      final File file =
-          File(path);
+      final File file = File(path);
 
       if (await file.exists()) {
         await file.delete();
       }
     }
 
-    mapPath.value =
-        null;
+    mapPath.value = null;
 
-    mapName.value =
-        null;
+    mapName.value = null;
 
-    error.value =
-        null;
+    error.value = null;
   }
 
   Future<void> _disposeCurrentMap() async {
-    final vt.Style? oldStyle =
-        _style;
+    final vt.Style? oldStyle = _style;
 
-    _style =
-        null;
+    _style = null;
 
-    _provider =
-        null;
+    _provider = null;
 
     if (oldStyle != null) {
       oldStyle.dispose();

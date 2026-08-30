@@ -10,8 +10,7 @@ class EntitiesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final EntityService service =
-        EntityService.instance;
+    final EntityService service = EntityService.instance;
 
     return Scaffold(
       appBar: AppBar(
@@ -19,10 +18,8 @@ class EntitiesScreen extends StatelessWidget {
           'Entities',
         ),
       ),
-      body: ValueListenableBuilder<
-          Map<String, RustlerEntity>>(
-        valueListenable:
-            service.entities,
+      body: ValueListenableBuilder<Map<String, RustlerEntity>>(
+        valueListenable: service.entities,
         builder: (
           context,
           entities,
@@ -36,31 +33,27 @@ class EntitiesScreen extends StatelessWidget {
             );
           }
 
-          final List<RustlerEntity> list =
-              entities.values.toList()
-                ..sort(
-                  (
-                    a,
-                    b,
-                  ) =>
-                      a.name.compareTo(
-                    b.name,
-                  ),
-                );
+          final List<RustlerEntity> list = entities.values.toList()
+            ..sort(
+              (
+                a,
+                b,
+              ) =>
+                  a.name.compareTo(
+                b.name,
+              ),
+            );
 
           return ListView.builder(
-            padding:
-                const EdgeInsets.all(
+            padding: const EdgeInsets.all(
               12,
             ),
-            itemCount:
-                list.length,
+            itemCount: list.length,
             itemBuilder: (
               context,
               index,
             ) {
-              final RustlerEntity entity =
-                  list[index];
+              final RustlerEntity entity = list[index];
 
               return Card(
                 child: ListTile(
@@ -78,33 +71,22 @@ class EntitiesScreen extends StatelessWidget {
                   ),
                   isThreeLine: true,
                   trailing: Column(
-                    mainAxisAlignment:
-                        MainAxisAlignment
-                            .center,
-                    crossAxisAlignment:
-                        CrossAxisAlignment
-                            .end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
                         _value(
                           entity,
                         ),
-                        style:
-                            const TextStyle(
-                          fontWeight:
-                              FontWeight.bold,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        entity.available
-                            ? 'LIVE'
-                            : 'OFFLINE',
+                        entity.available ? 'LIVE' : 'OFFLINE',
                         style: TextStyle(
                           fontSize: 11,
-                          color:
-                              entity.available
-                                  ? Colors.green
-                                  : Colors.grey,
+                          color: entity.available ? Colors.green : Colors.grey,
                         ),
                       ),
                     ],
@@ -125,11 +107,9 @@ class EntitiesScreen extends StatelessWidget {
       return '---';
     }
 
-    final String value =
-        entity.value.toString();
+    final String value = entity.value.toString();
 
-    if (entity.unit == null ||
-        entity.unit!.isEmpty) {
+    if (entity.unit == null || entity.unit!.isEmpty) {
       return value;
     }
 

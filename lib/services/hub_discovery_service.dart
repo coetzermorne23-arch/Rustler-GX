@@ -9,8 +9,7 @@ import '../models/discovered_hub.dart';
 class HubDiscoveryService {
   HubDiscoveryService._();
 
-  static final HubDiscoveryService instance =
-      HubDiscoveryService._();
+  static final HubDiscoveryService instance = HubDiscoveryService._();
 
   static const int discoveryPort = 8766;
 
@@ -29,11 +28,9 @@ class HubDiscoveryService {
   String? _hubName;
   int? _hubPort;
 
-  bool get isListening =>
-      _listener != null;
+  bool get isListening => _listener != null;
 
-  bool get isBroadcasting =>
-      _broadcaster != null;
+  bool get isBroadcasting => _broadcaster != null;
 
   // =========================================================
   // CLIENT DISCOVERY
@@ -45,8 +42,7 @@ class HubDiscoveryService {
     }
 
     try {
-      final RawDatagramSocket socket =
-          await RawDatagramSocket.bind(
+      final RawDatagramSocket socket = await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
         discoveryPort,
         reuseAddress: true,
@@ -77,8 +73,7 @@ class HubDiscoveryService {
         },
       );
 
-      _cleanupTimer ??=
-          Timer.periodic(
+      _cleanupTimer ??= Timer.periodic(
         const Duration(seconds: 5),
         (_) {
           _removeExpiredHubs();
@@ -103,52 +98,41 @@ class HubDiscoveryService {
     Datagram datagram,
   ) {
     try {
-      final String text =
-          utf8.decode(
+      final String text = utf8.decode(
         datagram.data,
       );
 
-      final dynamic decoded =
-          jsonDecode(text);
+      final dynamic decoded = jsonDecode(text);
 
       if (decoded is! Map) {
         return;
       }
 
-      final Map<String, dynamic> data =
-          Map<String, dynamic>.from(
+      final Map<String, dynamic> data = Map<String, dynamic>.from(
         decoded,
       );
 
-      if (data['protocol'] !=
-          'rustler-gx-discovery-v1') {
+      if (data['protocol'] != 'rustler-gx-discovery-v1') {
         return;
       }
 
-      if (data['type'] !=
-          'hub_announcement') {
+      if (data['type'] != 'hub_announcement') {
         return;
       }
 
-      final String id =
-          data['id']?.toString() ?? '';
+      final String id = data['id']?.toString() ?? '';
 
-      final String name =
-          data['name']?.toString() ??
-              'Rustler GX Hub';
+      final String name = data['name']?.toString() ?? 'Rustler GX Hub';
 
-      final int? port =
-          _parsePort(
+      final int? port = _parsePort(
         data['port'],
       );
 
-      if (id.isEmpty ||
-          port == null) {
+      if (id.isEmpty || port == null) {
         return;
       }
 
-      final String host =
-          datagram.address.address;
+      final String host = datagram.address.address;
 
       _upsertHub(
         DiscoveredHub(
@@ -181,15 +165,12 @@ class HubDiscoveryService {
   void _upsertHub(
     DiscoveredHub hub,
   ) {
-    final List<DiscoveredHub> updated =
-        List<DiscoveredHub>.from(
+    final List<DiscoveredHub> updated = List<DiscoveredHub>.from(
       hubs.value,
     );
 
-    final int index =
-        updated.indexWhere(
-      (existing) =>
-          existing.id == hub.id,
+    final int index = updated.indexWhere(
+      (existing) => existing.id == hub.id,
     );
 
     if (index >= 0) {
@@ -201,8 +182,7 @@ class HubDiscoveryService {
     }
 
     updated.sort(
-      (a, b) =>
-          a.name.compareTo(
+      (a, b) => a.name.compareTo(
         b.name,
       ),
     );
@@ -211,22 +191,17 @@ class HubDiscoveryService {
   }
 
   void _removeExpiredHubs() {
-    final DateTime cutoff =
-        DateTime.now().subtract(
+    final DateTime cutoff = DateTime.now().subtract(
       const Duration(seconds: 15),
     );
 
-    final List<DiscoveredHub> updated =
-        hubs.value
-            .where(
-              (hub) =>
-                  hub.lastSeen
-                      .isAfter(cutoff),
-            )
-            .toList();
+    final List<DiscoveredHub> updated = hubs.value
+        .where(
+          (hub) => hub.lastSeen.isAfter(cutoff),
+        )
+        .toList();
 
-    if (updated.length !=
-        hubs.value.length) {
+    if (updated.length != hubs.value.length) {
       hubs.value = updated;
     }
   }
@@ -238,8 +213,7 @@ class HubDiscoveryService {
     _cleanupTimer?.cancel();
     _cleanupTimer = null;
 
-    hubs.value =
-        <DiscoveredHub>[];
+    hubs.value = <DiscoveredHub>[];
 
     debugPrint(
       'Rustler GX discovery listener stopped',
@@ -260,8 +234,7 @@ class HubDiscoveryService {
     _hubPort = hubPort;
 
     if (_broadcaster == null) {
-      final RawDatagramSocket socket =
-          await RawDatagramSocket.bind(
+      final RawDatagramSocket socket = await RawDatagramSocket.bind(
         InternetAddress.anyIPv4,
         0,
       );
@@ -273,8 +246,7 @@ class HubDiscoveryService {
 
     _broadcastTimer?.cancel();
 
-    _broadcastTimer =
-        Timer.periodic(
+    _broadcastTimer = Timer.periodic(
       const Duration(seconds: 3),
       (_) {
         _broadcastAnnouncement();
@@ -289,41 +261,28 @@ class HubDiscoveryService {
   }
 
   void _broadcastAnnouncement() {
-    final RawDatagramSocket? socket =
-        _broadcaster;
+    final RawDatagramSocket? socket = _broadcaster;
 
-    final String? hubId =
-        _hubId;
+    final String? hubId = _hubId;
 
-    final String? hubName =
-        _hubName;
+    final String? hubName = _hubName;
 
-    final int? hubPort =
-        _hubPort;
+    final int? hubPort = _hubPort;
 
-    if (socket == null ||
-        hubId == null ||
-        hubName == null ||
-        hubPort == null) {
+    if (socket == null || hubId == null || hubName == null || hubPort == null) {
       return;
     }
 
-    final Map<String, dynamic> packet =
-        <String, dynamic>{
-      'protocol':
-          'rustler-gx-discovery-v1',
-      'type':
-          'hub_announcement',
+    final Map<String, dynamic> packet = <String, dynamic>{
+      'protocol': 'rustler-gx-discovery-v1',
+      'type': 'hub_announcement',
       'id': hubId,
       'name': hubName,
       'port': hubPort,
-      'timestamp':
-          DateTime.now()
-              .toIso8601String(),
+      'timestamp': DateTime.now().toIso8601String(),
     };
 
-    final List<int> bytes =
-        utf8.encode(
+    final List<int> bytes = utf8.encode(
       jsonEncode(packet),
     );
 

@@ -12,29 +12,21 @@ class HubSettingsScreen extends StatefulWidget {
   });
 
   @override
-  State<HubSettingsScreen> createState() =>
-      _HubSettingsScreenState();
+  State<HubSettingsScreen> createState() => _HubSettingsScreenState();
 }
 
-class _HubSettingsScreenState
-    extends State<HubSettingsScreen> {
-  final RustlerGxConfigService config =
-      RustlerGxConfigService.instance;
+class _HubSettingsScreenState extends State<HubSettingsScreen> {
+  final RustlerGxConfigService config = RustlerGxConfigService.instance;
 
-  final HubClientService hub =
-      HubClientService.instance;
+  final HubClientService hub = HubClientService.instance;
 
-  final HubDiscoveryService discovery =
-      HubDiscoveryService.instance;
+  final HubDiscoveryService discovery = HubDiscoveryService.instance;
 
-  final EntityService entities =
-      EntityService.instance;
+  final EntityService entities = EntityService.instance;
 
-  final TextEditingController hostController =
-      TextEditingController();
+  final TextEditingController hostController = TextEditingController();
 
-  final TextEditingController portController =
-      TextEditingController();
+  final TextEditingController portController = TextEditingController();
 
   bool loading = true;
   bool saving = false;
@@ -47,11 +39,9 @@ class _HubSettingsScreenState
   }
 
   Future<void> _load() async {
-    final String host =
-        await config.getHubHost();
+    final String host = await config.getHubHost();
 
-    final int port =
-        await config.getHubPort();
+    final int port = await config.getHubPort();
 
     hostController.text = host;
     portController.text = port.toString();
@@ -78,11 +68,9 @@ class _HubSettingsScreenState
   }
 
   Future<bool> _saveSettings() async {
-    final String host =
-        hostController.text.trim();
+    final String host = hostController.text.trim();
 
-    final int? port =
-        int.tryParse(
+    final int? port = int.tryParse(
       portController.text.trim(),
     );
 
@@ -94,9 +82,7 @@ class _HubSettingsScreenState
       return false;
     }
 
-    if (port == null ||
-        port < 1 ||
-        port > 65535) {
+    if (port == null || port < 1 || port > 65535) {
       _message(
         'Hub port must be between 1 and 65535.',
       );
@@ -134,8 +120,7 @@ class _HubSettingsScreenState
   }
 
   Future<void> _connect() async {
-    final bool saved =
-        await _saveSettings();
+    final bool saved = await _saveSettings();
 
     if (!saved) {
       return;
@@ -147,14 +132,11 @@ class _HubSettingsScreenState
   Future<void> _selectHub(
     DiscoveredHub discoveredHub,
   ) async {
-    hostController.text =
-        discoveredHub.host;
+    hostController.text = discoveredHub.host;
 
-    portController.text =
-        discoveredHub.port.toString();
+    portController.text = discoveredHub.port.toString();
 
-    final bool saved =
-        await _saveSettings();
+    final bool saved = await _saveSettings();
 
     if (!saved) {
       return;
@@ -170,8 +152,7 @@ class _HubSettingsScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(value),
       ),
@@ -206,8 +187,7 @@ class _HubSettingsScreenState
           ),
         ),
         body: const Center(
-          child:
-              CircularProgressIndicator(),
+          child: CircularProgressIndicator(),
         ),
       );
     }
@@ -219,20 +199,16 @@ class _HubSettingsScreenState
         ),
       ),
       body: ListView(
-        padding:
-            const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         children: [
           const Text(
             'Discovered Hubs',
             style: TextStyle(
               fontSize: 22,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 6),
-
           const Text(
             'Rustler GX automatically searches '
             'for hubs on the local network.',
@@ -240,13 +216,9 @@ class _HubSettingsScreenState
               color: Colors.white70,
             ),
           ),
-
           const SizedBox(height: 14),
-
-          ValueListenableBuilder<
-              List<DiscoveredHub>>(
-            valueListenable:
-                discovery.hubs,
+          ValueListenableBuilder<List<DiscoveredHub>>(
+            valueListenable: discovery.hubs,
             builder: (
               context,
               hubs,
@@ -255,8 +227,7 @@ class _HubSettingsScreenState
               if (hubs.isEmpty) {
                 return const Card(
                   child: Padding(
-                    padding:
-                        EdgeInsets.all(18),
+                    padding: EdgeInsets.all(18),
                     child: Row(
                       children: [
                         Icon(
@@ -280,34 +251,28 @@ class _HubSettingsScreenState
               return Column(
                 children: hubs
                     .map(
-                      (discoveredHub) =>
-                          Card(
+                      (discoveredHub) => Card(
                         child: ListTile(
-                          leading:
-                              const Icon(
+                          leading: const Icon(
                             Icons.hub,
                             size: 30,
                           ),
                           title: Text(
-                            discoveredHub
-                                .name,
+                            discoveredHub.name,
                           ),
                           subtitle: Text(
                             '${discoveredHub.host}:'
                             '${discoveredHub.port}',
                           ),
-                          trailing:
-                              FilledButton(
-                            onPressed:
-                                saving
-                                    ? null
-                                    : () {
-                                        _selectHub(
-                                          discoveredHub,
-                                        );
-                                      },
-                            child:
-                                const Text(
+                          trailing: FilledButton(
+                            onPressed: saving
+                                ? null
+                                : () {
+                                    _selectHub(
+                                      discoveredHub,
+                                    );
+                                  },
+                            child: const Text(
                               'CONNECT',
                             ),
                           ),
@@ -318,69 +283,45 @@ class _HubSettingsScreenState
               );
             },
           ),
-
           const SizedBox(height: 26),
-
           const Divider(),
-
           const SizedBox(height: 18),
-
           const Text(
             'Manual Connection',
             style: TextStyle(
               fontSize: 18,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 14),
-
           TextField(
-            controller:
-                hostController,
-            decoration:
-                const InputDecoration(
+            controller: hostController,
+            decoration: const InputDecoration(
               labelText: 'Hub address',
-              hintText:
-                  '192.168.1.50',
-              prefixIcon:
-                  Icon(Icons.dns),
-              border:
-                  OutlineInputBorder(),
+              hintText: '192.168.1.50',
+              prefixIcon: Icon(Icons.dns),
+              border: OutlineInputBorder(),
             ),
           ),
-
           const SizedBox(height: 12),
-
           TextField(
-            controller:
-                portController,
-            keyboardType:
-                TextInputType.number,
-            decoration:
-                const InputDecoration(
+            controller: portController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
               labelText: 'Port',
               hintText: '8765',
               prefixIcon: Icon(
                 Icons.settings_ethernet,
               ),
-              border:
-                  OutlineInputBorder(),
+              border: OutlineInputBorder(),
             ),
           ),
-
           const SizedBox(height: 16),
-
           Row(
             children: [
               Expanded(
-                child:
-                    FilledButton.icon(
-                  onPressed:
-                      saving
-                          ? null
-                          : _connect,
+                child: FilledButton.icon(
+                  onPressed: saving ? null : _connect,
                   icon: const Icon(
                     Icons.link,
                   ),
@@ -389,14 +330,11 @@ class _HubSettingsScreenState
                   ),
                 ),
               ),
-
               const SizedBox(
                 width: 10,
               ),
-
               Expanded(
-                child:
-                    OutlinedButton.icon(
+                child: OutlinedButton.icon(
                   onPressed: () {
                     hub.disconnect();
                   },
@@ -410,111 +348,77 @@ class _HubSettingsScreenState
               ),
             ],
           ),
-
           const SizedBox(height: 24),
-
-          ValueListenableBuilder<
-              HubConnectionState>(
-            valueListenable:
-                hub.connectionState,
+          ValueListenableBuilder<HubConnectionState>(
+            valueListenable: hub.connectionState,
             builder: (
               context,
               state,
               child,
             ) {
               return _InfoTile(
-                icon: state ==
-                        HubConnectionState
-                            .connected
+                icon: state == HubConnectionState.connected
                     ? Icons.cloud_done
                     : Icons.cloud_off,
-                title:
-                    'Connection',
-                value:
-                    _stateText(state),
+                title: 'Connection',
+                value: _stateText(state),
               );
             },
           ),
-
-          ValueListenableBuilder<
-              Map<String, dynamic>>(
-            valueListenable:
-                entities.entities,
+          ValueListenableBuilder<Map<String, dynamic>>(
+            valueListenable: entities.entities,
             builder: (
               context,
               entityMap,
               child,
             ) {
-              final int count =
-                  entityMap.values
-                      .where(
-                        (entity) =>
-                            entity.id
-                                .startsWith(
-                              'hub.',
-                            ),
-                      )
-                      .length;
+              final int count = entityMap.values
+                  .where(
+                    (entity) => entity.id.startsWith(
+                      'hub.',
+                    ),
+                  )
+                  .length;
 
               return _InfoTile(
-                icon:
-                    Icons.sensors,
-                title:
-                    'Remote entities',
-                value:
-                    count.toString(),
+                icon: Icons.sensors,
+                title: 'Remote entities',
+                value: count.toString(),
               );
             },
           ),
-
-          ValueListenableBuilder<
-              DateTime?>(
-            valueListenable:
-                hub.lastMessageAt,
+          ValueListenableBuilder<DateTime?>(
+            valueListenable: hub.lastMessageAt,
             builder: (
               context,
               value,
               child,
             ) {
               return _InfoTile(
-                icon:
-                    Icons.schedule,
-                title:
-                    'Last message',
-                value: value == null
-                    ? 'Never'
-                    : value
-                        .toLocal()
-                        .toString(),
+                icon: Icons.schedule,
+                title: 'Last message',
+                value: value == null ? 'Never' : value.toLocal().toString(),
               );
             },
           ),
-
-          ValueListenableBuilder<
-              String?>(
-            valueListenable:
-                hub.lastError,
+          ValueListenableBuilder<String?>(
+            valueListenable: hub.lastError,
             builder: (
               context,
               error,
               child,
             ) {
-              if (error == null ||
-                  error.isEmpty) {
-                return const SizedBox
-                    .shrink();
+              if (error == null || error.isEmpty) {
+                return const SizedBox.shrink();
               }
 
               return _InfoTile(
-                icon:
-                    Icons.error_outline,
-                title:
-                    'Last error',
+                icon: Icons.error_outline,
+                title: 'Last error',
                 value: error,
               );
             },
           ),
-
           const SizedBox(height: 30),
         ],
       ),
@@ -522,8 +426,7 @@ class _HubSettingsScreenState
   }
 }
 
-class _InfoTile
-    extends StatelessWidget {
+class _InfoTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String value;
@@ -537,8 +440,7 @@ class _InfoTile
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin:
-          const EdgeInsets.only(
+      margin: const EdgeInsets.only(
         bottom: 10,
       ),
       child: ListTile(

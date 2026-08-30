@@ -26,19 +26,11 @@ class MediaPlaybackData {
     Map<dynamic, dynamic> map,
   ) {
     return MediaPlaybackData(
-      title:
-          map['title']?.toString() ??
-          'Nothing playing',
-      artist:
-          map['artist']?.toString() ??
-          '',
-      album:
-          map['album']?.toString() ??
-          '',
-      playing:
-          map['playing'] == true,
-      packageName:
-          map['packageName']?.toString(),
+      title: map['title']?.toString() ?? 'Nothing playing',
+      artist: map['artist']?.toString() ?? '',
+      album: map['album']?.toString() ?? '',
+      playing: map['playing'] == true,
+      packageName: map['packageName']?.toString(),
     );
   }
 }

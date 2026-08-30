@@ -64,39 +64,24 @@ class HistoryRecord {
     Map<String, dynamic> json,
   ) {
     return HistoryRecord(
-      deviceId:
-          json['deviceId'] as String? ?? '',
-      deviceName:
-          json['deviceName'] as String? ?? '',
+      deviceId: json['deviceId'] as String? ?? '',
+      deviceName: json['deviceName'] as String? ?? '',
       timestamp: DateTime.parse(
         json['timestamp'] as String,
       ),
-      batteryVoltage:
-          _double(json['batteryVoltage']),
-      batteryCurrent:
-          _double(json['batteryCurrent']),
-      batteryPower:
-          _double(json['batteryPower']),
-      stateOfCharge:
-          _double(json['stateOfCharge']),
-      pvVoltage:
-          _double(json['pvVoltage']),
-      pvCurrent:
-          _double(json['pvCurrent']),
-      pvPower:
-          _double(json['pvPower']),
-      chargeCurrent:
-          _double(json['chargeCurrent']),
-      chargeState:
-          json['chargeState'] as String?,
-      inputVoltage:
-          _double(json['inputVoltage']),
-      outputVoltage:
-          _double(json['outputVoltage']),
-      outputCurrent:
-          _double(json['outputCurrent']),
-      outputPower:
-          _double(json['outputPower']),
+      batteryVoltage: _double(json['batteryVoltage']),
+      batteryCurrent: _double(json['batteryCurrent']),
+      batteryPower: _double(json['batteryPower']),
+      stateOfCharge: _double(json['stateOfCharge']),
+      pvVoltage: _double(json['pvVoltage']),
+      pvCurrent: _double(json['pvCurrent']),
+      pvPower: _double(json['pvPower']),
+      chargeCurrent: _double(json['chargeCurrent']),
+      chargeState: json['chargeState'] as String?,
+      inputVoltage: _double(json['inputVoltage']),
+      outputVoltage: _double(json['outputVoltage']),
+      outputCurrent: _double(json['outputCurrent']),
+      outputPower: _double(json['outputPower']),
     );
   }
 

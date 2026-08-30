@@ -10,8 +10,7 @@ class DeviceRegistryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final DeviceRegistryService registry =
-        DeviceRegistryService.instance;
+    final DeviceRegistryService registry = DeviceRegistryService.instance;
 
     return Scaffold(
       appBar: AppBar(
@@ -20,11 +19,10 @@ class DeviceRegistryScreen extends StatelessWidget {
       body: ValueListenableBuilder<Map<String, RustlerDevice>>(
         valueListenable: registry.devices,
         builder: (context, deviceMap, child) {
-          final List<RustlerDevice> devices =
-              deviceMap.values.toList()
-                ..sort(
-                  (a, b) => a.name.compareTo(b.name),
-                );
+          final List<RustlerDevice> devices = deviceMap.values.toList()
+            ..sort(
+              (a, b) => a.name.compareTo(b.name),
+            );
 
           if (devices.isEmpty) {
             return const Center(
@@ -104,25 +102,17 @@ class _DeviceCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              device.available
-                  ? Icons.circle
-                  : Icons.circle_outlined,
+              device.available ? Icons.circle : Icons.circle_outlined,
               size: 10,
-              color: device.available
-                  ? Colors.greenAccent
-                  : Colors.white38,
+              color: device.available ? Colors.greenAccent : Colors.white38,
             ),
             const SizedBox(width: 6),
             Text(
-              device.available
-                  ? 'LIVE'
-                  : 'OFFLINE',
+              device.available ? 'LIVE' : 'OFFLINE',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: device.available
-                    ? Colors.greenAccent
-                    : Colors.white38,
+                color: device.available ? Colors.greenAccent : Colors.white38,
               ),
             ),
           ],

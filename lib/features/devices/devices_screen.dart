@@ -16,24 +16,18 @@ class DevicesScreen extends StatefulWidget {
   });
 
   @override
-  State<DevicesScreen> createState() =>
-      _DevicesScreenState();
+  State<DevicesScreen> createState() => _DevicesScreenState();
 }
 
-class _DevicesScreenState
-    extends State<DevicesScreen>
+class _DevicesScreenState extends State<DevicesScreen>
     with SingleTickerProviderStateMixin {
-  final VictronBluetoothService bluetooth =
-      VictronBluetoothService.instance;
+  final VictronBluetoothService bluetooth = VictronBluetoothService.instance;
 
-  final DeviceRegistryService registry =
-      DeviceRegistryService.instance;
+  final DeviceRegistryService registry = DeviceRegistryService.instance;
 
-  final EntityService entityService =
-      EntityService.instance;
+  final EntityService entityService = EntityService.instance;
 
-  final DeviceEntityLinkService links =
-      DeviceEntityLinkService.instance;
+  final DeviceEntityLinkService links = DeviceEntityLinkService.instance;
 
   late final TabController tabController;
 
@@ -170,16 +164,12 @@ class _DevicesScreenState
         ) {
           if (tabController.index == 0) {
             return FloatingActionButton.extended(
-              onPressed:
-                  _isScanning
-                      ? null
-                      : _scan,
+              onPressed: _isScanning ? null : _scan,
               icon: _isScanning
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child:
-                          CircularProgressIndicator(
+                      child: CircularProgressIndicator(
                         strokeWidth: 2,
                       ),
                     )
@@ -187,9 +177,7 @@ class _DevicesScreenState
                       Icons.bluetooth_searching,
                     ),
               label: Text(
-                _isScanning
-                    ? 'SCANNING...'
-                    : 'SCAN FOR BT DEVICES',
+                _isScanning ? 'SCANNING...' : 'SCAN FOR BT DEVICES',
               ),
             );
           }
@@ -241,8 +229,7 @@ class _NearbyDevicesTab extends StatelessWidget {
         snapshot,
       ) {
         final List<VictronDevice> devices =
-            snapshot.data ??
-                const <VictronDevice>[];
+            snapshot.data ?? const <VictronDevice>[];
 
         if (devices.isEmpty) {
           return _NoNearbyDevices(
@@ -252,8 +239,7 @@ class _NearbyDevicesTab extends StatelessWidget {
         }
 
         return ListView(
-          padding:
-              const EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
             12,
             16,
             12,
@@ -273,10 +259,8 @@ class _NearbyDevicesTab extends StatelessWidget {
                     '${devices.length} nearby '
                     'Bluetooth device'
                     '${devices.length == 1 ? '' : 's'}',
-                    style:
-                        const TextStyle(
-                      fontWeight:
-                          FontWeight.bold,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -284,26 +268,20 @@ class _NearbyDevicesTab extends StatelessWidget {
                   const SizedBox(
                     width: 18,
                     height: 18,
-                    child:
-                        CircularProgressIndicator(
+                    child: CircularProgressIndicator(
                       strokeWidth: 2,
                     ),
                   ),
               ],
             ),
-
             const SizedBox(
               height: 14,
             ),
-
             ...devices.map(
-              (device) =>
-                  _NearbyDeviceCard(
+              (device) => _NearbyDeviceCard(
                 device: device,
-                bluetooth:
-                    bluetooth,
-                onSetup: () =>
-                    onSetup(
+                bluetooth: bluetooth,
+                onSetup: () => onSetup(
                   device,
                 ),
               ),
@@ -315,8 +293,7 @@ class _NearbyDevicesTab extends StatelessWidget {
   }
 }
 
-class _NearbyDeviceCard
-    extends StatelessWidget {
+class _NearbyDeviceCard extends StatelessWidget {
   final VictronDevice device;
   final VictronBluetoothService bluetooth;
   final VoidCallback onSetup;
@@ -329,12 +306,10 @@ class _NearbyDeviceCard
 
   @override
   Widget build(BuildContext context) {
-    final String deviceId =
-        device.device.remoteId.str;
+    final String deviceId = device.device.remoteId.str;
 
     return Card(
-      margin:
-          const EdgeInsets.only(
+      margin: const EdgeInsets.only(
         bottom: 10,
       ),
       child: ExpansionTile(
@@ -348,16 +323,14 @@ class _NearbyDeviceCard
         title: Text(
           device.displayName,
           style: const TextStyle(
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: Text(
           '${_victronTypeLabel(device.type)}'
           ' • ${device.rssi} dBm',
         ),
-        childrenPadding:
-            const EdgeInsets.fromLTRB(
+        childrenPadding: const EdgeInsets.fromLTRB(
           16,
           0,
           16,
@@ -368,91 +341,55 @@ class _NearbyDeviceCard
             label: 'Manufacturer',
             value: 'Victron Energy',
           ),
-
           _InfoRow(
             label: 'Type',
-            value:
-                _victronTypeLabel(
+            value: _victronTypeLabel(
               device.type,
             ),
           ),
-
           _InfoRow(
             label: 'Bluetooth ID',
             value: deviceId,
           ),
-
           _InfoRow(
             label: 'Signal',
-            value:
-                '${device.rssi} dBm',
+            value: '${device.rssi} dBm',
           ),
-
           _InfoRow(
-            label:
-                'Instant Readout',
-            value:
-                device.hasInstantReadout
-                    ? 'Supported'
-                    : 'Not detected',
+            label: 'Instant Readout',
+            value: device.hasInstantReadout ? 'Supported' : 'Not detected',
           ),
-
           if (device.modelId != null)
             _InfoRow(
               label: 'Model ID',
-              value:
-                  device.modelIdHex,
+              value: device.modelIdHex,
             ),
-
-          if (device.recordType !=
-              null)
+          if (device.recordType != null)
             _InfoRow(
-              label:
-                  'Record type',
-              value:
-                  device.recordTypeHex,
+              label: 'Record type',
+              value: device.recordTypeHex,
             ),
-
           const SizedBox(
             height: 14,
           ),
-
-          ValueListenableBuilder<
-              VictronDevice?>(
-            valueListenable:
-                bluetooth
-                    .connectedDevice,
+          ValueListenableBuilder<VictronDevice?>(
+            valueListenable: bluetooth.connectedDevice,
             builder: (
               context,
               connected,
               child,
             ) {
-              final bool active =
-                  connected
-                          ?.device
-                          .remoteId
-                          .str ==
-                      deviceId;
+              final bool active = connected?.device.remoteId.str == deviceId;
 
               return SizedBox(
-                width:
-                    double.infinity,
-                child:
-                    FilledButton.icon(
-                  onPressed:
-                      active
-                          ? null
-                          : onSetup,
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: active ? null : onSetup,
                   icon: Icon(
-                    active
-                        ? Icons
-                            .check_circle
-                        : Icons.add,
+                    active ? Icons.check_circle : Icons.add,
                   ),
                   label: Text(
-                    active
-                        ? 'CONFIGURED'
-                        : 'SET UP DEVICE',
+                    active ? 'CONFIGURED' : 'SET UP DEVICE',
                   ),
                 ),
               );
@@ -468,8 +405,7 @@ class _NearbyDeviceCard
 // CONFIGURED DEVICES
 // ===========================================================
 
-class _ConfiguredDevicesTab
-    extends StatelessWidget {
+class _ConfiguredDevicesTab extends StatelessWidget {
   final DeviceRegistryService registry;
   final EntityService entityService;
   final DeviceEntityLinkService links;
@@ -482,10 +418,8 @@ class _ConfiguredDevicesTab
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<
-        Map<String, RustlerDevice>>(
-      valueListenable:
-          registry.devices,
+    return ValueListenableBuilder<Map<String, RustlerDevice>>(
+      valueListenable: registry.devices,
       builder: (
         context,
         devices,
@@ -495,21 +429,19 @@ class _ConfiguredDevicesTab
           return const _NoConfiguredDevices();
         }
 
-        final List<RustlerDevice> list =
-            devices.values.toList()
-              ..sort(
-                (
-                  a,
-                  b,
-                ) =>
-                    a.name.compareTo(
-                  b.name,
-                ),
-              );
+        final List<RustlerDevice> list = devices.values.toList()
+          ..sort(
+            (
+              a,
+              b,
+            ) =>
+                a.name.compareTo(
+              b.name,
+            ),
+          );
 
         return ListView(
-          padding:
-              const EdgeInsets.fromLTRB(
+          padding: const EdgeInsets.fromLTRB(
             12,
             16,
             12,
@@ -529,26 +461,20 @@ class _ConfiguredDevicesTab
                     '${list.length} configured '
                     'device'
                     '${list.length == 1 ? '' : 's'}',
-                    style:
-                        const TextStyle(
-                      fontWeight:
-                          FontWeight.bold,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ],
             ),
-
             const SizedBox(
               height: 14,
             ),
-
             ...list.map(
-              (device) =>
-                  _ConfiguredDeviceCard(
+              (device) => _ConfiguredDeviceCard(
                 device: device,
-                entityService:
-                    entityService,
+                entityService: entityService,
                 links: links,
               ),
             ),
@@ -559,8 +485,7 @@ class _ConfiguredDevicesTab
   }
 }
 
-class _ConfiguredDeviceCard
-    extends StatelessWidget {
+class _ConfiguredDeviceCard extends StatelessWidget {
   final RustlerDevice device;
   final EntityService entityService;
   final DeviceEntityLinkService links;
@@ -574,8 +499,7 @@ class _ConfiguredDeviceCard
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin:
-          const EdgeInsets.only(
+      margin: const EdgeInsets.only(
         bottom: 10,
       ),
       child: ExpansionTile(
@@ -589,25 +513,19 @@ class _ConfiguredDeviceCard
                 ),
               ),
             ),
-
             Positioned(
               right: -2,
               bottom: -2,
               child: Container(
                 width: 13,
                 height: 13,
-                decoration:
-                    BoxDecoration(
-                  shape:
-                      BoxShape.circle,
-                  color: device.available
-                      ? Colors.green
-                      : Colors.grey,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: device.available ? Colors.green : Colors.grey,
                   border: Border.all(
                     color: Theme.of(
                       context,
-                    )
-                        .scaffoldBackgroundColor,
+                    ).scaffoldBackgroundColor,
                     width: 2,
                   ),
                 ),
@@ -618,8 +536,7 @@ class _ConfiguredDeviceCard
         title: Text(
           device.name,
           style: const TextStyle(
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: Text(
@@ -627,8 +544,7 @@ class _ConfiguredDeviceCard
           ' • '
           '${device.available ? 'ONLINE' : 'OFFLINE'}',
         ),
-        childrenPadding:
-            const EdgeInsets.fromLTRB(
+        childrenPadding: const EdgeInsets.fromLTRB(
           16,
           0,
           16,
@@ -637,107 +553,81 @@ class _ConfiguredDeviceCard
         children: [
           _InfoRow(
             label: 'Manufacturer',
-            value:
-                device.manufacturer,
+            value: device.manufacturer,
           ),
-
-          if (device.model != null &&
-              device.model!.isNotEmpty)
+          if (device.model != null && device.model!.isNotEmpty)
             _InfoRow(
               label: 'Model',
               value: device.model!,
             ),
-
           _InfoRow(
             label: 'Source',
             value: device.source,
           ),
-
           _InfoRow(
             label: 'Device ID',
             value: device.id,
           ),
-
           _InfoRow(
             label: 'Status',
-            value:
-                device.available
-                    ? 'Online'
-                    : 'Offline',
+            value: device.available ? 'Online' : 'Offline',
           ),
-
           const SizedBox(
             height: 14,
           ),
-
           const Align(
-            alignment:
-                Alignment.centerLeft,
+            alignment: Alignment.centerLeft,
             child: Text(
               'Entities',
               style: TextStyle(
                 fontSize: 16,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-
           const SizedBox(
             height: 8,
           ),
-
-          ValueListenableBuilder<
-              Map<String, RustlerEntity>>(
-            valueListenable:
-                entityService.entities,
+          ValueListenableBuilder<Map<String, RustlerEntity>>(
+            valueListenable: entityService.entities,
             builder: (
               context,
               entityMap,
               child,
             ) {
-              final List<RustlerEntity>
-                  deviceEntities =
-                  device.entityIds
-                      .map(
-                        (
-                          id,
-                        ) =>
-                            entityMap[id],
-                      )
-                      .whereType<
-                          RustlerEntity>()
-                      .toList();
+              final List<RustlerEntity> deviceEntities = device.entityIds
+                  .map(
+                    (
+                      id,
+                    ) =>
+                        entityMap[id],
+                  )
+                  .whereType<RustlerEntity>()
+                  .toList();
 
-              if (deviceEntities
-                  .isEmpty) {
+              if (deviceEntities.isEmpty) {
                 return const Align(
-                  alignment:
-                      Alignment
-                          .centerLeft,
+                  alignment: Alignment.centerLeft,
                   child: Text(
                     'No entities yet.',
                     style: TextStyle(
-                      color:
-                          Colors.white54,
+                      color: Colors.white54,
                     ),
                   ),
                 );
               }
 
               return Column(
-                children:
-                    deviceEntities
-                        .map(
-                          (
-                            entity,
-                          ) =>
-                              _EntityTile(
-                            entity:
-                                entity,
-                          ),
-                        )
-                        .toList(),
+                children: deviceEntities
+                    .map(
+                      (
+                        entity,
+                      ) =>
+                          _EntityTile(
+                        entity: entity,
+                      ),
+                    )
+                    .toList(),
               );
             },
           ),
@@ -751,8 +641,7 @@ class _ConfiguredDeviceCard
 // ENTITY TILE
 // ===========================================================
 
-class _EntityTile
-    extends StatelessWidget {
+class _EntityTile extends StatelessWidget {
   final RustlerEntity entity;
 
   const _EntityTile({
@@ -761,28 +650,23 @@ class _EntityTile
 
   @override
   Widget build(BuildContext context) {
-    final String value =
-        _formatEntityValue(
+    final String value = _formatEntityValue(
       entity,
     );
 
     return Container(
-      margin:
-          const EdgeInsets.only(
+      margin: const EdgeInsets.only(
         bottom: 6,
       ),
-      padding:
-          const EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: 12,
         vertical: 10,
       ),
       decoration: BoxDecoration(
-        borderRadius:
-            BorderRadius.circular(
+        borderRadius: BorderRadius.circular(
           10,
         ),
-        color: Colors.white
-            .withValues(
+        color: Colors.white.withValues(
           alpha: 0.04,
         ),
       ),
@@ -794,53 +678,37 @@ class _EntityTile
             ),
             size: 20,
           ),
-
           const SizedBox(
             width: 10,
           ),
-
           Expanded(
             child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment
-                      .start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   entity.name,
-                  style:
-                      const TextStyle(
-                    fontWeight:
-                        FontWeight.w500,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Text(
-                  entity.available
-                      ? entity.source
-                      : 'OFFLINE',
-                  style:
-                      const TextStyle(
+                  entity.available ? entity.source : 'OFFLINE',
+                  style: const TextStyle(
                     fontSize: 11,
-                    color:
-                        Colors.white54,
+                    color: Colors.white54,
                   ),
                 ),
               ],
             ),
           ),
-
           const SizedBox(
             width: 10,
           ),
-
           Text(
             value,
             style: TextStyle(
-              fontWeight:
-                  FontWeight.bold,
-              color:
-                  entity.available
-                      ? null
-                      : Colors.white38,
+              fontWeight: FontWeight.bold,
+              color: entity.available ? null : Colors.white38,
             ),
           ),
         ],
@@ -853,8 +721,7 @@ class _EntityTile
 // EMPTY STATES
 // ===========================================================
 
-class _NoNearbyDevices
-    extends StatelessWidget {
+class _NoNearbyDevices extends StatelessWidget {
   final bool isScanning;
   final VoidCallback onScan;
 
@@ -867,65 +734,47 @@ class _NoNearbyDevices
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding:
-            const EdgeInsets.all(
+        padding: const EdgeInsets.all(
           24,
         ),
         child: Column(
-          mainAxisSize:
-              MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
-              Icons
-                  .bluetooth_searching,
+              Icons.bluetooth_searching,
               size: 64,
             ),
-
             const SizedBox(
               height: 16,
             ),
-
             const Text(
               'No Bluetooth devices detected',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(
               height: 8,
             ),
-
             const Text(
               'Scan for nearby supported '
               'Bluetooth devices.',
-              textAlign:
-                  TextAlign.center,
+              textAlign: TextAlign.center,
               style: TextStyle(
-                color:
-                    Colors.white70,
+                color: Colors.white70,
               ),
             ),
-
             const SizedBox(
               height: 18,
             ),
-
             FilledButton.icon(
-              onPressed:
-                  isScanning
-                      ? null
-                      : onScan,
+              onPressed: isScanning ? null : onScan,
               icon: const Icon(
-                Icons
-                    .bluetooth_searching,
+                Icons.bluetooth_searching,
               ),
               label: Text(
-                isScanning
-                    ? 'SCANNING...'
-                    : 'SCAN FOR BT DEVICES',
+                isScanning ? 'SCANNING...' : 'SCAN FOR BT DEVICES',
               ),
             ),
           ],
@@ -935,19 +784,16 @@ class _NoNearbyDevices
   }
 }
 
-class _NoConfiguredDevices
-    extends StatelessWidget {
+class _NoConfiguredDevices extends StatelessWidget {
   const _NoConfiguredDevices();
 
   @override
   Widget build(BuildContext context) {
     return const Center(
       child: Padding(
-        padding:
-            EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         child: Column(
-          mainAxisSize:
-              MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               Icons.devices_other,
@@ -960,8 +806,7 @@ class _NoConfiguredDevices
               'No configured devices',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(
@@ -970,11 +815,9 @@ class _NoConfiguredDevices
             Text(
               'Use the Nearby tab to add '
               'a device to Rustler GX.',
-              textAlign:
-                  TextAlign.center,
+              textAlign: TextAlign.center,
               style: TextStyle(
-                color:
-                    Colors.white70,
+                color: Colors.white70,
               ),
             ),
           ],
@@ -988,8 +831,7 @@ class _NoConfiguredDevices
 // HELPERS
 // ===========================================================
 
-class _InfoRow
-    extends StatelessWidget {
+class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
 
@@ -1001,22 +843,18 @@ class _InfoRow
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         vertical: 4,
       ),
       child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 125,
             child: Text(
               label,
-              style:
-                  const TextStyle(
-                color:
-                    Colors.white70,
+              style: const TextStyle(
+                color: Colors.white70,
               ),
             ),
           ),
@@ -1198,20 +1036,17 @@ String _formatEntityValue(
     return 'OFFLINE';
   }
 
-  final dynamic raw =
-      entity.value;
+  final dynamic raw = entity.value;
 
   String value;
 
   if (raw is double) {
     if (raw.abs() >= 100) {
-      value =
-          raw.toStringAsFixed(
+      value = raw.toStringAsFixed(
         0,
       );
     } else {
-      value =
-          raw.toStringAsFixed(
+      value = raw.toStringAsFixed(
         2,
       );
     }
@@ -1219,8 +1054,7 @@ String _formatEntityValue(
     value = raw.toString();
   }
 
-  if (entity.unit == null ||
-      entity.unit!.isEmpty) {
+  if (entity.unit == null || entity.unit!.isEmpty) {
     return value;
   }
 

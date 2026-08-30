@@ -26,8 +26,7 @@ class HubMessage {
     Map<String, dynamic> json,
   ) {
     return HubMessage(
-      type:
-          json['type'] as String? ?? 'unknown',
+      type: json['type'] as String? ?? 'unknown',
       data: Map<String, dynamic>.from(
         json['data'] as Map? ?? {},
       ),
@@ -37,8 +36,7 @@ class HubMessage {
   factory HubMessage.decode(
     String value,
   ) {
-    final decoded =
-        jsonDecode(value);
+    final decoded = jsonDecode(value);
 
     if (decoded is! Map) {
       throw const FormatException(

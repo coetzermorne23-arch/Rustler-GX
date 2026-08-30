@@ -11,11 +11,9 @@ import 'road_graph_service.dart';
 class OfflineRoutingService {
   OfflineRoutingService._();
 
-  static final OfflineRoutingService instance =
-      OfflineRoutingService._();
+  static final OfflineRoutingService instance = OfflineRoutingService._();
 
-  final RoadGraphService graph =
-      RoadGraphService.instance;
+  final RoadGraphService graph = RoadGraphService.instance;
 
   Future<void> initialise() async {
     await graph.initialise();
@@ -33,80 +31,59 @@ class OfflineRoutingService {
       return null;
     }
 
-    final RoadNode? start =
-        graph.findNearestNode(
+    final RoadNode? start = graph.findNearestNode(
       startLatitude,
       startLongitude,
     );
 
-    final RoadNode? destination =
-        graph.findNearestNode(
+    final RoadNode? destination = graph.findNearestNode(
       destinationLatitude,
       destinationLongitude,
     );
 
-    if (start == null ||
-        destination == null) {
+    if (start == null || destination == null) {
       return null;
     }
 
-    if (start.id ==
-        destination.id) {
+    if (start.id == destination.id) {
       return NavigationRoute(
         points: <RoutePoint>[
           RoutePoint(
-            latitude:
-                startLatitude,
-            longitude:
-                startLongitude,
+            latitude: startLatitude,
+            longitude: startLongitude,
           ),
           RoutePoint(
-            latitude:
-                destinationLatitude,
-            longitude:
-                destinationLongitude,
+            latitude: destinationLatitude,
+            longitude: destinationLongitude,
           ),
         ],
         instructions: <RouteInstruction>[
           RouteInstruction(
-            type:
-                RouteInstructionType.start,
-            text:
-                'Start navigation',
-            distanceMetres:
-                0,
-            latitude:
-                startLatitude,
-            longitude:
-                startLongitude,
+            type: RouteInstructionType.start,
+            text: 'Start navigation',
+            distanceMetres: 0,
+            latitude: startLatitude,
+            longitude: startLongitude,
           ),
           RouteInstruction(
-            type:
-                RouteInstructionType.arrive,
-            text:
-                'Arrive at destination',
-            distanceMetres:
-                0,
-            latitude:
-                destinationLatitude,
-            longitude:
-                destinationLongitude,
+            type: RouteInstructionType.arrive,
+            text: 'Arrive at destination',
+            distanceMetres: 0,
+            latitude: destinationLatitude,
+            longitude: destinationLongitude,
           ),
         ],
-        distanceMetres:
-            _distanceMetres(
+        distanceMetres: _distanceMetres(
           startLatitude,
           startLongitude,
           destinationLatitude,
           destinationLongitude,
         ),
-        estimatedDuration:
-            Duration.zero,
+        estimatedDuration: Duration.zero,
       );
     }
 
-    final _SearchResult? result =
-        _aStar(
+    final _SearchResult? result = _aStar(
       start,
       destination,
     );
@@ -117,14 +94,10 @@ class OfflineRoutingService {
 
     return _buildNavigationRoute(
       result,
-      startLatitude:
-          startLatitude,
-      startLongitude:
-          startLongitude,
-      destinationLatitude:
-          destinationLatitude,
-      destinationLongitude:
-          destinationLongitude,
+      startLatitude: startLatitude,
+      startLongitude: startLongitude,
+      destinationLatitude: destinationLatitude,
+      destinationLongitude: destinationLongitude,
     );
   }
 
@@ -132,9 +105,7 @@ class OfflineRoutingService {
     RoadNode start,
     RoadNode destination,
   ) {
-    final HeapPriorityQueue<_QueueNode>
-        open =
-        HeapPriorityQueue<_QueueNode>(
+    final HeapPriorityQueue<_QueueNode> open = HeapPriorityQueue<_QueueNode>(
       (
         _QueueNode a,
         _QueueNode b,
@@ -144,26 +115,20 @@ class OfflineRoutingService {
       ),
     );
 
-    final Map<int, double> gScore =
-        <int, double>{
+    final Map<int, double> gScore = <int, double>{
       start.id: 0,
     };
 
-    final Map<int, int> cameFrom =
-        <int, int>{};
+    final Map<int, int> cameFrom = <int, int>{};
 
-    final Map<int, RoadEdge> edgeFrom =
-        <int, RoadEdge>{};
+    final Map<int, RoadEdge> edgeFrom = <int, RoadEdge>{};
 
-    final Set<int> closed =
-        <int>{};
+    final Set<int> closed = <int>{};
 
     open.add(
       _QueueNode(
-        nodeId:
-            start.id,
-        priority:
-            _heuristicSeconds(
+        nodeId: start.id,
+        priority: _heuristicSeconds(
           start,
           destination,
         ),
@@ -171,11 +136,9 @@ class OfflineRoutingService {
     );
 
     while (open.isNotEmpty) {
-      final _QueueNode currentQueue =
-          open.removeFirst();
+      final _QueueNode currentQueue = open.removeFirst();
 
-      final int currentId =
-          currentQueue.nodeId;
+      final int currentId = currentQueue.nodeId;
 
       if (closed.contains(
         currentId,
@@ -183,8 +146,7 @@ class OfflineRoutingService {
         continue;
       }
 
-      if (currentId ==
-          destination.id) {
+      if (currentId == destination.id) {
         return _reconstruct(
           start.id,
           destination.id,
@@ -197,8 +159,7 @@ class OfflineRoutingService {
         currentId,
       );
 
-      final RoadNode? currentNode =
-          graph.getNode(
+      final RoadNode? currentNode = graph.getNode(
         currentId,
       );
 
@@ -206,15 +167,12 @@ class OfflineRoutingService {
         continue;
       }
 
-      final List<RoadEdge> edges =
-          graph.getOutgoingEdges(
+      final List<RoadEdge> edges = graph.getOutgoingEdges(
         currentId,
       );
 
-      for (final RoadEdge edge
-          in edges) {
-        final int neighbourId =
-            edge.toNode;
+      for (final RoadEdge edge in edges) {
+        final int neighbourId = edge.toNode;
 
         if (closed.contains(
           neighbourId,
@@ -222,24 +180,17 @@ class OfflineRoutingService {
           continue;
         }
 
-        final double currentScore =
-            gScore[currentId] ??
-                double.infinity;
+        final double currentScore = gScore[currentId] ?? double.infinity;
 
-        final double tentative =
-            currentScore +
-                edge.travelSeconds;
+        final double tentative = currentScore + edge.travelSeconds;
 
-        final double previous =
-            gScore[neighbourId] ??
-                double.infinity;
+        final double previous = gScore[neighbourId] ?? double.infinity;
 
         if (tentative >= previous) {
           continue;
         }
 
-        final RoadNode? neighbour =
-            graph.getNode(
+        final RoadNode? neighbour = graph.getNode(
           neighbourId,
         );
 
@@ -247,28 +198,22 @@ class OfflineRoutingService {
           continue;
         }
 
-        cameFrom[neighbourId] =
-            currentId;
+        cameFrom[neighbourId] = currentId;
 
-        edgeFrom[neighbourId] =
-            edge;
+        edgeFrom[neighbourId] = edge;
 
-        gScore[neighbourId] =
-            tentative;
+        gScore[neighbourId] = tentative;
 
-        final double priority =
-            tentative +
-                _heuristicSeconds(
-                  neighbour,
-                  destination,
-                );
+        final double priority = tentative +
+            _heuristicSeconds(
+              neighbour,
+              destination,
+            );
 
         open.add(
           _QueueNode(
-            nodeId:
-                neighbourId,
-            priority:
-                priority,
+            nodeId: neighbourId,
+            priority: priority,
           ),
         );
       }
@@ -283,27 +228,20 @@ class OfflineRoutingService {
     Map<int, int> cameFrom,
     Map<int, RoadEdge> edgeFrom,
   ) {
-    final List<int> nodeIds =
-        <int>[
+    final List<int> nodeIds = <int>[
       destinationId,
     ];
 
-    final List<RoadEdge> edges =
-        <RoadEdge>[];
+    final List<RoadEdge> edges = <RoadEdge>[];
 
-    int current =
-        destinationId;
+    int current = destinationId;
 
-    while (current !=
-        startId) {
-      final int? previous =
-          cameFrom[current];
+    while (current != startId) {
+      final int? previous = cameFrom[current];
 
-      final RoadEdge? edge =
-          edgeFrom[current];
+      final RoadEdge? edge = edgeFrom[current];
 
-      if (previous == null ||
-          edge == null) {
+      if (previous == null || edge == null) {
         break;
       }
 
@@ -311,8 +249,7 @@ class OfflineRoutingService {
         edge,
       );
 
-      current =
-          previous;
+      current = previous;
 
       nodeIds.add(
         current,
@@ -320,10 +257,8 @@ class OfflineRoutingService {
     }
 
     return _SearchResult(
-      nodeIds:
-          nodeIds.reversed.toList(),
-      edges:
-          edges.reversed.toList(),
+      nodeIds: nodeIds.reversed.toList(),
+      edges: edges.reversed.toList(),
     );
   }
 
@@ -334,25 +269,19 @@ class OfflineRoutingService {
     required double destinationLatitude,
     required double destinationLongitude,
   }) {
-    final Map<int, RoadNode> nodes =
-        graph.getNodes(
+    final Map<int, RoadNode> nodes = graph.getNodes(
       result.nodeIds,
     );
 
-    final List<RoutePoint> points =
-        <RoutePoint>[
+    final List<RoutePoint> points = <RoutePoint>[
       RoutePoint(
-        latitude:
-            startLatitude,
-        longitude:
-            startLongitude,
+        latitude: startLatitude,
+        longitude: startLongitude,
       ),
     ];
 
-    for (final int id
-        in result.nodeIds) {
-      final RoadNode? node =
-          nodes[id];
+    for (final int id in result.nodeIds) {
+      final RoadNode? node = nodes[id];
 
       if (node == null) {
         continue;
@@ -360,41 +289,30 @@ class OfflineRoutingService {
 
       points.add(
         RoutePoint(
-          latitude:
-              node.latitude,
-          longitude:
-              node.longitude,
+          latitude: node.latitude,
+          longitude: node.longitude,
         ),
       );
     }
 
     points.add(
       RoutePoint(
-        latitude:
-            destinationLatitude,
-        longitude:
-            destinationLongitude,
+        latitude: destinationLatitude,
+        longitude: destinationLongitude,
       ),
     );
 
-    double totalDistance =
-        0;
+    double totalDistance = 0;
 
-    double totalSeconds =
-        0;
+    double totalSeconds = 0;
 
-    for (final RoadEdge edge
-        in result.edges) {
-      totalDistance +=
-          edge.distanceMetres;
+    for (final RoadEdge edge in result.edges) {
+      totalDistance += edge.distanceMetres;
 
-      totalSeconds +=
-          edge.travelSeconds;
+      totalSeconds += edge.travelSeconds;
     }
 
-    final List<RouteInstruction>
-        instructions =
-        _buildInstructions(
+    final List<RouteInstruction> instructions = _buildInstructions(
       result,
       nodes,
     );
@@ -402,213 +320,150 @@ class OfflineRoutingService {
     instructions.insert(
       0,
       RouteInstruction(
-        type:
-            RouteInstructionType.start,
-        text:
-            'Start navigation',
-        distanceMetres:
-            0,
-        latitude:
-            startLatitude,
-        longitude:
-            startLongitude,
+        type: RouteInstructionType.start,
+        text: 'Start navigation',
+        distanceMetres: 0,
+        latitude: startLatitude,
+        longitude: startLongitude,
       ),
     );
 
     instructions.add(
       RouteInstruction(
-        type:
-            RouteInstructionType.arrive,
-        text:
-            'Arrive at destination',
-        distanceMetres:
-            0,
-        latitude:
-            destinationLatitude,
-        longitude:
-            destinationLongitude,
+        type: RouteInstructionType.arrive,
+        text: 'Arrive at destination',
+        distanceMetres: 0,
+        latitude: destinationLatitude,
+        longitude: destinationLongitude,
       ),
     );
 
     return NavigationRoute(
-      points:
-          points,
-      instructions:
-          instructions,
-      distanceMetres:
-          totalDistance,
-      estimatedDuration:
-          Duration(
-        seconds:
-            totalSeconds.round(),
+      points: points,
+      instructions: instructions,
+      distanceMetres: totalDistance,
+      estimatedDuration: Duration(
+        seconds: totalSeconds.round(),
       ),
     );
   }
 
-  List<RouteInstruction>
-      _buildInstructions(
+  List<RouteInstruction> _buildInstructions(
     _SearchResult result,
     Map<int, RoadNode> nodes,
   ) {
-    final List<RouteInstruction>
-        instructions =
-        <RouteInstruction>[];
+    final List<RouteInstruction> instructions = <RouteInstruction>[];
 
-    if (result.nodeIds.length <
-        3) {
+    if (result.nodeIds.length < 3) {
       return instructions;
     }
 
-    double distanceSinceTurn =
-        0;
+    double distanceSinceTurn = 0;
 
-    for (int i = 0;
-        i < result.edges.length;
-        i++) {
-      distanceSinceTurn +=
-          result.edges[i]
-              .distanceMetres;
+    for (int i = 0; i < result.edges.length; i++) {
+      distanceSinceTurn += result.edges[i].distanceMetres;
 
-      if (i + 2 >=
-          result.nodeIds.length) {
+      if (i + 2 >= result.nodeIds.length) {
         continue;
       }
 
-      final RoadNode? a =
-          nodes[
-              result.nodeIds[i]];
+      final RoadNode? a = nodes[result.nodeIds[i]];
 
-      final RoadNode? b =
-          nodes[
-              result.nodeIds[
-                  i + 1]];
+      final RoadNode? b = nodes[result.nodeIds[i + 1]];
 
-      final RoadNode? c =
-          nodes[
-              result.nodeIds[
-                  i + 2]];
+      final RoadNode? c = nodes[result.nodeIds[i + 2]];
 
-      if (a == null ||
-          b == null ||
-          c == null) {
+      if (a == null || b == null || c == null) {
         continue;
       }
 
-      final double bearing1 =
-          _bearing(
+      final double bearing1 = _bearing(
         a.latitude,
         a.longitude,
         b.latitude,
         b.longitude,
       );
 
-      final double bearing2 =
-          _bearing(
+      final double bearing2 = _bearing(
         b.latitude,
         b.longitude,
         c.latitude,
         c.longitude,
       );
 
-      final double change =
-          _normaliseAngle(
-        bearing2 -
-            bearing1,
+      final double change = _normaliseAngle(
+        bearing2 - bearing1,
       );
 
-      final RouteInstructionType
-          type =
-          _instructionType(
+      final RouteInstructionType type = _instructionType(
         change,
       );
 
-      if (type ==
-          RouteInstructionType
-              .straight) {
+      if (type == RouteInstructionType.straight) {
         continue;
       }
 
-      final RoadEdge edge =
-          result.edges[
-              math.min(
+      final RoadEdge edge = result.edges[math.min(
         i + 1,
         result.edges.length - 1,
       )];
 
-      final String? roadName =
-          edge.roadName;
+      final String? roadName = edge.roadName;
 
       instructions.add(
         RouteInstruction(
-          type:
-              type,
-          text:
-              _instructionText(
+          type: type,
+          text: _instructionText(
             type,
             roadName,
           ),
-          roadName:
-              roadName,
-          distanceMetres:
-              distanceSinceTurn,
-          latitude:
-              b.latitude,
-          longitude:
-              b.longitude,
+          roadName: roadName,
+          distanceMetres: distanceSinceTurn,
+          latitude: b.latitude,
+          longitude: b.longitude,
         ),
       );
 
-      distanceSinceTurn =
-          0;
+      distanceSinceTurn = 0;
     }
 
     return instructions;
   }
 
-  RouteInstructionType
-      _instructionType(
+  RouteInstructionType _instructionType(
     double change,
   ) {
-    final double absolute =
-        change.abs();
+    final double absolute = change.abs();
 
     if (absolute < 20) {
-      return RouteInstructionType
-          .straight;
+      return RouteInstructionType.straight;
     }
 
     if (absolute >= 150) {
-      return RouteInstructionType
-          .uTurn;
+      return RouteInstructionType.uTurn;
     }
 
     if (change < 0) {
       if (absolute < 45) {
-        return RouteInstructionType
-            .slightLeft;
+        return RouteInstructionType.slightLeft;
       }
 
       if (absolute < 110) {
-        return RouteInstructionType
-            .left;
+        return RouteInstructionType.left;
       }
 
-      return RouteInstructionType
-          .sharpLeft;
+      return RouteInstructionType.sharpLeft;
     }
 
     if (absolute < 45) {
-      return RouteInstructionType
-          .slightRight;
+      return RouteInstructionType.slightRight;
     }
 
     if (absolute < 110) {
-      return RouteInstructionType
-          .right;
+      return RouteInstructionType.right;
     }
 
-    return RouteInstructionType
-        .sharpRight;
+    return RouteInstructionType.sharpRight;
   }
 
   String _instructionText(
@@ -616,10 +471,7 @@ class OfflineRoutingService {
     String? roadName,
   ) {
     final String road =
-        roadName == null ||
-                roadName.trim().isEmpty
-            ? ''
-            : ' onto $roadName';
+        roadName == null || roadName.trim().isEmpty ? '' : ' onto $roadName';
 
     switch (type) {
       case RouteInstructionType.start:
@@ -658,8 +510,7 @@ class OfflineRoutingService {
     RoadNode a,
     RoadNode b,
   ) {
-    final double metres =
-        _distanceMetres(
+    final double metres = _distanceMetres(
       a.latitude,
       a.longitude,
       b.latitude,
@@ -671,11 +522,9 @@ class OfflineRoutingService {
     // Keeping the heuristic optimistic means
     // A* does not incorrectly penalise a potentially
     // faster route.
-    const double metresPerSecond =
-        130 / 3.6;
+    const double metresPerSecond = 130 / 3.6;
 
-    return metres /
-        metresPerSecond;
+    return metres / metresPerSecond;
   }
 
   double _distanceMetres(
@@ -684,31 +533,25 @@ class OfflineRoutingService {
     double lat2,
     double lon2,
   ) {
-    const double earthRadius =
-        6371000;
+    const double earthRadius = 6371000;
 
-    final double phi1 =
-        _degreesToRadians(
+    final double phi1 = _degreesToRadians(
       lat1,
     );
 
-    final double phi2 =
-        _degreesToRadians(
+    final double phi2 = _degreesToRadians(
       lat2,
     );
 
-    final double deltaPhi =
-        _degreesToRadians(
+    final double deltaPhi = _degreesToRadians(
       lat2 - lat1,
     );
 
-    final double deltaLambda =
-        _degreesToRadians(
+    final double deltaLambda = _degreesToRadians(
       lon2 - lon1,
     );
 
-    final double a =
-        math.sin(
+    final double a = math.sin(
               deltaPhi / 2,
             ) *
             math.sin(
@@ -727,14 +570,13 @@ class OfflineRoutingService {
               deltaLambda / 2,
             );
 
-    final double c =
-        2 *
-            math.atan2(
-              math.sqrt(a),
-              math.sqrt(
-                1 - a,
-              ),
-            );
+    final double c = 2 *
+        math.atan2(
+          math.sqrt(a),
+          math.sqrt(
+            1 - a,
+          ),
+        );
 
     return earthRadius * c;
   }
@@ -745,51 +587,37 @@ class OfflineRoutingService {
     double lat2,
     double lon2,
   ) {
-    final double phi1 =
-        _degreesToRadians(
+    final double phi1 = _degreesToRadians(
       lat1,
     );
 
-    final double phi2 =
-        _degreesToRadians(
+    final double phi2 = _degreesToRadians(
       lat2,
     );
 
-    final double lambda =
-        _degreesToRadians(
+    final double lambda = _degreesToRadians(
       lon2 - lon1,
     );
 
-    final double y =
-        math.sin(lambda) *
-            math.cos(phi2);
+    final double y = math.sin(lambda) * math.cos(phi2);
 
-    final double x =
-        math.cos(phi1) *
-                math.sin(phi2) -
-            math.sin(phi1) *
-                math.cos(phi2) *
-                math.cos(lambda);
+    final double x = math.cos(phi1) * math.sin(phi2) -
+        math.sin(phi1) * math.cos(phi2) * math.cos(lambda);
 
-    final double degrees =
-        math.atan2(
-              y,
-              x,
-            ) *
-            180 /
-            math.pi;
+    final double degrees = math.atan2(
+          y,
+          x,
+        ) *
+        180 /
+        math.pi;
 
-    return (
-      degrees + 360
-    ) %
-        360;
+    return (degrees + 360) % 360;
   }
 
   double _normaliseAngle(
     double angle,
   ) {
-    double value =
-        angle;
+    double value = angle;
 
     while (value > 180) {
       value -= 360;
@@ -805,9 +633,7 @@ class OfflineRoutingService {
   double _degreesToRadians(
     double degrees,
   ) {
-    return degrees *
-        math.pi /
-        180;
+    return degrees * math.pi / 180;
   }
 }
 

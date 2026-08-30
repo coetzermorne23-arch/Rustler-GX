@@ -9,14 +9,11 @@ import '../models/victron_live_data.dart';
 class HistoryService {
   HistoryService._();
 
-  static final HistoryService instance =
-      HistoryService._();
+  static final HistoryService instance = HistoryService._();
 
-  static const String _storageKey =
-      'rustler_gx_history_v1';
+  static const String _storageKey = 'rustler_gx_history_v1';
 
-  static const Duration sampleInterval =
-      Duration(minutes: 1);
+  static const Duration sampleInterval = Duration(minutes: 1);
 
   static const int maxRecords = 10000;
 
@@ -32,11 +29,9 @@ class HistoryService {
       return;
     }
 
-    final prefs =
-        await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
-    final stored =
-        prefs.getString(_storageKey);
+    final stored = prefs.getString(_storageKey);
 
     if (stored == null || stored.isEmpty) {
       _loaded = true;
@@ -100,12 +95,9 @@ class HistoryService {
 
     final now = DateTime.now();
 
-    final previous =
-        _lastSample[data.serial];
+    final previous = _lastSample[data.serial];
 
-    if (previous != null &&
-        now.difference(previous) <
-            sampleInterval) {
+    if (previous != null && now.difference(previous) < sampleInterval) {
       return;
     }
 
@@ -115,49 +107,22 @@ class HistoryService {
       deviceId: data.serial,
       deviceName: data.name,
       timestamp: now,
-
-      batteryVoltage:
-          data.batteryVoltage,
-
-      batteryCurrent:
-          data.batteryCurrent,
-
-      batteryPower:
-          data.power,
-
-      stateOfCharge:
-          data.stateOfCharge,
-
-      pvVoltage:
-          data.pvVoltage,
-
-      pvCurrent:
-          data.pvCurrent,
-
-      pvPower:
-          data.pvPower,
-
-      chargeCurrent:
-          data.chargeCurrent,
-
-      chargeState:
-          data.chargeState,
-
-      inputVoltage:
-          data.inputVoltage,
-
-      outputVoltage:
-          data.outputVoltage,
-
-      outputCurrent:
-          data.outputCurrent,
-
-      outputPower:
-          data.outputPower,
+      batteryVoltage: data.batteryVoltage,
+      batteryCurrent: data.batteryCurrent,
+      batteryPower: data.power,
+      stateOfCharge: data.stateOfCharge,
+      pvVoltage: data.pvVoltage,
+      pvCurrent: data.pvCurrent,
+      pvPower: data.pvPower,
+      chargeCurrent: data.chargeCurrent,
+      chargeState: data.chargeState,
+      inputVoltage: data.inputVoltage,
+      outputVoltage: data.outputVoltage,
+      outputCurrent: data.outputCurrent,
+      outputPower: data.outputPower,
     );
 
-    final updated =
-        List<HistoryRecord>.from(
+    final updated = List<HistoryRecord>.from(
       records.value,
     );
 
@@ -203,14 +168,12 @@ class HistoryService {
 
   Future<void> _save() async {
     try {
-      final prefs =
-          await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
 
       final encoded = jsonEncode(
         records.value
             .map(
-              (record) =>
-                  record.toJson(),
+              (record) => record.toJson(),
             )
             .toList(),
       );
@@ -231,9 +194,7 @@ class HistoryService {
   ) {
     return records.value
         .where(
-          (record) =>
-              record.deviceId ==
-              deviceId,
+          (record) => record.deviceId == deviceId,
         )
         .toList();
   }
@@ -243,9 +204,7 @@ class HistoryService {
   ) {
     return records.value
         .where(
-          (record) =>
-              record.timestamp
-                  .isAfter(time),
+          (record) => record.timestamp.isAfter(time),
         )
         .toList();
   }
@@ -254,8 +213,7 @@ class HistoryService {
     records.value = [];
     _lastSample.clear();
 
-    final prefs =
-        await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
     await prefs.remove(
       _storageKey,

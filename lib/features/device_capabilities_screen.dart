@@ -3,25 +3,21 @@ import 'package:flutter/material.dart';
 import '../models/rustler_gx_mode.dart';
 import '../services/runtime_capability_controller.dart';
 
-class DeviceCapabilitiesScreen
-    extends StatefulWidget {
+class DeviceCapabilitiesScreen extends StatefulWidget {
   const DeviceCapabilitiesScreen({
     super.key,
   });
 
   @override
-  State<DeviceCapabilitiesScreen>
-      createState() =>
-          _DeviceCapabilitiesScreenState();
+  State<DeviceCapabilitiesScreen> createState() =>
+      _DeviceCapabilitiesScreenState();
 }
 
-class _DeviceCapabilitiesScreenState
-    extends State<DeviceCapabilitiesScreen> {
+class _DeviceCapabilitiesScreenState extends State<DeviceCapabilitiesScreen> {
   final RuntimeCapabilityController controller =
       RuntimeCapabilityController.instance;
 
-  Set<RustlerGxCapability> capabilities =
-      <RustlerGxCapability>{};
+  Set<RustlerGxCapability> capabilities = <RustlerGxCapability>{};
 
   bool loading = true;
   bool saving = false;
@@ -34,16 +30,14 @@ class _DeviceCapabilitiesScreenState
   }
 
   Future<void> _load() async {
-    final loaded =
-        await controller.getCapabilities();
+    final loaded = await controller.getCapabilities();
 
     if (!mounted) {
       return;
     }
 
     setState(() {
-      capabilities =
-          Set<RustlerGxCapability>.from(
+      capabilities = Set<RustlerGxCapability>.from(
         loaded,
       );
 
@@ -59,13 +53,11 @@ class _DeviceCapabilitiesScreenState
       return;
     }
 
-    final previous =
-        Set<RustlerGxCapability>.from(
+    final previous = Set<RustlerGxCapability>.from(
       capabilities,
     );
 
-    final updated =
-        Set<RustlerGxCapability>.from(
+    final updated = Set<RustlerGxCapability>.from(
       capabilities,
     );
 
@@ -112,14 +104,12 @@ class _DeviceCapabilitiesScreenState
       return;
     }
 
-    final previous =
-        Set<RustlerGxCapability>.from(
+    final previous = Set<RustlerGxCapability>.from(
       capabilities,
     );
 
     setState(() {
-      capabilities =
-          Set<RustlerGxCapability>.from(
+      capabilities = Set<RustlerGxCapability>.from(
         preset,
       );
 
@@ -162,8 +152,7 @@ class _DeviceCapabilitiesScreenState
       return;
     }
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
       ),
@@ -188,8 +177,7 @@ class _DeviceCapabilitiesScreenState
           ),
         ),
         body: const Center(
-          child:
-              CircularProgressIndicator(),
+          child: CircularProgressIndicator(),
         ),
       );
     }
@@ -201,20 +189,16 @@ class _DeviceCapabilitiesScreenState
         ),
       ),
       body: ListView(
-        padding:
-            const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         children: [
           const Text(
             'Device Presets',
             style: TextStyle(
               fontSize: 22,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 6),
-
           const Text(
             'Choose a preset or configure '
             'each capability manually.',
@@ -222,165 +206,120 @@ class _DeviceCapabilitiesScreenState
               color: Colors.white70,
             ),
           ),
-
           const SizedBox(height: 18),
-
           _PresetTile(
-            icon:
-                Icons.directions_car,
+            icon: Icons.directions_car,
             title: 'Head Unit',
-            subtitle:
-                'Bluetooth + Dashboard + GPS + Media',
+            subtitle: 'Bluetooth + Dashboard + GPS + Media',
             onTap: saving
                 ? null
                 : () => _preset(
                       {
-                        RustlerGxCapability
-                            .localBluetooth,
-                        RustlerGxCapability
-                            .dashboard,
-                        RustlerGxCapability
-                            .gps,
-                        RustlerGxCapability
-                            .media,
+                        RustlerGxCapability.localBluetooth,
+                        RustlerGxCapability.dashboard,
+                        RustlerGxCapability.gps,
+                        RustlerGxCapability.media,
                       },
                     ),
           ),
-
           _PresetTile(
-            icon:
-                Icons.tablet_android,
-            title:
-                'Monitoring Tablet',
-            subtitle:
-                'Bluetooth + Dashboard + Hub Client',
+            icon: Icons.tablet_android,
+            title: 'Monitoring Tablet',
+            subtitle: 'Bluetooth + Dashboard + Hub Client',
             onTap: saving
                 ? null
                 : () => _preset(
                       {
-                        RustlerGxCapability
-                            .localBluetooth,
-                        RustlerGxCapability
-                            .dashboard,
-                        RustlerGxCapability
-                            .hubClient,
+                        RustlerGxCapability.localBluetooth,
+                        RustlerGxCapability.dashboard,
+                        RustlerGxCapability.hubClient,
                       },
                     ),
           ),
-
           _PresetTile(
             icon: Icons.hub,
             title: 'Hub',
-            subtitle:
-                'Bluetooth + Hub Server',
+            subtitle: 'Bluetooth + Hub Server',
             onTap: saving
                 ? null
                 : () => _preset(
                       {
-                        RustlerGxCapability
-                            .localBluetooth,
-                        RustlerGxCapability
-                            .hubServer,
+                        RustlerGxCapability.localBluetooth,
+                        RustlerGxCapability.hubServer,
                       },
                     ),
           ),
-
           const SizedBox(height: 22),
-
           const Divider(),
-
           const SizedBox(height: 16),
-
           const Text(
             'Manual Configuration',
             style: TextStyle(
               fontSize: 18,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
-
           const SizedBox(height: 12),
-
           _CapabilityTile(
             icon: Icons.bluetooth,
-            title:
-                'Local Bluetooth',
-            subtitle:
-                'Scan and connect to nearby devices.',
+            title: 'Local Bluetooth',
+            subtitle: 'Scan and connect to nearby devices.',
             value: _enabled(
-              RustlerGxCapability
-                  .localBluetooth,
+              RustlerGxCapability.localBluetooth,
             ),
             onChanged: saving
                 ? null
                 : (value) => _change(
-                      RustlerGxCapability
-                          .localBluetooth,
+                      RustlerGxCapability.localBluetooth,
                       value,
                     ),
           ),
-
           _CapabilityTile(
-            icon:
-                Icons.cloud_download_outlined,
+            icon: Icons.cloud_download_outlined,
             title: 'Hub Client',
-            subtitle:
-                'Receive data from another Rustler GX Hub.',
+            subtitle: 'Receive data from another Rustler GX Hub.',
             value: _enabled(
-              RustlerGxCapability
-                  .hubClient,
+              RustlerGxCapability.hubClient,
             ),
             onChanged: saving
                 ? null
                 : (value) => _change(
-                      RustlerGxCapability
-                          .hubClient,
+                      RustlerGxCapability.hubClient,
                       value,
                     ),
           ),
-
           _CapabilityTile(
             icon: Icons.hub,
             title: 'Hub Server',
-            subtitle:
-                'Share this device entities over the local network.',
+            subtitle: 'Share this device entities over the local network.',
             value: _enabled(
-              RustlerGxCapability
-                  .hubServer,
+              RustlerGxCapability.hubServer,
             ),
             onChanged: saving
                 ? null
                 : (value) => _change(
-                      RustlerGxCapability
-                          .hubServer,
+                      RustlerGxCapability.hubServer,
                       value,
                     ),
           ),
-
           _CapabilityTile(
             icon: Icons.dashboard,
             title: 'Dashboard',
-            subtitle:
-                'Enable the local dashboard.',
+            subtitle: 'Enable the local dashboard.',
             value: _enabled(
-              RustlerGxCapability
-                  .dashboard,
+              RustlerGxCapability.dashboard,
             ),
             onChanged: saving
                 ? null
                 : (value) => _change(
-                      RustlerGxCapability
-                          .dashboard,
+                      RustlerGxCapability.dashboard,
                       value,
                     ),
           ),
-
           _CapabilityTile(
             icon: Icons.gps_fixed,
             title: 'GPS',
-            subtitle:
-                'Use built-in GPS and location hardware.',
+            subtitle: 'Use built-in GPS and location hardware.',
             value: _enabled(
               RustlerGxCapability.gps,
             ),
@@ -391,12 +330,10 @@ class _DeviceCapabilitiesScreenState
                       value,
                     ),
           ),
-
           _CapabilityTile(
             icon: Icons.music_note,
             title: 'Media',
-            subtitle:
-                'Enable head-unit media features.',
+            subtitle: 'Enable head-unit media features.',
             value: _enabled(
               RustlerGxCapability.media,
             ),
@@ -407,35 +344,28 @@ class _DeviceCapabilitiesScreenState
                       value,
                     ),
           ),
-
           _CapabilityTile(
             icon: Icons.public,
             title: 'Remote Access',
-            subtitle:
-                'Enable optional internet remote monitoring.',
+            subtitle: 'Enable optional internet remote monitoring.',
             value: _enabled(
-              RustlerGxCapability
-                  .remoteAccess,
+              RustlerGxCapability.remoteAccess,
             ),
             onChanged: saving
                 ? null
                 : (value) => _change(
-                      RustlerGxCapability
-                          .remoteAccess,
+                      RustlerGxCapability.remoteAccess,
                       value,
                     ),
           ),
-
           if (saving) ...[
             const SizedBox(
               height: 16,
             ),
             const Center(
-              child:
-                  CircularProgressIndicator(),
+              child: CircularProgressIndicator(),
             ),
           ],
-
           const SizedBox(height: 30),
         ],
       ),
@@ -443,8 +373,7 @@ class _DeviceCapabilitiesScreenState
   }
 }
 
-class _PresetTile
-    extends StatelessWidget {
+class _PresetTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
@@ -460,8 +389,7 @@ class _PresetTile
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin:
-          const EdgeInsets.only(
+      margin: const EdgeInsets.only(
         bottom: 10,
       ),
       child: ListTile(
@@ -472,8 +400,7 @@ class _PresetTile
         title: Text(
           title,
           style: const TextStyle(
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: Text(
@@ -488,14 +415,12 @@ class _PresetTile
   }
 }
 
-class _CapabilityTile
-    extends StatelessWidget {
+class _CapabilityTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
   final bool value;
-  final ValueChanged<bool>?
-      onChanged;
+  final ValueChanged<bool>? onChanged;
 
   const _CapabilityTile({
     required this.icon,
@@ -508,8 +433,7 @@ class _CapabilityTile
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin:
-          const EdgeInsets.only(
+      margin: const EdgeInsets.only(
         bottom: 10,
       ),
       child: SwitchListTile(
@@ -520,8 +444,7 @@ class _CapabilityTile
         title: Text(
           title,
           style: const TextStyle(
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: Text(

@@ -60,8 +60,7 @@ class VictronDevice {
 
     return manufacturerData
         .map(
-          (byte) =>
-              byte.toRadixString(16).padLeft(2, '0'),
+          (byte) => byte.toRadixString(16).padLeft(2, '0'),
         )
         .join(' ');
   }

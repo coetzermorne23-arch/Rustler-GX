@@ -3,14 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 class VictronKeyService {
   VictronKeyService._();
 
-  static final VictronKeyService instance =
-      VictronKeyService._();
+  static final VictronKeyService instance = VictronKeyService._();
 
-  final SharedPreferencesAsync _preferences =
-      SharedPreferencesAsync();
+  final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
 
-  static const String _knownDevicesKey =
-      'victron_known_devices';
+  static const String _knownDevicesKey = 'victron_known_devices';
 
   String _storageKey(String deviceId) {
     return 'victron_encryption_key_$deviceId';
@@ -32,15 +29,13 @@ class VictronKeyService {
     required String deviceId,
     required String encryptionKey,
   }) async {
-    final String normalizedKey =
-        encryptionKey
-            .replaceAll(' ', '')
-            .replaceAll(':', '')
-            .trim()
-            .toLowerCase();
+    final String normalizedKey = encryptionKey
+        .replaceAll(' ', '')
+        .replaceAll(':', '')
+        .trim()
+        .toLowerCase();
 
-    if (!RegExp(r'^[0-9a-f]{32}$')
-        .hasMatch(normalizedKey)) {
+    if (!RegExp(r'^[0-9a-f]{32}$').hasMatch(normalizedKey)) {
       throw const FormatException(
         'Encryption key must contain exactly '
         '32 hexadecimal characters.',
@@ -68,21 +63,17 @@ class VictronKeyService {
   Future<bool> hasKey(
     String deviceId,
   ) async {
-    final String? key =
-        await getKey(deviceId);
+    final String? key = await getKey(deviceId);
 
-    return key != null &&
-        key.isNotEmpty;
+    return key != null && key.isNotEmpty;
   }
 
   // =========================================================
   // KNOWN / TRUSTED DEVICES
   // =========================================================
 
-  Future<Set<String>>
-      getKnownDevices() async {
-    final List<String>? stored =
-        await _preferences.getStringList(
+  Future<Set<String>> getKnownDevices() async {
+    final List<String>? stored = await _preferences.getStringList(
       _knownDevicesKey,
     );
 
@@ -96,8 +87,7 @@ class VictronKeyService {
   Future<bool> isKnownDevice(
     String deviceId,
   ) async {
-    final Set<String> devices =
-        await getKnownDevices();
+    final Set<String> devices = await getKnownDevices();
 
     return devices.contains(deviceId);
   }
@@ -105,8 +95,7 @@ class VictronKeyService {
   Future<void> rememberDevice(
     String deviceId,
   ) async {
-    final Set<String> devices =
-        await getKnownDevices();
+    final Set<String> devices = await getKnownDevices();
 
     if (devices.add(deviceId)) {
       await _preferences.setStringList(
@@ -119,8 +108,7 @@ class VictronKeyService {
   Future<void> forgetDevice(
     String deviceId,
   ) async {
-    final Set<String> devices =
-        await getKnownDevices();
+    final Set<String> devices = await getKnownDevices();
 
     devices.remove(deviceId);
 
@@ -135,11 +123,9 @@ class VictronKeyService {
   }
 
   Future<void> clearKnownDevices() async {
-    final Set<String> devices =
-        await getKnownDevices();
+    final Set<String> devices = await getKnownDevices();
 
-    for (final String deviceId
-        in devices) {
+    for (final String deviceId in devices) {
       await removeKey(deviceId);
     }
 

@@ -5,16 +5,13 @@ import '../models/rustler_entity.dart';
 class EntityService {
   EntityService._();
 
-  static final EntityService instance =
-      EntityService._();
+  static final EntityService instance = EntityService._();
 
-  final ValueNotifier<Map<String, RustlerEntity>>
-      entities =
+  final ValueNotifier<Map<String, RustlerEntity>> entities =
       ValueNotifier<Map<String, RustlerEntity>>({});
 
   void upsert(RustlerEntity entity) {
-    final updated =
-        Map<String, RustlerEntity>.from(
+    final updated = Map<String, RustlerEntity>.from(
       entities.value,
     );
 
@@ -28,9 +25,7 @@ class EntityService {
   }
 
   void remove(String id) {
-    final updated =
-        Map<String, RustlerEntity>.from(
-      entities.value);
+    final updated = Map<String, RustlerEntity>.from(entities.value);
 
     updated.remove(id);
 

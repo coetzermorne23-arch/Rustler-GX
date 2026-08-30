@@ -36,14 +36,12 @@ class RoadEdge {
   });
 
   double get travelSeconds {
-    final double speedMetresPerSecond =
-        speedKmh / 3.6;
+    final double speedMetresPerSecond = speedKmh / 3.6;
 
     if (speedMetresPerSecond <= 0) {
       return double.infinity;
     }
 
-    return distanceMetres /
-        speedMetresPerSecond;
+    return distanceMetres / speedMetresPerSecond;
   }
 }

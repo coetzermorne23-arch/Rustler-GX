@@ -3,16 +3,14 @@ import 'package:flutter/material.dart';
 import '../services/capability_runtime_service.dart';
 import '../services/installation_identity_service.dart';
 
-class InstallationSettingsScreen
-    extends StatefulWidget {
+class InstallationSettingsScreen extends StatefulWidget {
   const InstallationSettingsScreen({
     super.key,
   });
 
   @override
-  State<InstallationSettingsScreen>
-      createState() =>
-          _InstallationSettingsScreenState();
+  State<InstallationSettingsScreen> createState() =>
+      _InstallationSettingsScreenState();
 }
 
 class _InstallationSettingsScreenState
@@ -20,11 +18,9 @@ class _InstallationSettingsScreenState
   final InstallationIdentityService identity =
       InstallationIdentityService.instance;
 
-  final CapabilityRuntimeService runtime =
-      CapabilityRuntimeService.instance;
+  final CapabilityRuntimeService runtime = CapabilityRuntimeService.instance;
 
-  final TextEditingController nameController =
-      TextEditingController();
+  final TextEditingController nameController = TextEditingController();
 
   String installationId = '';
   bool loading = true;
@@ -37,11 +33,9 @@ class _InstallationSettingsScreenState
   }
 
   Future<void> _load() async {
-    installationId =
-        await identity.getInstallationId();
+    installationId = await identity.getInstallationId();
 
-    nameController.text =
-        await identity.getInstallationName();
+    nameController.text = await identity.getInstallationName();
 
     if (!mounted) {
       return;
@@ -68,8 +62,7 @@ class _InstallationSettingsScreenState
         return;
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Installation settings saved.',
@@ -81,8 +74,7 @@ class _InstallationSettingsScreenState
         return;
       }
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             error.toString(),
@@ -114,8 +106,7 @@ class _InstallationSettingsScreenState
           ),
         ),
         body: const Center(
-          child:
-              CircularProgressIndicator(),
+          child: CircularProgressIndicator(),
         ),
       );
     }
@@ -127,29 +118,20 @@ class _InstallationSettingsScreenState
         ),
       ),
       body: ListView(
-        padding:
-            const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         children: [
           TextField(
-            controller:
-                nameController,
-            decoration:
-                const InputDecoration(
-              labelText:
-                  'Installation name',
-              hintText:
-                  'Caravan Hub',
-              prefixIcon:
-                  Icon(Icons.edit),
-              border:
-                  OutlineInputBorder(),
+            controller: nameController,
+            decoration: const InputDecoration(
+              labelText: 'Installation name',
+              hintText: 'Caravan Hub',
+              prefixIcon: Icon(Icons.edit),
+              border: OutlineInputBorder(),
             ),
           ),
-
           const SizedBox(
             height: 16,
           ),
-
           Card(
             child: ListTile(
               leading: const Icon(
@@ -163,23 +145,16 @@ class _InstallationSettingsScreenState
               ),
             ),
           ),
-
           const SizedBox(
             height: 16,
           ),
-
           FilledButton.icon(
-            onPressed:
-                saving
-                    ? null
-                    : _save,
+            onPressed: saving ? null : _save,
             icon: const Icon(
               Icons.save,
             ),
             label: Text(
-              saving
-                  ? 'SAVING...'
-                  : 'SAVE',
+              saving ? 'SAVING...' : 'SAVE',
             ),
           ),
         ],

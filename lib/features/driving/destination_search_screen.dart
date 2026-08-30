@@ -16,22 +16,16 @@ class DestinationSearchScreen extends StatefulWidget {
       _DestinationSearchScreenState();
 }
 
-class _DestinationSearchScreenState
-    extends State<DestinationSearchScreen> {
-  final NavigationPlaceService places =
-      NavigationPlaceService.instance;
+class _DestinationSearchScreenState extends State<DestinationSearchScreen> {
+  final NavigationPlaceService places = NavigationPlaceService.instance;
 
-  final NavigationService navigation =
-      NavigationService.instance;
+  final NavigationService navigation = NavigationService.instance;
 
-  final GpsService gps =
-      GpsService.instance;
+  final GpsService gps = GpsService.instance;
 
-  final TextEditingController controller =
-      TextEditingController();
+  final TextEditingController controller = TextEditingController();
 
-  List<NavigationPlace> results =
-      <NavigationPlace>[];
+  List<NavigationPlace> results = <NavigationPlace>[];
 
   bool loading = true;
 
@@ -61,8 +55,7 @@ class _DestinationSearchScreenState
   Future<void> _search(
     String value,
   ) async {
-    final String query =
-        value.trim();
+    final String query = value.trim();
 
     if (query.isEmpty) {
       if (!mounted) {
@@ -70,15 +63,13 @@ class _DestinationSearchScreenState
       }
 
       setState(() {
-        results =
-            <NavigationPlace>[];
+        results = <NavigationPlace>[];
       });
 
       return;
     }
 
-    final List<NavigationPlace> found =
-        await places.search(
+    final List<NavigationPlace> found = await places.search(
       query,
     );
 
@@ -122,15 +113,11 @@ class _DestinationSearchScreenState
   // =========================================================
 
   Future<void> _saveCurrentPosition() async {
-    Position? position =
-        gps.position.value;
+    Position? position = gps.position.value;
 
-    position ??=
-        await Geolocator.getCurrentPosition(
-      locationSettings:
-          const LocationSettings(
-        accuracy:
-            LocationAccuracy.best,
+    position ??= await Geolocator.getCurrentPosition(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
       ),
     );
 
@@ -138,17 +125,14 @@ class _DestinationSearchScreenState
       return;
     }
 
-    final NavigationPlace? place =
-        await showDialog<NavigationPlace>(
+    final NavigationPlace? place = await showDialog<NavigationPlace>(
       context: context,
       builder: (
         context,
       ) {
         return _SavePlaceDialog(
-          latitude:
-              position!.latitude,
-          longitude:
-              position.longitude,
+          latitude: position!.latitude,
+          longitude: position.longitude,
         );
       },
     );
@@ -185,18 +169,14 @@ class _DestinationSearchScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:
-            const Text(
+        title: const Text(
           'Where to?',
         ),
         actions: [
           IconButton(
-            tooltip:
-                'Save current position',
-            onPressed:
-                _saveCurrentPosition,
-            icon:
-                const Icon(
+            tooltip: 'Save current position',
+            onPressed: _saveCurrentPosition,
+            icon: const Icon(
               Icons.add_location_alt,
             ),
           ),
@@ -204,8 +184,7 @@ class _DestinationSearchScreenState
       ),
       body: loading
           ? const Center(
-              child:
-                  CircularProgressIndicator(),
+              child: CircularProgressIndicator(),
             )
           : Column(
               children: [
@@ -214,52 +193,37 @@ class _DestinationSearchScreenState
                 // =================================================
 
                 Padding(
-                  padding:
-                      const EdgeInsets.all(
+                  padding: const EdgeInsets.all(
                     16,
                   ),
                   child: TextField(
-                    controller:
-                        controller,
+                    controller: controller,
                     autofocus: true,
-                    onChanged:
-                        _search,
-                    style:
-                        const TextStyle(
+                    onChanged: _search,
+                    style: const TextStyle(
                       fontSize: 20,
                     ),
-                    decoration:
-                        InputDecoration(
-                      hintText:
-                          'Search destination...',
-                      prefixIcon:
-                          const Icon(
+                    decoration: InputDecoration(
+                      hintText: 'Search destination...',
+                      prefixIcon: const Icon(
                         Icons.search,
                       ),
-                      suffixIcon:
-                          controller.text
-                                  .isEmpty
-                              ? null
-                              : IconButton(
-                                  onPressed:
-                                      () {
-                                    controller
-                                        .clear();
+                      suffixIcon: controller.text.isEmpty
+                          ? null
+                          : IconButton(
+                              onPressed: () {
+                                controller.clear();
 
-                                    _search(
-                                      '',
-                                    );
-                                  },
-                                  icon:
-                                      const Icon(
-                                    Icons.clear,
-                                  ),
-                                ),
-                      border:
-                          OutlineInputBorder(
-                        borderRadius:
-                            BorderRadius
-                                .circular(
+                                _search(
+                                  '',
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.clear,
+                              ),
+                            ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
                           14,
                         ),
                       ),
@@ -271,26 +235,18 @@ class _DestinationSearchScreenState
                 // SAVED / SEARCH RESULTS
                 // =================================================
 
-                if (controller.text
-                    .trim()
-                    .isEmpty)
+                if (controller.text.trim().isEmpty)
                   Expanded(
-                    child:
-                        _SavedPlaces(
-                      places:
-                          places,
-                      onSelect:
-                          _select,
+                    child: _SavedPlaces(
+                      places: places,
+                      onSelect: _select,
                     ),
                   )
                 else
                   Expanded(
-                    child:
-                        _SearchResults(
-                      results:
-                          results,
-                      onSelect:
-                          _select,
+                    child: _SearchResults(
+                      results: results,
+                      onSelect: _select,
                     ),
                   ),
               ],
@@ -303,8 +259,7 @@ class _DestinationSearchScreenState
 // SAVED PLACES
 // =============================================================
 
-class _SavedPlaces
-    extends StatelessWidget {
+class _SavedPlaces extends StatelessWidget {
   final NavigationPlaceService places;
 
   final Future<void> Function(
@@ -318,34 +273,27 @@ class _SavedPlaces
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<
-        List<NavigationPlace>>(
-      valueListenable:
-          places.favourites,
+    return ValueListenableBuilder<List<NavigationPlace>>(
+      valueListenable: places.favourites,
       builder: (
         context,
         favourites,
         child,
       ) {
-        return ValueListenableBuilder<
-            List<NavigationPlace>>(
-          valueListenable:
-              places.recent,
+        return ValueListenableBuilder<List<NavigationPlace>>(
+          valueListenable: places.recent,
           builder: (
             context,
             recent,
             child,
           ) {
-            if (favourites.isEmpty &&
-                recent.isEmpty) {
+            if (favourites.isEmpty && recent.isEmpty) {
               return const Center(
                 child: Column(
-                  mainAxisSize:
-                      MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      Icons
-                          .location_on_outlined,
+                      Icons.location_on_outlined,
                       size: 65,
                     ),
                     SizedBox(
@@ -353,25 +301,21 @@ class _SavedPlaces
                     ),
                     Text(
                       'No saved destinations yet',
-                      style:
-                          TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     SizedBox(
                       height: 6,
                     ),
                     Padding(
-                      padding:
-                          EdgeInsets.symmetric(
+                      padding: EdgeInsets.symmetric(
                         horizontal: 24,
                       ),
                       child: Text(
                         'Use the location button to save your current position.',
-                        textAlign:
-                            TextAlign.center,
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ],
@@ -380,8 +324,7 @@ class _SavedPlaces
             }
 
             return ListView(
-              padding:
-                  const EdgeInsets.fromLTRB(
+              padding: const EdgeInsets.fromLTRB(
                 16,
                 0,
                 16,
@@ -394,19 +337,15 @@ class _SavedPlaces
 
                 if (favourites.isNotEmpty) ...[
                   const _SectionTitle(
-                    title:
-                        'Saved',
+                    title: 'Saved',
                   ),
-
                   ...favourites.map(
                     (
                       NavigationPlace place,
                     ) =>
                         _PlaceTile(
-                      place:
-                          place,
-                      onTap:
-                          () {
+                      place: place,
+                      onTap: () {
                         onSelect(
                           place,
                         );
@@ -423,21 +362,16 @@ class _SavedPlaces
                   const SizedBox(
                     height: 18,
                   ),
-
                   const _SectionTitle(
-                    title:
-                        'Recent',
+                    title: 'Recent',
                   ),
-
                   ...recent.map(
                     (
                       NavigationPlace place,
                     ) =>
                         _PlaceTile(
-                      place:
-                          place,
-                      onTap:
-                          () {
+                      place: place,
+                      onTap: () {
                         onSelect(
                           place,
                         );
@@ -458,8 +392,7 @@ class _SavedPlaces
 // SEARCH RESULTS
 // =============================================================
 
-class _SearchResults
-    extends StatelessWidget {
+class _SearchResults extends StatelessWidget {
   final List<NavigationPlace> results;
 
   final Future<void> Function(
@@ -477,8 +410,7 @@ class _SearchResults
       return const Center(
         child: Text(
           'No offline destinations found',
-          style:
-              TextStyle(
+          style: TextStyle(
             fontSize: 17,
           ),
         ),
@@ -486,27 +418,22 @@ class _SearchResults
     }
 
     return ListView.builder(
-      padding:
-          const EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         16,
         0,
         16,
         24,
       ),
-      itemCount:
-          results.length,
+      itemCount: results.length,
       itemBuilder: (
         context,
         index,
       ) {
-        final NavigationPlace place =
-            results[index];
+        final NavigationPlace place = results[index];
 
         return _PlaceTile(
-          place:
-              place,
-          onTap:
-              () {
+          place: place,
+          onTap: () {
             onSelect(
               place,
             );
@@ -521,8 +448,7 @@ class _SearchResults
 // PLACE TILE
 // =============================================================
 
-class _PlaceTile
-    extends StatelessWidget {
+class _PlaceTile extends StatelessWidget {
   final NavigationPlace place;
 
   final VoidCallback onTap;
@@ -552,38 +478,29 @@ class _PlaceTile
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        minTileHeight:
-            68,
-        leading:
-            Icon(
+        minTileHeight: 68,
+        leading: Icon(
           icon,
           size: 30,
         ),
-        title:
-            Text(
+        title: Text(
           place.name,
-          style:
-              const TextStyle(
-            fontWeight:
-                FontWeight.bold,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
           ),
         ),
-        subtitle:
-            place.address == null ||
-                    place.address!.isEmpty
-                ? Text(
-                    '${place.latitude.toStringAsFixed(5)}, '
-                    '${place.longitude.toStringAsFixed(5)}',
-                  )
-                : Text(
-                    place.address!,
-                  ),
-        trailing:
-            const Icon(
+        subtitle: place.address == null || place.address!.isEmpty
+            ? Text(
+                '${place.latitude.toStringAsFixed(5)}, '
+                '${place.longitude.toStringAsFixed(5)}',
+              )
+            : Text(
+                place.address!,
+              ),
+        trailing: const Icon(
           Icons.chevron_right,
         ),
-        onTap:
-            onTap,
+        onTap: onTap,
       ),
     );
   }
@@ -593,8 +510,7 @@ class _PlaceTile
 // SECTION TITLE
 // =============================================================
 
-class _SectionTitle
-    extends StatelessWidget {
+class _SectionTitle extends StatelessWidget {
   final String title;
 
   const _SectionTitle({
@@ -604,19 +520,15 @@ class _SectionTitle
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.only(
+      padding: const EdgeInsets.only(
         left: 4,
         bottom: 8,
       ),
-      child:
-          Text(
+      child: Text(
         title.toUpperCase(),
-        style:
-            const TextStyle(
+        style: const TextStyle(
           fontSize: 12,
-          fontWeight:
-              FontWeight.bold,
+          fontWeight: FontWeight.bold,
           letterSpacing: 1.4,
         ),
       ),
@@ -628,8 +540,7 @@ class _SectionTitle
 // SAVE PLACE DIALOG
 // =============================================================
 
-class _SavePlaceDialog
-    extends StatefulWidget {
+class _SavePlaceDialog extends StatefulWidget {
   final double latitude;
 
   final double longitude;
@@ -640,14 +551,11 @@ class _SavePlaceDialog
   });
 
   @override
-  State<_SavePlaceDialog> createState() =>
-      _SavePlaceDialogState();
+  State<_SavePlaceDialog> createState() => _SavePlaceDialogState();
 }
 
-class _SavePlaceDialogState
-    extends State<_SavePlaceDialog> {
-  final TextEditingController name =
-      TextEditingController();
+class _SavePlaceDialogState extends State<_SavePlaceDialog> {
+  final TextEditingController name = TextEditingController();
 
   bool favourite = true;
 
@@ -665,33 +573,24 @@ class _SavePlaceDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title:
-          const Text(
+      title: const Text(
         'Save location',
       ),
-      content:
-          SizedBox(
+      content: SizedBox(
         width: 420,
-        child:
-            Column(
-          mainAxisSize:
-              MainAxisSize.min,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // ===============================================
             // NAME
             // ===============================================
 
             TextField(
-              controller:
-                  name,
-              autofocus:
-                  true,
-              decoration:
-                  const InputDecoration(
-                labelText:
-                    'Name',
-                hintText:
-                    'Camp, Home, Workshop...',
+              controller: name,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                hintText: 'Camp, Home, Workshop...',
               ),
             ),
 
@@ -704,17 +603,13 @@ class _SavePlaceDialogState
             // ===============================================
 
             CheckboxListTile(
-              value:
-                  favourite,
-              onChanged:
-                  (value) {
+              value: favourite,
+              onChanged: (value) {
                 setState(() {
-                  favourite =
-                      value ?? false;
+                  favourite = value ?? false;
                 });
               },
-              title:
-                  const Text(
+              title: const Text(
                 'Favourite',
               ),
             ),
@@ -724,13 +619,10 @@ class _SavePlaceDialogState
             // ===============================================
 
             CheckboxListTile(
-              value:
-                  home,
-              onChanged:
-                  (value) {
+              value: home,
+              onChanged: (value) {
                 setState(() {
-                  home =
-                      value ?? false;
+                  home = value ?? false;
 
                   if (home) {
                     work = false;
@@ -738,8 +630,7 @@ class _SavePlaceDialogState
                   }
                 });
               },
-              title:
-                  const Text(
+              title: const Text(
                 'Set as Home',
               ),
             ),
@@ -749,13 +640,10 @@ class _SavePlaceDialogState
             // ===============================================
 
             CheckboxListTile(
-              value:
-                  work,
-              onChanged:
-                  (value) {
+              value: work,
+              onChanged: (value) {
                 setState(() {
-                  work =
-                      value ?? false;
+                  work = value ?? false;
 
                   if (work) {
                     home = false;
@@ -763,8 +651,7 @@ class _SavePlaceDialogState
                   }
                 });
               },
-              title:
-                  const Text(
+              title: const Text(
                 'Set as Work',
               ),
             ),
@@ -777,14 +664,12 @@ class _SavePlaceDialogState
         // ===============================================
 
         TextButton(
-          onPressed:
-              () {
+          onPressed: () {
             Navigator.of(
               context,
             ).pop();
           },
-          child:
-              const Text(
+          child: const Text(
             'CANCEL',
           ),
         ),
@@ -794,10 +679,8 @@ class _SavePlaceDialogState
         // ===============================================
 
         FilledButton(
-          onPressed:
-              () {
-            final String placeName =
-                name.text.trim();
+          onPressed: () {
+            final String placeName = name.text.trim();
 
             if (placeName.isEmpty) {
               return;
@@ -807,23 +690,16 @@ class _SavePlaceDialogState
               context,
             ).pop(
               NavigationPlace(
-                name:
-                    placeName,
-                latitude:
-                    widget.latitude,
-                longitude:
-                    widget.longitude,
-                favourite:
-                    favourite,
-                isHome:
-                    home,
-                isWork:
-                    work,
+                name: placeName,
+                latitude: widget.latitude,
+                longitude: widget.longitude,
+                favourite: favourite,
+                isHome: home,
+                isWork: work,
               ),
             );
           },
-          child:
-              const Text(
+          child: const Text(
             'SAVE',
           ),
         ),

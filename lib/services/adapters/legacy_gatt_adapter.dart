@@ -16,45 +16,42 @@ import '../decoders/orion_decoder.dart';
 
 class LegacyGattAdapter implements VictronAdapter {
   LegacyGattAdapter({
-  required this.device,
-  required this.deviceType,
-}) {
-  switch (deviceType) {
-    case VictronDeviceType.blueSmartCharger:
-      _decoder = BlueSmartDecoder();
-      break;
+    required this.device,
+    required this.deviceType,
+  }) {
+    switch (deviceType) {
+      case VictronDeviceType.blueSmartCharger:
+        _decoder = BlueSmartDecoder();
+        break;
 
-    case VictronDeviceType.smartSolar:
-      _decoder = SmartSolarDecoder();
-      break;
+      case VictronDeviceType.smartSolar:
+        _decoder = SmartSolarDecoder();
+        break;
 
-    case VictronDeviceType.smartShunt:
-      _decoder = SmartShuntDecoder();
-      break;
+      case VictronDeviceType.smartShunt:
+        _decoder = SmartShuntDecoder();
+        break;
 
-    case VictronDeviceType.orionSmart:
-    case VictronDeviceType.orionXs:
-      _decoder = OrionDecoder();
-      break;
+      case VictronDeviceType.orionSmart:
+      case VictronDeviceType.orionXs:
+        _decoder = OrionDecoder();
+        break;
 
-    default:
-      _decoder = BlueSmartDecoder();
+      default:
+        _decoder = BlueSmartDecoder();
+    }
   }
-}
 
-  static const String _singleValueUuid =
-      '306b0002-b081-4037-83dc-e59fcc3cdfd0';
+  static const String _singleValueUuid = '306b0002-b081-4037-83dc-e59fcc3cdfd0';
 
-  static const String _commandUuid =
-      '306b0003-b081-4037-83dc-e59fcc3cdfd0';
+  static const String _commandUuid = '306b0003-b081-4037-83dc-e59fcc3cdfd0';
 
-  static const String _bulkValueUuid =
-      '306b0004-b081-4037-83dc-e59fcc3cdfd0';
+  static const String _bulkValueUuid = '306b0004-b081-4037-83dc-e59fcc3cdfd0';
 
   final BluetoothDevice device;
   late final DeviceDecoder _decoder;
 
-   final VictronDeviceType deviceType;
+  final VictronDeviceType deviceType;
 
   final StreamController<VictronLiveData> _liveDataController =
       StreamController<VictronLiveData>.broadcast();
@@ -87,8 +84,7 @@ class LegacyGattAdapter implements VictronAdapter {
 
         _characteristics[uuid] = characteristic;
 
-        final canSubscribe =
-            characteristic.properties.notify ||
+        final canSubscribe = characteristic.properties.notify ||
             characteristic.properties.indicate;
 
         if (canSubscribe) {
@@ -353,16 +349,11 @@ class LegacyGattAdapter implements VictronAdapter {
   }
 
   int _findRecordStart() {
-    for (
-      int index = 0;
-      index <= _protocolBuffer.length - 4;
-      index++
-    ) {
+    for (int index = 0; index <= _protocolBuffer.length - 4; index++) {
       final first = _protocolBuffer[index];
       final third = _protocolBuffer[index + 2];
 
-      if ((first == 0x08 || first == 0x09) &&
-          third == 0x19) {
+      if ((first == 0x08 || first == 0x09) && third == 0x19) {
         return index;
       }
     }
@@ -386,30 +377,30 @@ class LegacyGattAdapter implements VictronAdapter {
     }
   }
 
- void _decodeRecord(List<int> record) {
-  final category = record[3];
-  final register = record[4];
-  final valueBytes = record.sublist(6);
+  void _decodeRecord(List<int> record) {
+    final category = record[3];
+    final register = record[4];
+    final valueBytes = record.sublist(6);
 
-  final registerId =
-      '${category.toRadixString(16).padLeft(2, '0')}'
-      '${register.toRadixString(16).padLeft(2, '0')}';
+    final registerId = '${category.toRadixString(16).padLeft(2, '0')}'
+        '${register.toRadixString(16).padLeft(2, '0')}';
 
-  final rawValue = _decodeLittleEndian(
-    valueBytes,
-    signed: _isSignedRegister(registerId),
-  );
+    final rawValue = _decodeLittleEndian(
+      valueBytes,
+      signed: _isSignedRegister(registerId),
+    );
 
-  _latestData = _decoder.decode(
-  _latestData,
-  registerId,
-  rawValue,
-).copyWith(
-  updatedAt: DateTime.now(),
-);
-  _publish();
-}
-   
+    _latestData = _decoder
+        .decode(
+          _latestData,
+          registerId,
+          rawValue,
+        )
+        .copyWith(
+          updatedAt: DateTime.now(),
+        );
+    _publish();
+  }
 
   int _decodeLittleEndian(
     List<int> bytes, {
@@ -434,10 +425,8 @@ class LegacyGattAdapter implements VictronAdapter {
   }
 
   bool _isSignedRegister(String registerId) {
-    return registerId == 'ed8c' ||
-        registerId == 'ed8e';
+    return registerId == 'ed8c' || registerId == 'ed8e';
   }
-
 
   void _publish() {
     _liveDataController.add(_latestData);
@@ -446,9 +435,7 @@ class LegacyGattAdapter implements VictronAdapter {
   String _toHex(List<int> bytes) {
     return bytes
         .map(
-          (byte) => byte
-              .toRadixString(16)
-              .padLeft(2, '0'),
+          (byte) => byte.toRadixString(16).padLeft(2, '0'),
         )
         .join(' ');
   }
@@ -480,4 +467,4 @@ class LegacyGattAdapter implements VictronAdapter {
       await _liveDataController.close();
     }
   }
-} 
+}

@@ -8,14 +8,11 @@ class RuntimeCapabilityController {
   static final RuntimeCapabilityController instance =
       RuntimeCapabilityController._();
 
-  final RustlerGxConfigService _config =
-      RustlerGxConfigService.instance;
+  final RustlerGxConfigService _config = RustlerGxConfigService.instance;
 
-  final CapabilityRuntimeService _runtime =
-      CapabilityRuntimeService.instance;
+  final CapabilityRuntimeService _runtime = CapabilityRuntimeService.instance;
 
-  Future<Set<RustlerGxCapability>>
-      getCapabilities() async {
+  Future<Set<RustlerGxCapability>> getCapabilities() async {
     return _config.getCapabilities();
   }
 

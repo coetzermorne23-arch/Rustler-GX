@@ -8,8 +8,7 @@ enum RustlerGxCapability {
   remoteAccess,
 }
 
-extension RustlerGxCapabilityExtension
-    on RustlerGxCapability {
+extension RustlerGxCapabilityExtension on RustlerGxCapability {
   String get label {
     switch (this) {
       case RustlerGxCapability.localBluetooth:

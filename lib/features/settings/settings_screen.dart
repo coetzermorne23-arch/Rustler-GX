@@ -44,32 +44,28 @@ class SettingsScreen extends StatelessWidget {
         _SettingsTile(
           icon: Icons.bluetooth,
           title: 'Bluetooth & Victron',
-          subtitle:
-              'Bluetooth devices, Victron setup and encryption keys',
+          subtitle: 'Bluetooth devices, Victron setup and encryption keys',
           onTap: () {
             Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) =>
-                    const VictronSettingsScreen(),
+                builder: (_) => const VictronSettingsScreen(),
               ),
             );
           },
         ),
 
         _SettingsTile(
-  icon: Icons.extension,
-  title: 'Device Capabilities',
-  subtitle:
-      'Bluetooth, Hub, GPS, media and dashboard capabilities',
-  onTap: () {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            const DeviceCapabilitiesScreen(),
-      ),
-    );
-  },
-),
+          icon: Icons.extension,
+          title: 'Device Capabilities',
+          subtitle: 'Bluetooth, Hub, GPS, media and dashboard capabilities',
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const DeviceCapabilitiesScreen(),
+              ),
+            );
+          },
+        ),
 
         const SizedBox(height: 22),
 
@@ -84,8 +80,7 @@ class SettingsScreen extends StatelessWidget {
         const _SettingsTile(
           icon: Icons.dashboard_customize,
           title: 'Dashboard & Pages',
-          subtitle:
-              'Widgets, dashboard pages and layouts',
+          subtitle: 'Widgets, dashboard pages and layouts',
         ),
 
         const SizedBox(height: 22),
@@ -101,15 +96,13 @@ class SettingsScreen extends StatelessWidget {
         const _SettingsTile(
           icon: Icons.navigation,
           title: 'GPS & Navigation',
-          subtitle:
-              'GPS source, navigation and driving features',
+          subtitle: 'GPS source, navigation and driving features',
         ),
 
         const _SettingsTile(
           icon: Icons.music_note,
           title: 'Media',
-          subtitle:
-              'Music apps and dashboard media controls',
+          subtitle: 'Music apps and dashboard media controls',
         ),
 
         const SizedBox(height: 22),
@@ -125,22 +118,19 @@ class SettingsScreen extends StatelessWidget {
         const _SettingsTile(
           icon: Icons.extension,
           title: 'Device Capabilities',
-          subtitle:
-              'Bluetooth, Hub, GPS, media and dashboard capabilities',
+          subtitle: 'Bluetooth, Hub, GPS, media and dashboard capabilities',
         ),
 
         const _SettingsTile(
           icon: Icons.cloud_outlined,
           title: 'Remote Access',
-          subtitle:
-              'Optional internet-based remote monitoring',
+          subtitle: 'Optional internet-based remote monitoring',
         ),
 
         const _SettingsTile(
           icon: Icons.info_outline,
           title: 'About Rustler GX',
-          subtitle:
-              'Version and system information',
+          subtitle: 'Version and system information',
         ),
 
         const SizedBox(height: 30),
@@ -173,9 +163,7 @@ class _SectionTitle extends StatelessWidget {
           fontSize: 13,
           fontWeight: FontWeight.bold,
           letterSpacing: 1.1,
-          color: Theme.of(context)
-              .colorScheme
-              .primary,
+          color: Theme.of(context).colorScheme.primary,
         ),
       ),
     );
@@ -242,34 +230,26 @@ class _SettingsTile extends StatelessWidget {
 // VICTRON SETTINGS
 // ===========================================================
 
-class VictronSettingsScreen
-    extends StatefulWidget {
+class VictronSettingsScreen extends StatefulWidget {
   const VictronSettingsScreen({
     super.key,
   });
 
   @override
-  State<VictronSettingsScreen>
-      createState() =>
-          _VictronSettingsScreenState();
+  State<VictronSettingsScreen> createState() => _VictronSettingsScreenState();
 }
 
-class _VictronSettingsScreenState
-    extends State<VictronSettingsScreen> {
-  final VictronBluetoothService bluetooth =
-      VictronBluetoothService.instance;
+class _VictronSettingsScreenState extends State<VictronSettingsScreen> {
+  final VictronBluetoothService bluetooth = VictronBluetoothService.instance;
 
-  final VictronKeyService keyService =
-      VictronKeyService.instance;
+  final VictronKeyService keyService = VictronKeyService.instance;
 
   Future<void> _editKey(
     VictronDevice device,
   ) async {
-    final String deviceId =
-        device.device.remoteId.str;
+    final String deviceId = device.device.remoteId.str;
 
-    final String? existingKey =
-        await keyService.getKey(
+    final String? existingKey = await keyService.getKey(
       deviceId,
     );
 
@@ -277,8 +257,7 @@ class _VictronSettingsScreenState
       return;
     }
 
-    final bool? changed =
-        await showDialog<bool>(
+    final bool? changed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -309,8 +288,7 @@ class _VictronSettingsScreenState
           snapshot,
         ) {
           final List<VictronDevice> devices =
-              snapshot.data ??
-                  const <VictronDevice>[];
+              snapshot.data ?? const <VictronDevice>[];
 
           return ListView(
             padding: const EdgeInsets.all(
@@ -321,13 +299,10 @@ class _VictronSettingsScreenState
                 'Victron Devices',
                 style: TextStyle(
                   fontSize: 22,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 6),
-
               const Text(
                 'Manage Victron Instant Readout '
                 'encryption keys stored on this device.',
@@ -335,14 +310,11 @@ class _VictronSettingsScreenState
                   color: Colors.white70,
                 ),
               ),
-
               const SizedBox(height: 18),
-
               if (devices.isEmpty)
                 const Card(
                   child: Padding(
-                    padding:
-                        EdgeInsets.all(18),
+                    padding: EdgeInsets.all(18),
                     child: Column(
                       children: [
                         Icon(
@@ -353,8 +325,7 @@ class _VictronSettingsScreenState
                         Text(
                           'No Victron devices detected.',
                           style: TextStyle(
-                            fontWeight:
-                                FontWeight.bold,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         SizedBox(height: 5),
@@ -362,11 +333,9 @@ class _VictronSettingsScreenState
                           'Scan for BT devices first. '
                           'Detected Victron devices '
                           'will appear here.',
-                          textAlign:
-                              TextAlign.center,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            color:
-                                Colors.white70,
+                            color: Colors.white70,
                           ),
                         ),
                       ],
@@ -375,13 +344,10 @@ class _VictronSettingsScreenState
                 )
               else
                 ...devices.map(
-                  (device) =>
-                      _DeviceKeyCard(
+                  (device) => _DeviceKeyCard(
                     device: device,
-                    keyService:
-                        keyService,
-                    onEditKey: () =>
-                        _editKey(
+                    keyService: keyService,
+                    onEditKey: () => _editKey(
                       device,
                     ),
                   ),
@@ -398,8 +364,7 @@ class _VictronSettingsScreenState
 // DEVICE KEY CARD
 // ===========================================================
 
-class _DeviceKeyCard
-    extends StatelessWidget {
+class _DeviceKeyCard extends StatelessWidget {
   final VictronDevice device;
 
   final VictronKeyService keyService;
@@ -414,8 +379,7 @@ class _DeviceKeyCard
 
   @override
   Widget build(BuildContext context) {
-    final String deviceId =
-        device.device.remoteId.str;
+    final String deviceId = device.device.remoteId.str;
 
     return Card(
       margin: const EdgeInsets.only(
@@ -426,20 +390,16 @@ class _DeviceKeyCard
           16,
         ),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               device.displayName,
               style: const TextStyle(
                 fontSize: 17,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 6),
-
             Text(
               deviceId,
               style: const TextStyle(
@@ -447,9 +407,7 @@ class _DeviceKeyCard
                 color: Colors.white54,
               ),
             ),
-
             const SizedBox(height: 12),
-
             FutureBuilder<bool>(
               future: keyService.hasKey(
                 deviceId,
@@ -458,37 +416,25 @@ class _DeviceKeyCard
                 context,
                 snapshot,
               ) {
-                final bool hasKey =
-                    snapshot.data ??
-                        false;
+                final bool hasKey = snapshot.data ?? false;
 
                 return Row(
                   children: [
                     Icon(
-                      hasKey
-                          ? Icons.key
-                          : Icons.key_off,
+                      hasKey ? Icons.key : Icons.key_off,
                     ),
-
                     const SizedBox(
                       width: 8,
                     ),
-
                     Expanded(
                       child: Text(
-                        hasKey
-                            ? 'Encryption key saved'
-                            : 'No encryption key',
+                        hasKey ? 'Encryption key saved' : 'No encryption key',
                       ),
                     ),
-
                     FilledButton(
-                      onPressed:
-                          onEditKey,
+                      onPressed: onEditKey,
                       child: Text(
-                        hasKey
-                            ? 'EDIT KEY'
-                            : 'ADD KEY',
+                        hasKey ? 'EDIT KEY' : 'ADD KEY',
                       ),
                     ),
                   ],
@@ -506,8 +452,7 @@ class _DeviceKeyCard
 // KEY DIALOG
 // ===========================================================
 
-class _KeyDialog
-    extends StatefulWidget {
+class _KeyDialog extends StatefulWidget {
   final VictronDevice device;
 
   final String? existingKey;
@@ -518,17 +463,13 @@ class _KeyDialog
   });
 
   @override
-  State<_KeyDialog> createState() =>
-      _KeyDialogState();
+  State<_KeyDialog> createState() => _KeyDialogState();
 }
 
-class _KeyDialogState
-    extends State<_KeyDialog> {
-  final VictronKeyService keyService =
-      VictronKeyService.instance;
+class _KeyDialogState extends State<_KeyDialog> {
+  final VictronKeyService keyService = VictronKeyService.instance;
 
-  late final TextEditingController
-      controller;
+  late final TextEditingController controller;
 
   bool obscure = true;
 
@@ -538,10 +479,8 @@ class _KeyDialogState
   void initState() {
     super.initState();
 
-    controller =
-        TextEditingController(
-      text:
-          widget.existingKey ?? '',
+    controller = TextEditingController(
+      text: widget.existingKey ?? '',
     );
   }
 
@@ -553,23 +492,21 @@ class _KeyDialogState
   }
 
   Future<void> _save() async {
-    final String value =
-        controller.text
-            .replaceAll(
-              ' ',
-              '',
-            )
-            .replaceAll(
-              ':',
-              '',
-            )
-            .trim();
+    final String value = controller.text
+        .replaceAll(
+          ' ',
+          '',
+        )
+        .replaceAll(
+          ':',
+          '',
+        )
+        .trim();
 
     if (!RegExp(
       r'^[0-9a-fA-F]{32}$',
     ).hasMatch(value)) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Key must be exactly '
@@ -587,8 +524,7 @@ class _KeyDialogState
 
     try {
       await keyService.saveKey(
-        deviceId:
-            widget.device.device.remoteId.str,
+        deviceId: widget.device.device.remoteId.str,
         encryptionKey: value,
       );
 
@@ -609,8 +545,7 @@ class _KeyDialogState
         saving = false;
       });
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             error.toString(),
@@ -654,24 +589,18 @@ class _KeyDialogState
           autocorrect: false,
           enableSuggestions: false,
           decoration: InputDecoration(
-            labelText:
-                'Encryption key',
-            border:
-                const OutlineInputBorder(),
+            labelText: 'Encryption key',
+            border: const OutlineInputBorder(),
             suffixIcon: IconButton(
               onPressed: saving
                   ? null
                   : () {
                       setState(() {
-                        obscure =
-                            !obscure;
+                        obscure = !obscure;
                       });
                     },
               icon: Icon(
-                obscure
-                    ? Icons.visibility
-                    : Icons
-                        .visibility_off,
+                obscure ? Icons.visibility : Icons.visibility_off,
               ),
             ),
           ),
@@ -680,15 +609,11 @@ class _KeyDialogState
       actions: [
         if (widget.existingKey != null)
           TextButton(
-            onPressed:
-                saving
-                    ? null
-                    : _remove,
+            onPressed: saving ? null : _remove,
             child: const Text(
               'REMOVE',
             ),
           ),
-
         TextButton(
           onPressed: saving
               ? null
@@ -702,18 +627,13 @@ class _KeyDialogState
             'CANCEL',
           ),
         ),
-
         FilledButton(
-          onPressed:
-              saving
-                  ? null
-                  : _save,
+          onPressed: saving ? null : _save,
           child: saving
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child:
-                      CircularProgressIndicator(
+                  child: CircularProgressIndicator(
                     strokeWidth: 2,
                   ),
                 )

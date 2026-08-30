@@ -11,20 +11,16 @@ class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() =>
-      _DashboardScreenState();
+  State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState
-    extends State<DashboardScreen> {
-  final VictronBluetoothService bluetooth =
-      VictronBluetoothService.instance;
+class _DashboardScreenState extends State<DashboardScreen> {
+  final VictronBluetoothService bluetooth = VictronBluetoothService.instance;
 
   int _selectedIndex = 0;
 
   Widget _dashboardPage() {
-    return ValueListenableBuilder<
-        Map<String, VictronLiveData>>(
+    return ValueListenableBuilder<Map<String, VictronLiveData>>(
       valueListenable: bluetooth.liveDevices,
       builder: (context, devices, child) {
         final entries = devices.entries.toList()
@@ -44,9 +40,7 @@ class _DashboardScreenState
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 6),
-
             Text(
               entries.isEmpty
                   ? 'No live devices'
@@ -56,9 +50,7 @@ class _DashboardScreenState
                 color: Colors.white70,
               ),
             ),
-
             const SizedBox(height: 16),
-
             if (entries.isEmpty)
               const _EmptyDashboard()
             else
@@ -155,9 +147,7 @@ class _EmptyDashboard extends StatelessWidget {
               Icons.bluetooth_searching,
               size: 52,
             ),
-
             const SizedBox(height: 12),
-
             const Text(
               'No Victron live data',
               style: TextStyle(
@@ -165,9 +155,7 @@ class _EmptyDashboard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 8),
-
             const Text(
               'Scan for Victron devices to start '
               'receiving live data.',
@@ -198,8 +186,7 @@ class _VictronDeviceCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(18),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
@@ -207,27 +194,19 @@ class _VictronDeviceCard extends StatelessWidget {
                   _iconForType(type),
                   size: 42,
                 ),
-
                 const SizedBox(width: 12),
-
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        data.name.isEmpty
-                            ? 'Victron Device'
-                            : data.name,
+                        data.name.isEmpty ? 'Victron Device' : data.name,
                         style: const TextStyle(
                           fontSize: 19,
-                          fontWeight:
-                              FontWeight.bold,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 3),
-
                       Text(
                         _labelForType(type),
                         style: const TextStyle(
@@ -237,32 +216,18 @@ class _VictronDeviceCard extends StatelessWidget {
                     ],
                   ),
                 ),
-
                 _LiveIndicator(
                   updatedAt: data.updatedAt,
                 ),
               ],
             ),
-
             const SizedBox(height: 18),
-
-            if (type == _DashboardDeviceType.shunt)
-              _buildShunt(),
-
-            if (type == _DashboardDeviceType.mppt)
-              _buildMppt(),
-
-            if (type == _DashboardDeviceType.orion)
-              _buildOrion(),
-
-            if (type == _DashboardDeviceType.charger)
-              _buildCharger(),
-
-            if (type == _DashboardDeviceType.unknown)
-              _buildGeneric(),
-
+            if (type == _DashboardDeviceType.shunt) _buildShunt(),
+            if (type == _DashboardDeviceType.mppt) _buildMppt(),
+            if (type == _DashboardDeviceType.orion) _buildOrion(),
+            if (type == _DashboardDeviceType.charger) _buildCharger(),
+            if (type == _DashboardDeviceType.unknown) _buildGeneric(),
             const SizedBox(height: 12),
-
             Text(
               data.serial,
               style: const TextStyle(
@@ -276,55 +241,48 @@ class _VictronDeviceCard extends StatelessWidget {
     );
   }
 
-    Widget _buildShunt() {
+  Widget _buildShunt() {
     return Column(
       children: [
         const _SectionTitle(
           title: 'BATTERY',
         ),
-
         _DataRow(
           label: 'Battery voltage',
           value: _voltage(
             data.batteryVoltage,
           ),
         ),
-
         _DataRow(
           label: 'Battery current',
           value: _amps(
             data.batteryCurrent,
           ),
         ),
-
         _DataRow(
           label: 'Battery power',
           value: _watts(
             _batteryPower(),
           ),
         ),
-
         _DataRow(
           label: 'State of charge',
           value: _percent(
             data.stateOfCharge,
           ),
         ),
-
         _DataRow(
           label: 'Consumed Ah',
           value: _ampHours(
             data.consumedAh,
           ),
         ),
-
         _DataRow(
           label: 'Time remaining',
           value: _remainingTime(
             data.remainingMinutes,
           ),
         ),
-
         if (data.temperature != null)
           _DataRow(
             label: 'Temperature',
@@ -332,14 +290,11 @@ class _VictronDeviceCard extends StatelessWidget {
               data.temperature,
             ),
           ),
-
         if (data.starterVoltage != null) ...[
           const Divider(height: 24),
-
           const _SectionTitle(
             title: 'AUX / STARTER',
           ),
-
           _DataRow(
             label: 'Starter voltage',
             value: _voltage(
@@ -347,14 +302,11 @@ class _VictronDeviceCard extends StatelessWidget {
             ),
           ),
         ],
-
         if (data.midpointVoltage != null) ...[
           const Divider(height: 24),
-
           const _SectionTitle(
             title: 'MIDPOINT',
           ),
-
           _DataRow(
             label: 'Midpoint voltage',
             value: _voltage(
@@ -362,27 +314,23 @@ class _VictronDeviceCard extends StatelessWidget {
             ),
           ),
         ],
-
-        if (data.alarmCode != null &&
-            data.alarmCode != 0) ...[
+        if (data.alarmCode != null && data.alarmCode != 0) ...[
           const Divider(height: 24),
-
           _DataRow(
             label: 'Alarm',
-            value:
-                'Code ${data.alarmCode}',
+            value: 'Code ${data.alarmCode}',
           ),
         ],
       ],
     );
   }
-    Widget _buildMppt() {
+
+  Widget _buildMppt() {
     return Column(
       children: [
         const _SectionTitle(
           title: 'SOLAR',
         ),
-
         if (data.pvVoltage != null)
           _DataRow(
             label: 'PV voltage',
@@ -390,7 +338,6 @@ class _VictronDeviceCard extends StatelessWidget {
               data.pvVoltage,
             ),
           ),
-
         if (data.pvCurrent != null)
           _DataRow(
             label: 'PV current',
@@ -398,21 +345,18 @@ class _VictronDeviceCard extends StatelessWidget {
               data.pvCurrent,
             ),
           ),
-
         _DataRow(
           label: 'PV power',
           value: _watts(
             data.pvPower,
           ),
         ),
-
         _DataRow(
           label: 'Yield today',
           value: _energy(
             data.yieldToday,
           ),
         ),
-
         if (data.loadCurrent != null)
           _DataRow(
             label: 'Load current',
@@ -420,41 +364,32 @@ class _VictronDeviceCard extends StatelessWidget {
               data.loadCurrent,
             ),
           ),
-
         const Divider(height: 24),
-
         const _SectionTitle(
           title: 'BATTERY / CHARGER',
         ),
-
         _DataRow(
           label: 'Battery voltage',
           value: _voltage(
             data.batteryVoltage,
           ),
         ),
-
         _DataRow(
           label: 'Charge current',
           value: _amps(
             data.chargeCurrent,
           ),
         ),
-
         _DataRow(
           label: 'Output power',
           value: _watts(
             data.power,
           ),
         ),
-
         _DataRow(
           label: 'Charge state',
-          value:
-              data.chargeState ??
-              'Waiting...',
+          value: data.chargeState ?? 'Waiting...',
         ),
-
         _DataRow(
           label: 'Charger error',
           value: _chargerError(
@@ -471,117 +406,94 @@ class _VictronDeviceCard extends StatelessWidget {
         const _SectionTitle(
           title: 'INPUT',
         ),
-
         _DataRow(
           label: 'Input voltage',
           value: _voltage(
             data.inputVoltage,
           ),
         ),
-
         const Divider(height: 24),
-
         const _SectionTitle(
           title: 'OUTPUT',
         ),
-
         _DataRow(
           label: 'Output voltage',
           value: _voltage(
-            data.outputVoltage ??
-                data.batteryVoltage,
+            data.outputVoltage ?? data.batteryVoltage,
           ),
         ),
-
         _DataRow(
           label: 'Output current',
           value: _amps(
-            data.outputCurrent ??
-                data.chargeCurrent,
+            data.outputCurrent ?? data.chargeCurrent,
           ),
         ),
-
         _DataRow(
           label: 'Output power',
           value: _watts(
-            data.outputPower ??
-                data.power,
+            data.outputPower ?? data.power,
           ),
         ),
-
         _DataRow(
           label: 'State',
-          value:
-              data.chargeState ?? 'Waiting...',
+          value: data.chargeState ?? 'Waiting...',
         ),
       ],
     );
   }
 
   Widget _buildCharger() {
-  final bool hasError =
-      data.chargerError != null &&
-      data.chargerError != 0;
+    final bool hasError = data.chargerError != null && data.chargerError != 0;
 
-  return Column(
-    children: [
-      const _SectionTitle(
-        title: 'CHARGER OUTPUT',
-      ),
-
-      _DataRow(
-        label: 'Battery voltage',
-        value: _voltage(
-          data.batteryVoltage,
+    return Column(
+      children: [
+        const _SectionTitle(
+          title: 'CHARGER OUTPUT',
         ),
-      ),
-
-      _DataRow(
-        label: 'Charge current',
-        value: _amps(
-          data.chargeCurrent,
-        ),
-      ),
-
-      _DataRow(
-        label: 'Output power',
-        value: _watts(
-          data.power,
-        ),
-      ),
-
-      const Divider(height: 24),
-
-      const _SectionTitle(
-        title: 'STATUS',
-      ),
-
-      _DataRow(
-        label: 'Charge state',
-        value:
-            data.chargeState ??
-            'Waiting...',
-      ),
-
-      _DataRow(
-        label: 'Charger status',
-        value: hasError
-            ? 'ERROR ${data.chargerError}'
-            : data.chargerError == 0
-                ? 'OK'
-                : 'Waiting...',
-      ),
-
-      if (data.temperature != null)
         _DataRow(
-          label: 'Temperature',
-          value: _temperature(
-            data.temperature,
+          label: 'Battery voltage',
+          value: _voltage(
+            data.batteryVoltage,
           ),
         ),
-    ],
-  );
-}
+        _DataRow(
+          label: 'Charge current',
+          value: _amps(
+            data.chargeCurrent,
+          ),
+        ),
+        _DataRow(
+          label: 'Output power',
+          value: _watts(
+            data.power,
+          ),
+        ),
+        const Divider(height: 24),
+        const _SectionTitle(
+          title: 'STATUS',
+        ),
+        _DataRow(
+          label: 'Charge state',
+          value: data.chargeState ?? 'Waiting...',
+        ),
+        _DataRow(
+          label: 'Charger status',
+          value: hasError
+              ? 'ERROR ${data.chargerError}'
+              : data.chargerError == 0
+                  ? 'OK'
+                  : 'Waiting...',
+        ),
+        if (data.temperature != null)
+          _DataRow(
+            label: 'Temperature',
+            value: _temperature(
+              data.temperature,
+            ),
+          ),
+      ],
+    );
+  }
 
   Widget _buildGeneric() {
     return Column(
@@ -592,53 +504,45 @@ class _VictronDeviceCard extends StatelessWidget {
             data.batteryVoltage,
           ),
         ),
-
         _DataRow(
           label: 'Battery current',
           value: _amps(
             data.batteryCurrent,
           ),
         ),
-
         _DataRow(
           label: 'Charge current',
           value: _amps(
             data.chargeCurrent,
           ),
         ),
-
         _DataRow(
           label: 'Power',
           value: _watts(
             data.power,
           ),
         ),
-
         _DataRow(
           label: 'SOC',
           value: _percent(
             data.stateOfCharge,
           ),
         ),
-
         _DataRow(
           label: 'PV voltage',
           value: _voltage(
             data.pvVoltage,
           ),
         ),
-
         _DataRow(
           label: 'PV power',
           value: _watts(
             data.pvPower,
           ),
         ),
-
         _DataRow(
           label: 'State',
-          value:
-              data.chargeState ?? 'Waiting...',
+          value: data.chargeState ?? 'Waiting...',
         ),
       ],
     );
@@ -649,13 +553,11 @@ class _VictronDeviceCard extends StatelessWidget {
       return data.power;
     }
 
-    if (data.batteryVoltage == null ||
-        data.batteryCurrent == null) {
+    if (data.batteryVoltage == null || data.batteryCurrent == null) {
       return null;
     }
 
-    return data.batteryVoltage! *
-        data.batteryCurrent!;
+    return data.batteryVoltage! * data.batteryCurrent!;
   }
 
   _DashboardDeviceType _detectType(
@@ -685,8 +587,7 @@ class _VictronDeviceCard extends StatelessWidget {
       return _DashboardDeviceType.charger;
     }
 
-    if (data.pvPower != null ||
-        data.pvVoltage != null) {
+    if (data.pvPower != null || data.pvVoltage != null) {
       return _DashboardDeviceType.mppt;
     }
 
@@ -694,8 +595,7 @@ class _VictronDeviceCard extends StatelessWidget {
       return _DashboardDeviceType.shunt;
     }
 
-    if (data.inputVoltage != null ||
-        data.outputVoltage != null) {
+    if (data.inputVoltage != null || data.outputVoltage != null) {
       return _DashboardDeviceType.orion;
     }
 
@@ -801,8 +701,7 @@ class _VictronDeviceCard extends StatelessWidget {
       return 'Waiting...';
     }
 
-    if (minutes < 0 ||
-        minutes >= 0xffff) {
+    if (minutes < 0 || minutes >= 0xffff) {
       return '--';
     }
 
@@ -846,19 +745,15 @@ class _LiveIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final age =
-        DateTime.now().difference(updatedAt);
+    final age = DateTime.now().difference(updatedAt);
 
-    final live =
-        age < const Duration(seconds: 45);
+    final live = age < const Duration(seconds: 45);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
-          live
-              ? Icons.circle
-              : Icons.circle_outlined,
+          live ? Icons.circle : Icons.circle_outlined,
           size: 10,
         ),
         const SizedBox(width: 5),
@@ -867,15 +762,14 @@ class _LiveIndicator extends StatelessWidget {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: live
-                ? Colors.greenAccent
-                : Colors.white38,
+            color: live ? Colors.greenAccent : Colors.white38,
           ),
         ),
       ],
     );
   }
 }
+
 class _SectionTitle extends StatelessWidget {
   final String title;
 
@@ -888,8 +782,7 @@ class _SectionTitle extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
-        padding:
-            const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.only(bottom: 6),
         child: Text(
           title,
           style: const TextStyle(
@@ -916,8 +809,7 @@ class _DataRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(vertical: 7),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
           Expanded(
@@ -928,7 +820,6 @@ class _DataRow extends StatelessWidget {
               ),
             ),
           ),
-
           Text(
             value,
             style: const TextStyle(

@@ -5,13 +5,10 @@ import '../models/rustler_device.dart';
 class DeviceRegistryService {
   DeviceRegistryService._();
 
-  static final DeviceRegistryService instance =
-      DeviceRegistryService._();
+  static final DeviceRegistryService instance = DeviceRegistryService._();
 
-  final ValueNotifier<
-      Map<String, RustlerDevice>> devices =
-      ValueNotifier<
-          Map<String, RustlerDevice>>(
+  final ValueNotifier<Map<String, RustlerDevice>> devices =
+      ValueNotifier<Map<String, RustlerDevice>>(
     <String, RustlerDevice>{},
   );
 
@@ -24,8 +21,7 @@ class DeviceRegistryService {
   void upsertDevice(
     RustlerDevice device,
   ) {
-    final updated =
-        Map<String, RustlerDevice>.from(
+    final updated = Map<String, RustlerDevice>.from(
       devices.value,
     );
 
@@ -37,8 +33,7 @@ class DeviceRegistryService {
   void removeDevice(
     String deviceId,
   ) {
-    final updated =
-        Map<String, RustlerDevice>.from(
+    final updated = Map<String, RustlerDevice>.from(
       devices.value,
     );
 
@@ -53,8 +48,7 @@ class DeviceRegistryService {
     String deviceId,
     bool available,
   ) {
-    final RustlerDevice? existing =
-        devices.value[deviceId];
+    final RustlerDevice? existing = devices.value[deviceId];
 
     if (existing == null) {
       return;
@@ -72,15 +66,13 @@ class DeviceRegistryService {
     required String deviceId,
     required String entityId,
   }) {
-    final RustlerDevice? existing =
-        devices.value[deviceId];
+    final RustlerDevice? existing = devices.value[deviceId];
 
     if (existing == null) {
       return;
     }
 
-    final List<String> entityIds =
-        List<String>.from(
+    final List<String> entityIds = List<String>.from(
       existing.entityIds,
     );
 
@@ -104,15 +96,13 @@ class DeviceRegistryService {
     required String deviceId,
     required String entityId,
   }) {
-    final RustlerDevice? existing =
-        devices.value[deviceId];
+    final RustlerDevice? existing = devices.value[deviceId];
 
     if (existing == null) {
       return;
     }
 
-    final List<String> entityIds =
-        List<String>.from(
+    final List<String> entityIds = List<String>.from(
       existing.entityIds,
     );
 
@@ -131,14 +121,12 @@ class DeviceRegistryService {
   List<RustlerDevice> get availableDevices {
     return devices.value.values
         .where(
-          (device) =>
-              device.available,
+          (device) => device.available,
         )
         .toList();
   }
 
   void clear() {
-    devices.value =
-        <String, RustlerDevice>{};
+    devices.value = <String, RustlerDevice>{};
   }
 }

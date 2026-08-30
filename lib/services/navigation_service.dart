@@ -15,60 +15,47 @@ import 'offline_routing_service.dart';
 class NavigationService {
   NavigationService._();
 
-  static final NavigationService instance =
-      NavigationService._();
+  static final NavigationService instance = NavigationService._();
 
-  final NavigationPlaceService places =
-      NavigationPlaceService.instance;
+  final NavigationPlaceService places = NavigationPlaceService.instance;
 
-  final OfflineRoutingService routing =
-      OfflineRoutingService.instance;
+  final OfflineRoutingService routing = OfflineRoutingService.instance;
 
-  final GpsService gps =
-      GpsService.instance;
+  final GpsService gps = GpsService.instance;
 
-  final ValueNotifier<NavigationPlace?>
-      destination =
+  final ValueNotifier<NavigationPlace?> destination =
       ValueNotifier<NavigationPlace?>(
     null,
   );
 
-  final ValueNotifier<NavigationRoute?>
-      route =
-      ValueNotifier<NavigationRoute?>(
+  final ValueNotifier<NavigationRoute?> route = ValueNotifier<NavigationRoute?>(
     null,
   );
 
-  final ValueNotifier<RouteInstruction?>
-      currentInstruction =
+  final ValueNotifier<RouteInstruction?> currentInstruction =
       ValueNotifier<RouteInstruction?>(
     null,
   );
 
-  final ValueNotifier<bool> navigating =
-      ValueNotifier<bool>(
+  final ValueNotifier<bool> navigating = ValueNotifier<bool>(
     false,
   );
 
-  final ValueNotifier<bool> calculating =
-      ValueNotifier<bool>(
+  final ValueNotifier<bool> calculating = ValueNotifier<bool>(
     false,
   );
 
-  final ValueNotifier<bool> offRoute =
-      ValueNotifier<bool>(
+  final ValueNotifier<bool> offRoute = ValueNotifier<bool>(
     false,
   );
 
-  final ValueNotifier<String?> error =
-      ValueNotifier<String?>(
+  final ValueNotifier<String?> error = ValueNotifier<String?>(
     null,
   );
 
   DateTime? _lastReroute;
 
-  bool _initialised =
-      false;
+  bool _initialised = false;
 
   Future<void> initialise() async {
     if (_initialised) {
@@ -83,30 +70,23 @@ class NavigationService {
       _gpsChanged,
     );
 
-    _initialised =
-        true;
+    _initialised = true;
   }
 
   Future<void> selectDestination(
     NavigationPlace place,
   ) async {
-    destination.value =
-        place;
+    destination.value = place;
 
-    route.value =
-        null;
+    route.value = null;
 
-    currentInstruction.value =
-        null;
+    currentInstruction.value = null;
 
-    navigating.value =
-        false;
+    navigating.value = false;
 
-    offRoute.value =
-        false;
+    offRoute.value = false;
 
-    error.value =
-        null;
+    error.value = null;
 
     if (place.id != null) {
       await places.markVisited(
@@ -116,106 +96,78 @@ class NavigationService {
   }
 
   Future<bool> startNavigation() async {
-    final NavigationPlace? target =
-        destination.value;
+    final NavigationPlace? target = destination.value;
 
-    final Position? position =
-        gps.position.value;
+    final Position? position = gps.position.value;
 
     if (target == null) {
-      error.value =
-          'No destination selected.';
+      error.value = 'No destination selected.';
 
       return false;
     }
 
     if (position == null) {
-      error.value =
-          'Waiting for GPS position.';
+      error.value = 'Waiting for GPS position.';
 
       return false;
     }
 
-    calculating.value =
-        true;
+    calculating.value = true;
 
-    error.value =
-        null;
+    error.value = null;
 
     try {
-      final NavigationRoute?
-          calculated =
-          await routing.calculateRoute(
-        startLatitude:
-            position.latitude,
-        startLongitude:
-            position.longitude,
-        destinationLatitude:
-            target.latitude,
-        destinationLongitude:
-            target.longitude,
+      final NavigationRoute? calculated = await routing.calculateRoute(
+        startLatitude: position.latitude,
+        startLongitude: position.longitude,
+        destinationLatitude: target.latitude,
+        destinationLongitude: target.longitude,
       );
 
       if (calculated == null) {
-        error.value =
-            routing.graph.hasRoadData
-                ? 'No road route found.'
-                : 'No offline road graph installed.';
+        error.value = routing.graph.hasRoadData
+            ? 'No road route found.'
+            : 'No offline road graph installed.';
 
-        navigating.value =
-            false;
+        navigating.value = false;
 
         return false;
       }
 
-      route.value =
-          calculated;
+      route.value = calculated;
 
-      navigating.value =
-          true;
+      navigating.value = true;
 
-      offRoute.value =
-          false;
+      offRoute.value = false;
 
-      if (calculated.instructions
-          .isNotEmpty) {
-        currentInstruction.value =
-            calculated.instructions.first;
+      if (calculated.instructions.isNotEmpty) {
+        currentInstruction.value = calculated.instructions.first;
       }
 
       return true;
     } catch (exception) {
-      error.value =
-          'Routing error: $exception';
+      error.value = 'Routing error: $exception';
 
-      navigating.value =
-          false;
+      navigating.value = false;
 
       return false;
     } finally {
-      calculating.value =
-          false;
+      calculating.value = false;
     }
   }
 
   void stopNavigation() {
-    navigating.value =
-        false;
+    navigating.value = false;
 
-    route.value =
-        null;
+    route.value = null;
 
-    destination.value =
-        null;
+    destination.value = null;
 
-    currentInstruction.value =
-        null;
+    currentInstruction.value = null;
 
-    offRoute.value =
-        false;
+    offRoute.value = false;
 
-    error.value =
-        null;
+    error.value = null;
   }
 
   void _gpsChanged() {
@@ -223,15 +175,11 @@ class NavigationService {
       return;
     }
 
-    final Position? position =
-        gps.position.value;
+    final Position? position = gps.position.value;
 
-    final NavigationRoute? activeRoute =
-        route.value;
+    final NavigationRoute? activeRoute = route.value;
 
-    if (position == null ||
-        activeRoute == null ||
-        activeRoute.points.isEmpty) {
+    if (position == null || activeRoute == null || activeRoute.points.isEmpty) {
       return;
     }
 
@@ -240,21 +188,16 @@ class NavigationService {
       activeRoute,
     );
 
-    final double distance =
-        _distanceFromRoute(
+    final double distance = _distanceFromRoute(
       position,
       activeRoute,
     );
 
-    const double offRouteThreshold =
-        60;
+    const double offRouteThreshold = 60;
 
-    final bool nowOffRoute =
-        distance >
-            offRouteThreshold;
+    final bool nowOffRoute = distance > offRouteThreshold;
 
-    offRoute.value =
-        nowOffRoute;
+    offRoute.value = nowOffRoute;
 
     if (nowOffRoute) {
       _requestReroute();
@@ -265,39 +208,31 @@ class NavigationService {
     Position position,
     NavigationRoute activeRoute,
   ) {
-    if (activeRoute.instructions
-        .isEmpty) {
+    if (activeRoute.instructions.isEmpty) {
       return;
     }
 
     RouteInstruction? closest;
 
-    double closestDistance =
-        double.infinity;
+    double closestDistance = double.infinity;
 
-    for (final RouteInstruction instruction
-        in activeRoute.instructions) {
-      final double distance =
-          Geolocator.distanceBetween(
+    for (final RouteInstruction instruction in activeRoute.instructions) {
+      final double distance = Geolocator.distanceBetween(
         position.latitude,
         position.longitude,
         instruction.latitude,
         instruction.longitude,
       );
 
-      if (distance <
-          closestDistance) {
-        closestDistance =
-            distance;
+      if (distance < closestDistance) {
+        closestDistance = distance;
 
-        closest =
-            instruction;
+        closest = instruction;
       }
     }
 
     if (closest != null) {
-      currentInstruction.value =
-          closest;
+      currentInstruction.value = closest;
     }
   }
 
@@ -305,23 +240,18 @@ class NavigationService {
     Position position,
     NavigationRoute activeRoute,
   ) {
-    double closest =
-        double.infinity;
+    double closest = double.infinity;
 
-    for (final RoutePoint point
-        in activeRoute.points) {
-      final double distance =
-          Geolocator.distanceBetween(
+    for (final RoutePoint point in activeRoute.points) {
+      final double distance = Geolocator.distanceBetween(
         position.latitude,
         position.longitude,
         point.latitude,
         point.longitude,
       );
 
-      if (distance <
-          closest) {
-        closest =
-            distance;
+      if (distance < closest) {
+        closest = distance;
       }
     }
 
@@ -329,8 +259,7 @@ class NavigationService {
   }
 
   Future<void> _requestReroute() async {
-    final DateTime now =
-        DateTime.now();
+    final DateTime now = DateTime.now();
 
     if (_lastReroute != null &&
         now.difference(
@@ -346,8 +275,7 @@ class NavigationService {
       return;
     }
 
-    _lastReroute =
-        now;
+    _lastReroute = now;
 
     await startNavigation();
   }

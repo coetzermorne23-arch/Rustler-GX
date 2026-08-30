@@ -17,11 +17,9 @@ class NavigationRoute {
     required this.estimatedDuration,
   });
 
-  double get distanceKm =>
-      distanceMetres / 1000;
+  double get distanceKm => distanceMetres / 1000;
 
-  bool get isEmpty =>
-      points.isEmpty;
+  bool get isEmpty => points.isEmpty;
 
   String get distanceText {
     if (distanceMetres < 1000) {
@@ -32,18 +30,15 @@ class NavigationRoute {
   }
 
   String get etaText {
-    final int totalMinutes =
-        estimatedDuration.inMinutes;
+    final int totalMinutes = estimatedDuration.inMinutes;
 
     if (totalMinutes < 60) {
       return '$totalMinutes min';
     }
 
-    final int hours =
-        totalMinutes ~/ 60;
+    final int hours = totalMinutes ~/ 60;
 
-    final int minutes =
-        totalMinutes % 60;
+    final int minutes = totalMinutes % 60;
 
     if (minutes == 0) {
       return '${hours}h';

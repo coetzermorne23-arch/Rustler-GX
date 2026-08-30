@@ -5,16 +5,14 @@ import '../../models/victron_live_data.dart';
 class DashboardRepository {
   DashboardRepository._();
 
-  static final DashboardRepository instance =
-      DashboardRepository._();
+  static final DashboardRepository instance = DashboardRepository._();
 
   final Map<String, VictronLiveData> _devices = {};
 
   final StreamController<List<VictronLiveData>> _controller =
       StreamController.broadcast();
 
-  Stream<List<VictronLiveData>> get devices =>
-      _controller.stream;
+  Stream<List<VictronLiveData>> get devices => _controller.stream;
 
   void update(VictronLiveData data) {
     _devices[data.serial] = data;
@@ -37,6 +35,5 @@ class DashboardRepository {
     _controller.add([]);
   }
 
-  List<VictronLiveData> get current =>
-      _devices.values.toList();
+  List<VictronLiveData> get current => _devices.values.toList();
 }

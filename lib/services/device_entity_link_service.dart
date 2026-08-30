@@ -6,14 +6,11 @@ import 'entity_service.dart';
 class DeviceEntityLinkService {
   DeviceEntityLinkService._();
 
-  static final DeviceEntityLinkService instance =
-      DeviceEntityLinkService._();
+  static final DeviceEntityLinkService instance = DeviceEntityLinkService._();
 
-  final DeviceRegistryService devices =
-      DeviceRegistryService.instance;
+  final DeviceRegistryService devices = DeviceRegistryService.instance;
 
-  final EntityService entities =
-      EntityService.instance;
+  final EntityService entities = EntityService.instance;
 
   void registerDevice(
     RustlerDevice device,
@@ -40,8 +37,7 @@ class DeviceEntityLinkService {
   List<RustlerEntity> entitiesForDevice(
     String deviceId,
   ) {
-    final RustlerDevice? device =
-        devices.getDevice(
+    final RustlerDevice? device = devices.getDevice(
       deviceId,
     );
 
@@ -49,13 +45,10 @@ class DeviceEntityLinkService {
       return <RustlerEntity>[];
     }
 
-    final List<RustlerEntity> result =
-        <RustlerEntity>[];
+    final List<RustlerEntity> result = <RustlerEntity>[];
 
-    for (final String entityId
-        in device.entityIds) {
-      final RustlerEntity? entity =
-          entities.get(
+    for (final String entityId in device.entityIds) {
+      final RustlerEntity? entity = entities.get(
         entityId,
       );
 
@@ -78,8 +71,7 @@ class DeviceEntityLinkService {
       available,
     );
 
-    final RustlerDevice? device =
-        devices.getDevice(
+    final RustlerDevice? device = devices.getDevice(
       deviceId,
     );
 
@@ -87,10 +79,8 @@ class DeviceEntityLinkService {
       return;
     }
 
-    for (final String entityId
-        in device.entityIds) {
-      final RustlerEntity? entity =
-          entities.get(
+    for (final String entityId in device.entityIds) {
+      final RustlerEntity? entity = entities.get(
         entityId,
       );
 

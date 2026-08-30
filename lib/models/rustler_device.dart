@@ -54,17 +54,13 @@ class RustlerDevice {
     return RustlerDevice(
       id: id,
       name: name ?? this.name,
-      manufacturer:
-          manufacturer ?? this.manufacturer,
+      manufacturer: manufacturer ?? this.manufacturer,
       model: model ?? this.model,
       type: type ?? this.type,
       source: source ?? this.source,
-      available:
-          available ?? this.available,
-      updatedAt:
-          updatedAt ?? this.updatedAt,
-      entityIds:
-          entityIds ?? this.entityIds,
+      available: available ?? this.available,
+      updatedAt: updatedAt ?? this.updatedAt,
+      entityIds: entityIds ?? this.entityIds,
     );
   }
 }

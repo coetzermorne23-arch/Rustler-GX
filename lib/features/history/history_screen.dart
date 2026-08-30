@@ -8,17 +8,14 @@ class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
   @override
-  State<HistoryScreen> createState() =>
-      _HistoryScreenState();
+  State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  final HistoryService history =
-      HistoryService.instance;
+  final HistoryService history = HistoryService.instance;
 
   String? selectedDevice;
-  _HistoryRange selectedRange =
-      _HistoryRange.twentyFourHours;
+  _HistoryRange selectedRange = _HistoryRange.twentyFourHours;
 
   @override
   void initState() {
@@ -31,21 +28,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return ValueListenableBuilder<List<HistoryRecord>>(
       valueListenable: history.records,
       builder: (context, records, child) {
-        final deviceIds = records
-            .map((record) => record.deviceId)
-            .toSet()
-            .toList();
+        final deviceIds =
+            records.map((record) => record.deviceId).toSet().toList();
 
-        final filteredByDevice =
-            selectedDevice == null
-                ? records
-                : records
-                    .where(
-                      (record) =>
-                          record.deviceId ==
-                          selectedDevice,
-                    )
-                    .toList();
+        final filteredByDevice = selectedDevice == null
+            ? records
+            : records
+                .where(
+                  (record) => record.deviceId == selectedDevice,
+                )
+                .toList();
 
         final rangeStart = DateTime.now().subtract(
           selectedRange.duration,
@@ -53,8 +45,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
         final ranged = filteredByDevice
             .where(
-              (record) =>
-                  record.timestamp.isAfter(
+              (record) => record.timestamp.isAfter(
                 rangeStart,
               ),
             )
@@ -76,106 +67,76 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: records.isEmpty
                     ? const _EmptyHistory()
                     : ListView(
-                        padding:
-                            const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(12),
                         children: [
                           _RangeSelector(
-                            selectedRange:
-                                selectedRange,
+                            selectedRange: selectedRange,
                             onChanged: (range) {
                               setState(() {
-                                selectedRange =
-                                    range;
+                                selectedRange = range;
                               });
                             },
                           ),
-
                           const SizedBox(
                             height: 12,
                           ),
-
                           _HistoryGraphCard(
-                            title:
-                                'Battery Voltage',
+                            title: 'Battery Voltage',
                             unit: 'V',
                             records: ranged,
-                            valueSelector:
-                                (record) =>
-                                    record
-                                        .batteryVoltage,
+                            valueSelector: (record) => record.batteryVoltage,
                             decimals: 2,
                           ),
-
                           const SizedBox(
                             height: 12,
                           ),
-
                           _HistoryGraphCard(
-                            title:
-                                'Battery Current',
+                            title: 'Battery Current',
                             unit: 'A',
                             records: ranged,
-                            valueSelector:
-                                (record) =>
-                                    record
-                                        .batteryCurrent,
+                            valueSelector: (record) => record.batteryCurrent,
                             decimals: 2,
                           ),
-
                           const SizedBox(
                             height: 12,
                           ),
-
                           _HistoryGraphCard(
                             title: 'State of Charge',
                             unit: '%',
                             records: ranged,
-                            valueSelector:
-                                (record) =>
-                                    record
-                                        .stateOfCharge,
+                            valueSelector: (record) => record.stateOfCharge,
                             minYOverride: 0,
                             maxYOverride: 100,
                             decimals: 1,
                           ),
-
                           const SizedBox(
                             height: 12,
                           ),
-
                           _HistoryGraphCard(
                             title: 'Solar Power',
                             unit: 'W',
                             records: ranged,
-                            valueSelector:
-                                (record) =>
-                                    record.pvPower,
+                            valueSelector: (record) => record.pvPower,
                             minYOverride: 0,
                             decimals: 0,
                           ),
-
                           const SizedBox(
                             height: 20,
                           ),
-
                           const Text(
                             'Stored samples',
                             style: TextStyle(
                               fontSize: 18,
-                              fontWeight:
-                                  FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-
                           const SizedBox(
                             height: 8,
                           ),
-
                           if (filteredByDevice.isEmpty)
                             const Card(
                               child: Padding(
-                                padding:
-                                    EdgeInsets.all(
+                                padding: EdgeInsets.all(
                                   18,
                                 ),
                                 child: Text(
@@ -186,8 +147,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             )
                           else
                             ...filteredByDevice.map(
-                              (record) =>
-                                  _HistoryCard(
+                              (record) => _HistoryCard(
                                 record: record,
                               ),
                             ),
@@ -223,7 +183,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ),
           ),
-
           if (records.isNotEmpty)
             DropdownButton<String?>(
               value: selectedDevice,
@@ -239,19 +198,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
                 ...deviceIds.map(
                   (id) {
-                    final record =
-                        records.firstWhere(
-                      (record) =>
-                          record.deviceId == id,
+                    final record = records.firstWhere(
+                      (record) => record.deviceId == id,
                     );
 
-                    return DropdownMenuItem<
-                        String?>(
+                    return DropdownMenuItem<String?>(
                       value: id,
                       child: Text(
-                        record.deviceName.isEmpty
-                            ? id
-                            : record.deviceName,
+                        record.deviceName.isEmpty ? id : record.deviceName,
                       ),
                     );
                   },
@@ -263,11 +217,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 });
               },
             ),
-
           const SizedBox(
             width: 8,
           ),
-
           if (records.isNotEmpty)
             IconButton(
               tooltip: 'Clear history',
@@ -282,8 +234,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _confirmClear() async {
-    final confirmed =
-        await showDialog<bool>(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -358,8 +309,7 @@ class _RangeSelector extends StatelessWidget {
           label: Text('6H'),
         ),
         ButtonSegment(
-          value:
-              _HistoryRange.twentyFourHours,
+          value: _HistoryRange.twentyFourHours,
           label: Text('24H'),
         ),
         ButtonSegment(
@@ -410,12 +360,10 @@ class _HistoryGraphCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dataPoints =
-        <_GraphPoint>[];
+    final dataPoints = <_GraphPoint>[];
 
     for (final record in records) {
-      final value =
-          valueSelector(record);
+      final value = valueSelector(record);
 
       if (value == null) {
         continue;
@@ -432,25 +380,20 @@ class _HistoryGraphCard extends StatelessWidget {
     if (dataPoints.isEmpty) {
       return Card(
         child: Padding(
-          padding:
-              const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(18),
           child: Column(
-            crossAxisAlignment:
-                CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
                 style: const TextStyle(
                   fontSize: 17,
-                  fontWeight:
-                      FontWeight.bold,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(
                 height: 18,
               ),
-
               const Center(
                 child: Text(
                   'No data in this range',
@@ -465,16 +408,11 @@ class _HistoryGraphCard extends StatelessWidget {
       );
     }
 
-    final start =
-        dataPoints.first.time;
+    final start = dataPoints.first.time;
 
     final spots = dataPoints.map(
       (point) {
-        final seconds =
-            point.time
-                .difference(start)
-                .inSeconds
-                .toDouble();
+        final seconds = point.time.difference(start).inSeconds.toDouble();
 
         return FlSpot(
           seconds,
@@ -483,21 +421,17 @@ class _HistoryGraphCard extends StatelessWidget {
       },
     ).toList();
 
-    final values =
-        dataPoints
-            .map(
-              (point) =>
-                  point.value,
-            )
-            .toList();
+    final values = dataPoints
+        .map(
+          (point) => point.value,
+        )
+        .toList();
 
-    double minY =
-        values.reduce(
+    double minY = values.reduce(
       (a, b) => a < b ? a : b,
     );
 
-    double maxY =
-        values.reduce(
+    double maxY = values.reduce(
       (a, b) => a > b ? a : b,
     );
 
@@ -514,8 +448,7 @@ class _HistoryGraphCard extends StatelessWidget {
       maxY += 1;
     }
 
-    final padding =
-        (maxY - minY) * 0.08;
+    final padding = (maxY - minY) * 0.08;
 
     if (minYOverride == null) {
       minY -= padding;
@@ -525,142 +458,108 @@ class _HistoryGraphCard extends StatelessWidget {
       maxY += padding;
     }
 
-    final latest =
-        dataPoints.last.value;
+    final latest = dataPoints.last.value;
 
     return Card(
       child: Padding(
-        padding:
-            const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
                 Expanded(
                   child: Text(
                     title,
-                    style:
-                        const TextStyle(
+                    style: const TextStyle(
                       fontSize: 17,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-
                 Text(
                   '${latest.toStringAsFixed(decimals)} $unit',
-                  style:
-                      const TextStyle(
+                  style: const TextStyle(
                     fontSize: 17,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
-
             const SizedBox(
               height: 18,
             ),
-
             SizedBox(
               height: 220,
               child: LineChart(
                 LineChartData(
                   minY: minY,
                   maxY: maxY,
-                  borderData:
-                      FlBorderData(
+                  borderData: FlBorderData(
                     show: false,
                   ),
-                  gridData:
-                      const FlGridData(
+                  gridData: const FlGridData(
                     show: true,
                   ),
-                  titlesData:
-                      FlTitlesData(
-                    topTitles:
-                        const AxisTitles(
-                      sideTitles:
-                          SideTitles(
+                  titlesData: FlTitlesData(
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(
                         showTitles: false,
                       ),
                     ),
-                    rightTitles:
-                        const AxisTitles(
-                      sideTitles:
-                          SideTitles(
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(
                         showTitles: false,
                       ),
                     ),
-                    leftTitles:
-                        AxisTitles(
-                      sideTitles:
-                          SideTitles(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 46,
-                        getTitlesWidget:
-                            (
+                        getTitlesWidget: (
                           value,
                           meta,
                         ) {
                           return Text(
-                            value
-                                .toStringAsFixed(
-                              decimals > 1
-                                  ? 1
-                                  : decimals,
+                            value.toStringAsFixed(
+                              decimals > 1 ? 1 : decimals,
                             ),
-                            style:
-                                const TextStyle(
+                            style: const TextStyle(
                               fontSize: 10,
-                              color:
-                                  Colors.white54,
+                              color: Colors.white54,
                             ),
                           );
                         },
                       ),
                     ),
-                    bottomTitles:
-                        AxisTitles(
-                      sideTitles:
-                          SideTitles(
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 28,
-                        interval:
-                            _bottomInterval(
+                        interval: _bottomInterval(
                           spots,
                         ),
-                        getTitlesWidget:
-                            (
+                        getTitlesWidget: (
                           value,
                           meta,
                         ) {
-                          final time =
-                              start.add(
+                          final time = start.add(
                             Duration(
-                              seconds:
-                                  value.round(),
+                              seconds: value.round(),
                             ),
                           );
 
                           return Padding(
-                            padding:
-                                const EdgeInsets.only(
+                            padding: const EdgeInsets.only(
                               top: 6,
                             ),
                             child: Text(
                               _timeLabel(
                                 time,
                               ),
-                              style:
-                                  const TextStyle(
+                              style: const TextStyle(
                                 fontSize: 10,
-                                color:
-                                    Colors.white54,
+                                color: Colors.white54,
                               ),
                             ),
                           );
@@ -668,20 +567,14 @@ class _HistoryGraphCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  lineTouchData:
-                      LineTouchData(
-                    touchTooltipData:
-                        LineTouchTooltipData(
-                      getTooltipItems:
-                          (spots) {
+                  lineTouchData: LineTouchData(
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipItems: (spots) {
                         return spots.map(
                           (spot) {
-                            final time =
-                                start.add(
+                            final time = start.add(
                               Duration(
-                                seconds:
-                                    spot.x
-                                        .round(),
+                                seconds: spot.x.round(),
                               ),
                             );
 
@@ -699,11 +592,8 @@ class _HistoryGraphCard extends StatelessWidget {
                     LineChartBarData(
                       spots: spots,
                       isCurved: true,
-                      dotData:
-                          FlDotData(
-                        show:
-                            spots.length <
-                                30,
+                      dotData: FlDotData(
+                        show: spots.length < 30,
                       ),
                       barWidth: 2,
                     ),
@@ -724,9 +614,7 @@ class _HistoryGraphCard extends StatelessWidget {
       return 1;
     }
 
-    final total =
-        spots.last.x -
-            spots.first.x;
+    final total = spots.last.x - spots.first.x;
 
     if (total <= 0) {
       return 1;
@@ -738,10 +626,7 @@ class _HistoryGraphCard extends StatelessWidget {
   static String _timeLabel(
     DateTime time,
   ) {
-    String two(int value) =>
-        value
-            .toString()
-            .padLeft(2, '0');
+    String two(int value) => value.toString().padLeft(2, '0');
 
     return '${two(time.hour)}:'
         '${two(time.minute)}';
@@ -750,13 +635,9 @@ class _HistoryGraphCard extends StatelessWidget {
   static String _dateTime(
     DateTime value,
   ) {
-    final local =
-        value.toLocal();
+    final local = value.toLocal();
 
-    String two(int value) =>
-        value
-            .toString()
-            .padLeft(2, '0');
+    String two(int value) => value.toString().padLeft(2, '0');
 
     return '${local.year}-'
         '${two(local.month)}-'
@@ -794,12 +675,9 @@ class _HistoryCard extends StatelessWidget {
           Icons.timeline,
         ),
         title: Text(
-          record.deviceName.isEmpty
-              ? 'Victron device'
-              : record.deviceName,
+          record.deviceName.isEmpty ? 'Victron device' : record.deviceName,
           style: const TextStyle(
-            fontWeight:
-                FontWeight.bold,
+            fontWeight: FontWeight.bold,
           ),
         ),
         subtitle: Text(
@@ -807,8 +685,7 @@ class _HistoryCard extends StatelessWidget {
             record.timestamp,
           ),
         ),
-        childrenPadding:
-            const EdgeInsets.fromLTRB(
+        childrenPadding: const EdgeInsets.fromLTRB(
           16,
           0,
           16,
@@ -818,92 +695,67 @@ class _HistoryCard extends StatelessWidget {
           if (record.batteryVoltage != null)
             _Row(
               label: 'Battery voltage',
-              value:
-                  '${record.batteryVoltage!.toStringAsFixed(2)} V',
+              value: '${record.batteryVoltage!.toStringAsFixed(2)} V',
             ),
-
           if (record.batteryCurrent != null)
             _Row(
               label: 'Battery current',
-              value:
-                  '${record.batteryCurrent!.toStringAsFixed(2)} A',
+              value: '${record.batteryCurrent!.toStringAsFixed(2)} A',
             ),
-
           if (record.batteryPower != null)
             _Row(
               label: 'Battery power',
-              value:
-                  '${record.batteryPower!.toStringAsFixed(0)} W',
+              value: '${record.batteryPower!.toStringAsFixed(0)} W',
             ),
-
           if (record.stateOfCharge != null)
             _Row(
               label: 'SOC',
-              value:
-                  '${record.stateOfCharge!.toStringAsFixed(1)} %',
+              value: '${record.stateOfCharge!.toStringAsFixed(1)} %',
             ),
-
           if (record.pvVoltage != null)
             _Row(
               label: 'PV voltage',
-              value:
-                  '${record.pvVoltage!.toStringAsFixed(2)} V',
+              value: '${record.pvVoltage!.toStringAsFixed(2)} V',
             ),
-
           if (record.pvCurrent != null)
             _Row(
               label: 'PV current',
-              value:
-                  '${record.pvCurrent!.toStringAsFixed(2)} A',
+              value: '${record.pvCurrent!.toStringAsFixed(2)} A',
             ),
-
           if (record.pvPower != null)
             _Row(
               label: 'PV power',
-              value:
-                  '${record.pvPower!.toStringAsFixed(0)} W',
+              value: '${record.pvPower!.toStringAsFixed(0)} W',
             ),
-
           if (record.chargeCurrent != null)
             _Row(
               label: 'Charge current',
-              value:
-                  '${record.chargeCurrent!.toStringAsFixed(2)} A',
+              value: '${record.chargeCurrent!.toStringAsFixed(2)} A',
             ),
-
           if (record.chargeState != null)
             _Row(
               label: 'Charge state',
-              value:
-                  record.chargeState!,
+              value: record.chargeState!,
             ),
-
           if (record.inputVoltage != null)
             _Row(
               label: 'Input voltage',
-              value:
-                  '${record.inputVoltage!.toStringAsFixed(2)} V',
+              value: '${record.inputVoltage!.toStringAsFixed(2)} V',
             ),
-
           if (record.outputVoltage != null)
             _Row(
               label: 'Output voltage',
-              value:
-                  '${record.outputVoltage!.toStringAsFixed(2)} V',
+              value: '${record.outputVoltage!.toStringAsFixed(2)} V',
             ),
-
           if (record.outputCurrent != null)
             _Row(
               label: 'Output current',
-              value:
-                  '${record.outputCurrent!.toStringAsFixed(2)} A',
+              value: '${record.outputCurrent!.toStringAsFixed(2)} A',
             ),
-
           if (record.outputPower != null)
             _Row(
               label: 'Output power',
-              value:
-                  '${record.outputPower!.toStringAsFixed(0)} W',
+              value: '${record.outputPower!.toStringAsFixed(0)} W',
             ),
         ],
       ),
@@ -913,13 +765,9 @@ class _HistoryCard extends StatelessWidget {
   static String _dateTime(
     DateTime value,
   ) {
-    final local =
-        value.toLocal();
+    final local = value.toLocal();
 
-    String two(int value) =>
-        value
-            .toString()
-            .padLeft(2, '0');
+    String two(int value) => value.toString().padLeft(2, '0');
 
     return '${local.year}-'
         '${two(local.month)}-'
@@ -942,8 +790,7 @@ class _Row extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         vertical: 4,
       ),
       child: Row(
@@ -952,16 +799,14 @@ class _Row extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                color:
-                    Colors.white70,
+                color: Colors.white70,
               ),
             ),
           ),
           Text(
             value,
             style: const TextStyle(
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -977,8 +822,7 @@ class _EmptyHistory extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Center(
       child: Column(
-        mainAxisSize:
-            MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             Icons.history,
@@ -991,8 +835,7 @@ class _EmptyHistory extends StatelessWidget {
             'No history yet',
             style: TextStyle(
               fontSize: 18,
-              fontWeight:
-                  FontWeight.bold,
+              fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(
@@ -1002,8 +845,7 @@ class _EmptyHistory extends StatelessWidget {
             'Victron measurements will '
             'appear here automatically.',
             style: TextStyle(
-              color:
-                  Colors.white70,
+              color: Colors.white70,
             ),
           ),
         ],

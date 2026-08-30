@@ -5,53 +5,40 @@ import '../models/rustler_gx_mode.dart';
 class RustlerGxConfigService {
   RustlerGxConfigService._();
 
-  static final RustlerGxConfigService instance =
-      RustlerGxConfigService._();
+  static final RustlerGxConfigService instance = RustlerGxConfigService._();
 
-  final SharedPreferencesAsync _preferences =
-      SharedPreferencesAsync();
+  final SharedPreferencesAsync _preferences = SharedPreferencesAsync();
 
-  static const String _capabilitiesKey =
-      'rustler_gx_capabilities';
+  static const String _capabilitiesKey = 'rustler_gx_capabilities';
 
-  static const String _hubHostKey =
-      'rustler_gx_hub_host';
+  static const String _hubHostKey = 'rustler_gx_hub_host';
 
-  static const String _hubPortKey =
-      'rustler_gx_hub_port';
+  static const String _hubPortKey = 'rustler_gx_hub_port';
 
-  static const String defaultHubHost =
-      'rustlergx.local';
+  static const String defaultHubHost = 'rustlergx.local';
 
-  static const int defaultHubPort =
-      8765;
+  static const int defaultHubPort = 8765;
 
-  static const Set<RustlerGxCapability>
-      defaultCapabilities = {
+  static const Set<RustlerGxCapability> defaultCapabilities = {
     RustlerGxCapability.localBluetooth,
     RustlerGxCapability.dashboard,
   };
 
-  Future<Set<RustlerGxCapability>>
-      getCapabilities() async {
-    final List<String>? stored =
-        await _preferences.getStringList(
+  Future<Set<RustlerGxCapability>> getCapabilities() async {
+    final List<String>? stored = await _preferences.getStringList(
       _capabilitiesKey,
     );
 
-    if (stored == null ||
-        stored.isEmpty) {
+    if (stored == null || stored.isEmpty) {
       return Set<RustlerGxCapability>.from(
         defaultCapabilities,
       );
     }
 
-    final Set<RustlerGxCapability> result =
-        <RustlerGxCapability>{};
+    final Set<RustlerGxCapability> result = <RustlerGxCapability>{};
 
     for (final String name in stored) {
-      for (final capability
-          in RustlerGxCapability.values) {
+      for (final capability in RustlerGxCapability.values) {
         if (capability.name == name) {
           result.add(capability);
           break;
@@ -75,8 +62,7 @@ class RustlerGxConfigService {
       _capabilitiesKey,
       capabilities
           .map(
-            (capability) =>
-                capability.name,
+            (capability) => capability.name,
           )
           .toList(),
     );
@@ -85,8 +71,7 @@ class RustlerGxConfigService {
   Future<bool> hasCapability(
     RustlerGxCapability capability,
   ) async {
-    final capabilities =
-        await getCapabilities();
+    final capabilities = await getCapabilities();
 
     return capabilities.contains(
       capability,
@@ -96,8 +81,7 @@ class RustlerGxConfigService {
   Future<void> enableCapability(
     RustlerGxCapability capability,
   ) async {
-    final capabilities =
-        await getCapabilities();
+    final capabilities = await getCapabilities();
 
     capabilities.add(
       capability,
@@ -111,8 +95,7 @@ class RustlerGxConfigService {
   Future<void> disableCapability(
     RustlerGxCapability capability,
   ) async {
-    final capabilities =
-        await getCapabilities();
+    final capabilities = await getCapabilities();
 
     capabilities.remove(
       capability,
@@ -133,8 +116,7 @@ class RustlerGxConfigService {
   Future<void> setHubHost(
     String host,
   ) async {
-    final String clean =
-        host.trim();
+    final String clean = host.trim();
 
     if (clean.isEmpty) {
       throw const FormatException(
@@ -158,8 +140,7 @@ class RustlerGxConfigService {
   Future<void> setHubPort(
     int port,
   ) async {
-    if (port < 1 ||
-        port > 65535) {
+    if (port < 1 || port > 65535) {
       throw const FormatException(
         'Hub port must be between 1 and 65535.',
       );
@@ -172,11 +153,9 @@ class RustlerGxConfigService {
   }
 
   Future<Uri> getHubHttpUri() async {
-    final String host =
-        await getHubHost();
+    final String host = await getHubHost();
 
-    final int port =
-        await getHubPort();
+    final int port = await getHubPort();
 
     return Uri(
       scheme: 'http',
@@ -186,11 +165,9 @@ class RustlerGxConfigService {
   }
 
   Future<Uri> getHubWebSocketUri() async {
-    final String host =
-        await getHubHost();
+    final String host = await getHubHost();
 
-    final int port =
-        await getHubPort();
+    final int port = await getHubPort();
 
     return Uri(
       scheme: 'ws',

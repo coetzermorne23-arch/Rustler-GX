@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart'
-    as vt;
+import 'package:flutter_map_vector_tiles/flutter_map_vector_tiles.dart' as vt;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -25,19 +24,14 @@ class OfflineNavigationScreen extends StatefulWidget {
       _OfflineNavigationScreenState();
 }
 
-class _OfflineNavigationScreenState
-    extends State<OfflineNavigationScreen> {
-  final GpsService gps =
-      GpsService.instance;
+class _OfflineNavigationScreenState extends State<OfflineNavigationScreen> {
+  final GpsService gps = GpsService.instance;
 
-  final VectorOfflineMapService maps =
-      VectorOfflineMapService.instance;
+  final VectorOfflineMapService maps = VectorOfflineMapService.instance;
 
-  final NavigationService navigation =
-      NavigationService.instance;
+  final NavigationService navigation = NavigationService.instance;
 
-  final MapController mapController =
-      MapController();
+  final MapController mapController = MapController();
 
   bool followVehicle = true;
 
@@ -133,11 +127,9 @@ class _OfflineNavigationScreenState
   void _destinationChanged() {
     _refresh();
 
-    final NavigationPlace? destination =
-        navigation.destination.value;
+    final NavigationPlace? destination = navigation.destination.value;
 
-    if (destination == null ||
-        !_mapReady) {
+    if (destination == null || !_mapReady) {
       return;
     }
 
@@ -165,12 +157,9 @@ class _OfflineNavigationScreenState
   void _routeChanged() {
     _refresh();
 
-    final NavigationRoute? route =
-        navigation.route.value;
+    final NavigationRoute? route = navigation.route.value;
 
-    if (route == null ||
-        route.points.isEmpty ||
-        !_mapReady) {
+    if (route == null || route.points.isEmpty || !_mapReady) {
       return;
     }
 
@@ -186,8 +175,7 @@ class _OfflineNavigationScreenState
 
     setState(() {});
 
-    if (!followVehicle ||
-        !_mapReady) {
+    if (!followVehicle || !_mapReady) {
       return;
     }
 
@@ -213,8 +201,7 @@ class _OfflineNavigationScreenState
       return '--';
     }
 
-    const List<String> directions =
-        <String>[
+    const List<String> directions = <String>[
       'N',
       'NE',
       'E',
@@ -225,9 +212,7 @@ class _OfflineNavigationScreenState
       'NW',
     ];
 
-    final int index =
-        ((heading + 22.5) ~/ 45) %
-            8;
+    final int index = ((heading + 22.5) ~/ 45) % 8;
 
     return directions[index];
   }
@@ -246,8 +231,7 @@ class _OfflineNavigationScreenState
     Position? position,
     NavigationPlace? destination,
   ) {
-    if (position == null ||
-        destination == null) {
+    if (position == null || destination == null) {
       return null;
     }
 
@@ -262,11 +246,9 @@ class _OfflineNavigationScreenState
   void _followCurrentPosition({
     bool updateState = true,
   }) {
-    final Position? position =
-        gps.position.value;
+    final Position? position = gps.position.value;
 
-    if (updateState &&
-        mounted) {
+    if (updateState && mounted) {
       setState(() {
         followVehicle = true;
       });
@@ -274,8 +256,7 @@ class _OfflineNavigationScreenState
       followVehicle = true;
     }
 
-    if (position == null ||
-        !_mapReady) {
+    if (position == null || !_mapReady) {
       return;
     }
 
@@ -285,9 +266,7 @@ class _OfflineNavigationScreenState
           position.latitude,
           position.longitude,
         ),
-        navigation.navigating.value
-            ? 17
-            : 16,
+        navigation.navigating.value ? 17 : 16,
       );
 
       if (position.heading >= 0) {
@@ -299,11 +278,9 @@ class _OfflineNavigationScreenState
   }
 
   void _showDestination() {
-    final NavigationPlace? destination =
-        navigation.destination.value;
+    final NavigationPlace? destination = navigation.destination.value;
 
-    if (destination == null ||
-        !_mapReady) {
+    if (destination == null || !_mapReady) {
       return;
     }
 
@@ -328,8 +305,7 @@ class _OfflineNavigationScreenState
 
   Future<void> _openDestinationSearch() async {
     final NavigationPlace? selected =
-        await Navigator.of(context)
-            .push<NavigationPlace>(
+        await Navigator.of(context).push<NavigationPlace>(
       MaterialPageRoute<NavigationPlace>(
         builder: (
           context,
@@ -339,8 +315,7 @@ class _OfflineNavigationScreenState
       ),
     );
 
-    if (selected == null ||
-        !mounted) {
+    if (selected == null || !mounted) {
       return;
     }
 
@@ -378,8 +353,7 @@ class _OfflineNavigationScreenState
   }
 
   Future<void> _startNavigation() async {
-    final bool success =
-        await navigation.startNavigation();
+    final bool success = await navigation.startNavigation();
 
     if (!mounted) {
       return;
@@ -387,8 +361,7 @@ class _OfflineNavigationScreenState
 
     if (!success) {
       final String message =
-          navigation.error.value ??
-              'Could not calculate route.';
+          navigation.error.value ?? 'Could not calculate route.';
 
       ScaffoldMessenger.of(
         context,
@@ -507,34 +480,26 @@ class _OfflineNavigationScreenState
   Widget build(
     BuildContext context,
   ) {
-    final NavigationPlace? destination =
-        navigation.destination.value;
+    final NavigationPlace? destination = navigation.destination.value;
 
-    final NavigationRoute? route =
-        navigation.route.value;
+    final NavigationRoute? route = navigation.route.value;
 
-    final RouteInstruction? instruction =
-        navigation.currentInstruction.value;
+    final RouteInstruction? instruction = navigation.currentInstruction.value;
 
-    final bool navigating =
-        navigation.navigating.value;
+    final bool navigating = navigation.navigating.value;
 
-    final bool calculating =
-        navigation.calculating.value;
+    final bool calculating = navigation.calculating.value;
 
-    final Position? position =
-        gps.position.value;
+    final Position? position = gps.position.value;
 
-    final double? direct =
-        _directDistance(
+    final double? direct = _directDistance(
       position,
       destination,
     );
 
     return Scaffold(
       body: ValueListenableBuilder<String?>(
-        valueListenable:
-            maps.mapPath,
+        valueListenable: maps.mapPath,
         builder: (
           context,
           mapPath,
@@ -544,26 +509,22 @@ class _OfflineNavigationScreenState
             return const _MapLoadingScreen();
           }
 
-          if (mapPath == null ||
-              !maps.ready) {
+          if (mapPath == null || !maps.ready) {
             return _NoOfflineMap(
-              error:
-                  maps.error.value,
-              onChooseMap:
-                  _chooseMap,
+              error: maps.error.value,
+              onChooseMap: _chooseMap,
             );
           }
 
-          final LatLng initialCenter =
-              position == null
-                  ? const LatLng(
-                      -30.5595,
-                      22.9375,
-                    )
-                  : LatLng(
-                      position.latitude,
-                      position.longitude,
-                    );
+          final LatLng initialCenter = position == null
+              ? const LatLng(
+                  -30.5595,
+                  22.9375,
+                )
+              : LatLng(
+                  position.latitude,
+                  position.longitude,
+                );
 
           return Stack(
             children: [
@@ -573,44 +534,30 @@ class _OfflineNavigationScreenState
 
               Positioned.fill(
                 child: FlutterMap(
-                  mapController:
-                      mapController,
-                  options:
-                      MapOptions(
-                    initialCenter:
-                        initialCenter,
-                    initialZoom:
-                        position == null
-                            ? 5.2
-                            : 15,
-                    minZoom:
-                        3,
-                    maxZoom:
-                        19,
-                    onMapReady:
-                        () {
+                  mapController: mapController,
+                  options: MapOptions(
+                    initialCenter: initialCenter,
+                    initialZoom: position == null ? 5.2 : 15,
+                    minZoom: 3,
+                    maxZoom: 19,
+                    onMapReady: () {
                       _mapReady = true;
 
                       if (navigating) {
                         _followCurrentPosition();
-                      } else if (destination !=
-                          null) {
+                      } else if (destination != null) {
                         _showDestination();
-                      } else if (position !=
-                          null) {
+                      } else if (position != null) {
                         _followCurrentPosition();
                       }
                     },
-                    onPositionChanged:
-                        (
+                    onPositionChanged: (
                       camera,
                       hasGesture,
                     ) {
-                      if (hasGesture &&
-                          followVehicle) {
+                      if (hasGesture && followVehicle) {
                         setState(() {
-                          followVehicle =
-                              false;
+                          followVehicle = false;
                         });
                       }
                     },
@@ -621,40 +568,32 @@ class _OfflineNavigationScreenState
                     // ====================================
 
                     vt.VectorTileLayer(
-                      theme:
-                          maps.style!.theme,
-                      tileProviders:
-                          maps.style!.providers,
-                      rasterSources:
-                          maps.style!.rasterSources,
-                      sprites:
-                          maps.style!.sprites,
+                      theme: maps.style!.theme,
+                      tileProviders: maps.style!.providers,
+                      rasterSources: maps.style!.rasterSources,
+                      sprites: maps.style!.sprites,
                     ),
 
                     // ====================================
                     // ROUTE
                     // ====================================
 
-                    if (route != null &&
-                        route.points.length >=
-                            2)
+                    if (route != null && route.points.length >= 2)
                       PolylineLayer(
                         polylines: [
                           Polyline(
-                            points:
-                                route.points
-                                    .map(
-                                      (
-                                        point,
-                                      ) =>
-                                          LatLng(
-                                        point.latitude,
-                                        point.longitude,
-                                      ),
-                                    )
-                                    .toList(),
-                            strokeWidth:
-                                7,
+                            points: route.points
+                                .map(
+                                  (
+                                    point,
+                                  ) =>
+                                      LatLng(
+                                    point.latitude,
+                                    point.longitude,
+                                  ),
+                                )
+                                .toList(),
+                            strokeWidth: 7,
                           ),
                         ],
                       ),
@@ -667,40 +606,26 @@ class _OfflineNavigationScreenState
                       MarkerLayer(
                         markers: [
                           Marker(
-                            point:
-                                LatLng(
+                            point: LatLng(
                               position.latitude,
                               position.longitude,
                             ),
-                            width:
-                                64,
-                            height:
-                                64,
-                            child:
-                                Transform.rotate(
-                              angle:
-                                  position.heading >=
-                                          0
-                                      ? position.heading *
-                                          0.017453292519943295
-                                      : 0,
-                              child:
-                                  Container(
-                                decoration:
-                                    BoxDecoration(
-                                  shape:
-                                      BoxShape.circle,
-                                  color:
-                                      Colors.black.withValues(
-                                    alpha:
-                                        0.75,
+                            width: 64,
+                            height: 64,
+                            child: Transform.rotate(
+                              angle: position.heading >= 0
+                                  ? position.heading * 0.017453292519943295
+                                  : 0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.black.withValues(
+                                    alpha: 0.75,
                                   ),
                                 ),
-                                child:
-                                    const Icon(
+                                child: const Icon(
                                   Icons.navigation,
-                                  size:
-                                      42,
+                                  size: 42,
                                 ),
                               ),
                             ),
@@ -716,20 +641,15 @@ class _OfflineNavigationScreenState
                       MarkerLayer(
                         markers: [
                           Marker(
-                            point:
-                                LatLng(
+                            point: LatLng(
                               destination.latitude,
                               destination.longitude,
                             ),
-                            width:
-                                68,
-                            height:
-                                68,
-                            child:
-                                const Icon(
+                            width: 68,
+                            height: 68,
+                            child: const Icon(
                               Icons.location_on,
-                              size:
-                                  64,
+                              size: 64,
                             ),
                           ),
                         ],
@@ -742,62 +662,41 @@ class _OfflineNavigationScreenState
               // NEXT TURN
               // ==========================================
 
-              if (navigating &&
-                  instruction != null)
+              if (navigating && instruction != null)
                 Positioned(
-                  left:
-                      18,
-                  top:
-                      18,
-                  width:
-                      430,
-                  child:
-                      Card(
-                    child:
-                        Padding(
-                      padding:
-                          const EdgeInsets.all(
+                  left: 18,
+                  top: 18,
+                  width: 430,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(
                         14,
                       ),
-                      child:
-                          Row(
+                      child: Row(
                         children: [
                           Icon(
                             _instructionIcon(
                               instruction.type,
                             ),
-                            size:
-                                48,
+                            size: 48,
                           ),
-
                           const SizedBox(
-                            width:
-                                14,
+                            width: 14,
                           ),
-
                           Expanded(
-                            child:
-                                Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   instruction.text,
-                                  maxLines:
-                                      2,
-                                  overflow:
-                                      TextOverflow.ellipsis,
-                                  style:
-                                      const TextStyle(
-                                    fontSize:
-                                        18,
-                                    fontWeight:
-                                        FontWeight.bold,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-
-                                if (instruction.distanceMetres >
-                                    0)
+                                if (instruction.distanceMetres > 0)
                                   Text(
                                     _formatDistance(
                                       instruction.distanceMetres,
@@ -818,25 +717,16 @@ class _OfflineNavigationScreenState
 
               if (!navigating)
                 Positioned(
-                  left:
-                      18,
-                  top:
-                      18,
-                  width:
-                      290,
-                  child:
-                      FilledButton.icon(
-                    onPressed:
-                        _openDestinationSearch,
-                    icon:
-                        const Icon(
+                  left: 18,
+                  top: 18,
+                  width: 290,
+                  child: FilledButton.icon(
+                    onPressed: _openDestinationSearch,
+                    icon: const Icon(
                       Icons.search,
                     ),
-                    label:
-                        Text(
-                      destination == null
-                          ? 'WHERE TO?'
-                          : 'CHANGE DESTINATION',
+                    label: Text(
+                      destination == null ? 'WHERE TO?' : 'CHANGE DESTINATION',
                     ),
                   ),
                 ),
@@ -846,25 +736,16 @@ class _OfflineNavigationScreenState
               // ==========================================
 
               Positioned(
-                right:
-                    18,
-                top:
-                    18,
-                child:
-                    Card(
-                  child:
-                      Padding(
-                    padding:
-                        const EdgeInsets.symmetric(
-                      horizontal:
-                          18,
-                      vertical:
-                          9,
+                right: 18,
+                top: 18,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 9,
                     ),
-                    child:
-                        Column(
-                      mainAxisSize:
-                          MainAxisSize.min,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           position == null
@@ -874,35 +755,25 @@ class _OfflineNavigationScreenState
                                 ).toStringAsFixed(
                                   0,
                                 ),
-                          style:
-                              const TextStyle(
-                            fontSize:
-                                34,
-                            height:
-                                0.95,
-                            fontWeight:
-                                FontWeight.bold,
+                          style: const TextStyle(
+                            fontSize: 34,
+                            height: 0.95,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-
                         const Text(
                           'km/h',
-                          style:
-                              TextStyle(
-                            fontSize:
-                                11,
+                          style: TextStyle(
+                            fontSize: 11,
                           ),
                         ),
-
                         if (position != null)
                           Text(
                             _headingText(
                               position.heading,
                             ),
-                            style:
-                                const TextStyle(
-                              fontSize:
-                                  11,
+                            style: const TextStyle(
+                              fontSize: 11,
                             ),
                           ),
                       ],
@@ -917,261 +788,173 @@ class _OfflineNavigationScreenState
 
               if (destination != null)
                 Positioned(
-                  left:
-                      18,
-                  top:
-                      navigating
-                          ? 130
-                          : 80,
-                  width:
-                      350,
-                  child:
-                      Card(
-                    child:
-                        Padding(
-                      padding:
-                          const EdgeInsets.all(
+                  left: 18,
+                  top: navigating ? 130 : 80,
+                  width: 350,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(
                         14,
                       ),
-                      child:
-                          Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
                               const Icon(
                                 Icons.location_on,
                               ),
-
                               const SizedBox(
-                                width:
-                                    8,
+                                width: 8,
                               ),
-
                               Expanded(
-                                child:
-                                    Text(
+                                child: Text(
                                   destination.name,
-                                  maxLines:
-                                      1,
-                                  overflow:
-                                      TextOverflow.ellipsis,
-                                  style:
-                                      const TextStyle(
-                                    fontSize:
-                                        17,
-                                    fontWeight:
-                                        FontWeight.bold,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
                             ],
                           ),
-
-                          if (destination.address !=
-                                  null &&
-                              destination.address!
-                                  .isNotEmpty) ...[
+                          if (destination.address != null &&
+                              destination.address!.isNotEmpty) ...[
                             const SizedBox(
-                              height:
-                                  4,
+                              height: 4,
                             ),
-
                             Text(
                               destination.address!,
-                              maxLines:
-                                  2,
-                              overflow:
-                                  TextOverflow.ellipsis,
-                              style:
-                                  const TextStyle(
-                                fontSize:
-                                    11,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
                               ),
                             ),
                           ],
-
                           const SizedBox(
-                            height:
-                                10,
+                            height: 10,
                           ),
-
                           if (route != null)
                             Row(
                               children: [
                                 const Icon(
                                   Icons.route,
-                                  size:
-                                      18,
+                                  size: 18,
                                 ),
-
                                 const SizedBox(
-                                  width:
-                                      6,
+                                  width: 6,
                                 ),
-
                                 Text(
                                   route.distanceText,
-                                  style:
-                                      const TextStyle(
-                                    fontWeight:
-                                        FontWeight.bold,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-
                                 const SizedBox(
-                                  width:
-                                      18,
+                                  width: 18,
                                 ),
-
                                 const Icon(
                                   Icons.schedule,
-                                  size:
-                                      18,
+                                  size: 18,
                                 ),
-
                                 const SizedBox(
-                                  width:
-                                      6,
+                                  width: 6,
                                 ),
-
                                 Text(
                                   route.etaText,
-                                  style:
-                                      const TextStyle(
-                                    fontWeight:
-                                        FontWeight.bold,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ],
                             )
-                          else if (direct !=
-                              null)
+                          else if (direct != null)
                             Text(
                               '${_formatDistance(direct)} direct',
                             ),
-
                           if (navigation.offRoute.value) ...[
                             const SizedBox(
-                              height:
-                                  8,
+                              height: 8,
                             ),
-
                             const Row(
                               children: [
                                 Icon(
                                   Icons.warning_amber,
-                                  size:
-                                      18,
+                                  size: 18,
                                 ),
-
                                 SizedBox(
-                                  width:
-                                      6,
+                                  width: 6,
                                 ),
-
                                 Expanded(
-                                  child:
-                                      Text(
+                                  child: Text(
                                     'OFF ROUTE — recalculating',
-                                    style:
-                                        TextStyle(
-                                      fontWeight:
-                                          FontWeight.bold,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ],
-
-                          if (navigation.error.value !=
-                              null) ...[
+                          if (navigation.error.value != null) ...[
                             const SizedBox(
-                              height:
-                                  8,
+                              height: 8,
                             ),
-
                             Text(
                               navigation.error.value!,
-                              style:
-                                  const TextStyle(
-                                fontSize:
-                                    12,
+                              style: const TextStyle(
+                                fontSize: 12,
                               ),
                             ),
                           ],
-
                           const SizedBox(
-                            height:
-                                12,
+                            height: 12,
                           ),
-
                           Row(
                             children: [
                               if (!navigating)
                                 Expanded(
-                                  child:
-                                      FilledButton.icon(
+                                  child: FilledButton.icon(
                                     onPressed:
-                                        calculating
-                                            ? null
-                                            : _startNavigation,
-                                    icon:
-                                        calculating
-                                            ? const SizedBox(
-                                                width:
-                                                    18,
-                                                height:
-                                                    18,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  strokeWidth:
-                                                      2,
-                                                ),
-                                              )
-                                            : const Icon(
-                                                Icons.navigation,
-                                              ),
-                                    label:
-                                        Text(
-                                      calculating
-                                          ? 'CALCULATING'
-                                          : 'START',
+                                        calculating ? null : _startNavigation,
+                                    icon: calculating
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.navigation,
+                                          ),
+                                    label: Text(
+                                      calculating ? 'CALCULATING' : 'START',
                                     ),
                                   ),
                                 ),
-
                               if (navigating)
                                 Expanded(
-                                  child:
-                                      FilledButton.icon(
-                                    onPressed:
-                                        _cancelNavigation,
-                                    icon:
-                                        const Icon(
+                                  child: FilledButton.icon(
+                                    onPressed: _cancelNavigation,
+                                    icon: const Icon(
                                       Icons.close,
                                     ),
-                                    label:
-                                        const Text(
+                                    label: const Text(
                                       'STOP',
                                     ),
                                   ),
                                 ),
-
                               const SizedBox(
-                                width:
-                                    8,
+                                width: 8,
                               ),
-
                               IconButton(
-                                tooltip:
-                                    'Show destination',
-                                onPressed:
-                                    _showDestination,
-                                icon:
-                                    const Icon(
+                                tooltip: 'Show destination',
+                                onPressed: _showDestination,
+                                icon: const Icon(
                                   Icons.flag,
                                 ),
                               ),
@@ -1188,51 +971,32 @@ class _OfflineNavigationScreenState
               // ==========================================
 
               Positioned(
-                top:
-                    18,
-                left:
-                    0,
-                right:
-                    0,
-                child:
-                    Center(
-                  child:
-                      IgnorePointer(
-                    child:
-                        Card(
-                      child:
-                          Padding(
-                        padding:
-                            const EdgeInsets.symmetric(
-                          horizontal:
-                              12,
-                          vertical:
-                              7,
+                top: 18,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: IgnorePointer(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
                         ),
-                        child:
-                            Row(
-                          mainAxisSize:
-                              MainAxisSize.min,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
                               Icons.public,
-                              size:
-                                  16,
+                              size: 16,
                             ),
-
                             const SizedBox(
-                              width:
-                                  6,
+                              width: 6,
                             ),
-
                             const Text(
                               'SOUTH AFRICA • OFFLINE',
-                              style:
-                                  TextStyle(
-                                fontSize:
-                                    10,
-                                fontWeight:
-                                    FontWeight.bold,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
@@ -1248,14 +1012,10 @@ class _OfflineNavigationScreenState
               // ==========================================
 
               const Positioned(
-                left:
-                    18,
-                bottom:
-                    18,
-                width:
-                    430,
-                child:
-                    MediaControlCard(),
+                left: 18,
+                bottom: 18,
+                width: 430,
+                child: MediaControlCard(),
               ),
 
               // ==========================================
@@ -1263,112 +1023,77 @@ class _OfflineNavigationScreenState
               // ==========================================
 
               Positioned(
-                right:
-                    18,
-                bottom:
-                    18,
-                child:
-                    Column(
-                  mainAxisSize:
-                      MainAxisSize.min,
+                right: 18,
+                bottom: 18,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     FloatingActionButton.small(
-                      heroTag:
-                          'map_zoom_in',
-                      onPressed:
-                          () {
-                        final camera =
-                            mapController.camera;
+                      heroTag: 'map_zoom_in',
+                      onPressed: () {
+                        final camera = mapController.camera;
 
                         mapController.move(
                           camera.center,
-                          camera.zoom +
-                              1,
+                          camera.zoom + 1,
                         );
                       },
-                      child:
-                          const Icon(
+                      child: const Icon(
                         Icons.add,
                       ),
                     ),
-
                     const SizedBox(
-                      height:
-                          10,
+                      height: 10,
                     ),
-
                     FloatingActionButton.small(
-                      heroTag:
-                          'map_zoom_out',
-                      onPressed:
-                          () {
-                        final camera =
-                            mapController.camera;
+                      heroTag: 'map_zoom_out',
+                      onPressed: () {
+                        final camera = mapController.camera;
 
                         mapController.move(
                           camera.center,
-                          camera.zoom -
-                              1,
+                          camera.zoom - 1,
                         );
                       },
-                      child:
-                          const Icon(
+                      child: const Icon(
                         Icons.remove,
                       ),
                     ),
-
                     const SizedBox(
-                      height:
-                          10,
+                      height: 10,
                     ),
-
                     FloatingActionButton(
-                      heroTag:
-                          'follow_vehicle',
-                      onPressed:
-                          _followCurrentPosition,
-                      child:
-                          Icon(
+                      heroTag: 'follow_vehicle',
+                      onPressed: _followCurrentPosition,
+                      child: Icon(
                         followVehicle
                             ? Icons.my_location
                             : Icons.location_searching,
                       ),
                     ),
-
                     if (destination != null) ...[
                       const SizedBox(
-                        height:
-                            10,
+                        height: 10,
                       ),
-
                       FloatingActionButton.small(
-                        heroTag:
-                            'show_destination',
-                        onPressed:
-                            _showDestination,
-                        child:
-                            const Icon(
+                        heroTag: 'show_destination',
+                        onPressed: _showDestination,
+                        child: const Icon(
                           Icons.flag,
                         ),
                       ),
                     ],
-
                     const SizedBox(
-                      height:
-                          10,
+                      height: 10,
                     ),
-
                     FloatingActionButton.small(
-                      heroTag:
-                          'dashboard',
-                      onPressed:
-                          () {
+                      heroTag: 'dashboard',
+                      onPressed: () {
                         Navigator.of(
                           context,
                         ).pop();
                       },
-                      child:
-                          const Icon(
+                      child: const Icon(
                         Icons.dashboard_customize,
                       ),
                     ),
@@ -1387,8 +1112,7 @@ class _OfflineNavigationScreenState
 // MAP LOADING
 // ============================================================
 
-class _MapLoadingScreen
-    extends StatelessWidget {
+class _MapLoadingScreen extends StatelessWidget {
   const _MapLoadingScreen();
 
   @override
@@ -1396,24 +1120,17 @@ class _MapLoadingScreen
     BuildContext context,
   ) {
     return const Center(
-      child:
-          Column(
-        mainAxisSize:
-            MainAxisSize.min,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           CircularProgressIndicator(),
-
           SizedBox(
-            height:
-                18,
+            height: 18,
           ),
-
           Text(
             'LOADING OFFLINE SOUTH AFRICA MAP...',
-            style:
-                TextStyle(
-              fontWeight:
-                  FontWeight.bold,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -1426,12 +1143,10 @@ class _MapLoadingScreen
 // NO MAP
 // ============================================================
 
-class _NoOfflineMap
-    extends StatelessWidget {
+class _NoOfflineMap extends StatelessWidget {
   final String? error;
 
-  final Future<void> Function()
-      onChooseMap;
+  final Future<void> Function() onChooseMap;
 
   const _NoOfflineMap({
     required this.error,
@@ -1443,93 +1158,63 @@ class _NoOfflineMap
     BuildContext context,
   ) {
     return Center(
-      child:
-          Padding(
-        padding:
-            const EdgeInsets.all(
+      child: Padding(
+        padding: const EdgeInsets.all(
           24,
         ),
-        child:
-            Column(
-          mainAxisSize:
-              MainAxisSize.min,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.public,
-              size:
-                  76,
+              size: 76,
             ),
-
             const SizedBox(
-              height:
-                  18,
+              height: 18,
             ),
-
             const Text(
               'SOUTH AFRICA OFFLINE MAP',
-              textAlign:
-                  TextAlign.center,
-              style:
-                  TextStyle(
-                fontSize:
-                    22,
-                fontWeight:
-                    FontWeight.bold,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(
-              height:
-                  10,
+              height: 10,
             ),
-
             const SizedBox(
-              width:
-                  480,
-              child:
-                  Text(
+              width: 480,
+              child: Text(
                 'Select the Rustler GX South Africa vector MBTiles map. '
                 'After import the map is stored locally on the head unit '
                 'and does not require mobile data or Wi-Fi.',
-                textAlign:
-                    TextAlign.center,
+                textAlign: TextAlign.center,
               ),
             ),
-
             if (error != null) ...[
               const SizedBox(
-                height:
-                    14,
+                height: 14,
               ),
-
               SizedBox(
-                width:
-                    480,
-                child:
-                    Text(
+                width: 480,
+                child: Text(
                   error!,
-                  textAlign:
-                      TextAlign.center,
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
-
             const SizedBox(
-              height:
-                  24,
+              height: 24,
             ),
-
             FilledButton.icon(
-              onPressed:
-                  () async {
+              onPressed: () async {
                 await onChooseMap();
               },
-              icon:
-                  const Icon(
+              icon: const Icon(
                 Icons.folder_open,
               ),
-              label:
-                  const Text(
+              label: const Text(
                 'SELECT SOUTH AFRICA MAP',
               ),
             ),

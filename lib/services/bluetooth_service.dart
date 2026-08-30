@@ -26,13 +26,11 @@ import 'device_registry_service.dart';
 class VictronBluetoothService {
   VictronBluetoothService._();
 
-  static final VictronBluetoothService instance =
-      VictronBluetoothService._();
+  static final VictronBluetoothService instance = VictronBluetoothService._();
 
   static const int victronManufacturerId = 0x02e1;
 
-  final VictronKeyService _keyService =
-      VictronKeyService.instance;
+  final VictronKeyService _keyService = VictronKeyService.instance;
 
   final VictronInstantReadoutDecoder _instantDecoder =
       const VictronInstantReadoutDecoder();
@@ -48,15 +46,12 @@ class VictronBluetoothService {
   /// ALL live Victron devices.
   ///
   /// Key = Bluetooth remote ID.
-  final ValueNotifier<Map<String, VictronLiveData>>
-      liveDevices =
+  final ValueNotifier<Map<String, VictronLiveData>> liveDevices =
       ValueNotifier<Map<String, VictronLiveData>>({});
 
-  StreamSubscription<BluetoothConnectionState>?
-      _connectionSubscription;
+  StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
 
-  StreamSubscription<VictronLiveData>?
-      _liveDataSubscription;
+  StreamSubscription<VictronLiveData>? _liveDataSubscription;
 
   VictronAdapter? _activeAdapter;
 
@@ -67,204 +62,189 @@ class VictronBluetoothService {
 
   final Map<String, DateTime> _lastAutoConnectAttempt = {};
 
-  static const Duration _autoConnectRetryInterval =
-    Duration(seconds: 30);
+  static const Duration _autoConnectRetryInterval = Duration(seconds: 30);
 
   Stream<List<VictronDevice>> get devices {
-  return FlutterBluePlus.scanResults.map((results) {
-    final Map<String, VictronDevice> uniqueDevices = {};
+    return FlutterBluePlus.scanResults.map((results) {
+      final Map<String, VictronDevice> uniqueDevices = {};
 
-    for (final result in results) {
-      final advertisement = result.advertisementData;
+      for (final result in results) {
+        final advertisement = result.advertisementData;
 
-      final List<int> victronManufacturerData =
-          advertisement.manufacturerData[
-                  victronManufacturerId] ??
-              const [];
+        final List<int> victronManufacturerData =
+            advertisement.manufacturerData[victronManufacturerId] ?? const [];
 
-      final bool hasInstantReadout =
-          victronManufacturerData.isNotEmpty &&
-              victronManufacturerData.first == 0x10;
+        final bool hasInstantReadout = victronManufacturerData.isNotEmpty &&
+            victronManufacturerData.first == 0x10;
 
-      // Victron manufacturer data after the company ID:
-      //
-      // byte 0-1 = prefix 0x0210
-      // byte 2-3 = model/product ID
-      // byte 4   = Instant Readout record type
-      //
-      // flutter_blue_plus gives us the payload after
-      // the manufacturer/company ID, hence these offsets.
+        // Victron manufacturer data after the company ID:
+        //
+        // byte 0-1 = prefix 0x0210
+        // byte 2-3 = model/product ID
+        // byte 4   = Instant Readout record type
+        //
+        // flutter_blue_plus gives us the payload after
+        // the manufacturer/company ID, hence these offsets.
 
-      int? modelId;
-      int? recordType;
+        int? modelId;
+        int? recordType;
 
-      if (hasInstantReadout &&
-          victronManufacturerData.length >= 5) {
-        modelId =
-            victronManufacturerData[2] |
-                (victronManufacturerData[3] << 8);
+        if (hasInstantReadout && victronManufacturerData.length >= 5) {
+          modelId =
+              victronManufacturerData[2] | (victronManufacturerData[3] << 8);
 
-        recordType =
-            victronManufacturerData[4];
-      }
+          recordType = victronManufacturerData[4];
+        }
 
-      final String combinedName =
-          '${result.device.platformName} '
-                  '${advertisement.advName}'
-              .toLowerCase();
+        final String combinedName = '${result.device.platformName} '
+                '${advertisement.advName}'
+            .toLowerCase();
 
-      final VictronDeviceType type =
-          _identifyDeviceType(
-        combinedName: combinedName,
-        hasInstantReadout: hasInstantReadout,
-        modelId: modelId,
-        recordType: recordType,
-      );
-
-      final bool looksLikeVictron =
-          type != VictronDeviceType.unknown ||
-              hasInstantReadout ||
-              victronManufacturerData.isNotEmpty;
-
-      if (!looksLikeVictron) {
-        continue;
-      }
-
-      final VictronDevice victronDevice =
-          VictronDevice(
-        device: result.device,
-        platformName: result.device.platformName,
-        advertisedName: advertisement.advName,
-        rssi: result.rssi,
-        type: type,
-        hasInstantReadout: hasInstantReadout,
-        manufacturerData: victronManufacturerData,
-        modelId: modelId,
-        recordType: recordType,
-      );
-
-      final String deviceId =
-          result.device.remoteId.str;
-
-      uniqueDevices[deviceId] =
-          victronDevice;
-
-      if (hasInstantReadout) {
-        debugPrint(
-          'VICTRON ADVERTISEMENT '
-          '${victronDevice.displayName} '
-          '$deviceId '
-          'model=${victronDevice.modelIdHex} '
-          'record=${victronDevice.recordTypeHex}: '
-          '${victronDevice.manufacturerDataHex}',
+        final VictronDeviceType type = _identifyDeviceType(
+          combinedName: combinedName,
+          hasInstantReadout: hasInstantReadout,
+          modelId: modelId,
+          recordType: recordType,
         );
 
+        final bool looksLikeVictron = type != VictronDeviceType.unknown ||
+            hasInstantReadout ||
+            victronManufacturerData.isNotEmpty;
+
+        if (!looksLikeVictron) {
+          continue;
+        }
+
+        final VictronDevice victronDevice = VictronDevice(
+          device: result.device,
+          platformName: result.device.platformName,
+          advertisedName: advertisement.advName,
+          rssi: result.rssi,
+          type: type,
+          hasInstantReadout: hasInstantReadout,
+          manufacturerData: victronManufacturerData,
+          modelId: modelId,
+          recordType: recordType,
+        );
+
+        final String deviceId = result.device.remoteId.str;
+
+        uniqueDevices[deviceId] = victronDevice;
+
+        if (hasInstantReadout) {
+          debugPrint(
+            'VICTRON ADVERTISEMENT '
+            '${victronDevice.displayName} '
+            '$deviceId '
+            'model=${victronDevice.modelIdHex} '
+            'record=${victronDevice.recordTypeHex}: '
+            '${victronDevice.manufacturerDataHex}',
+          );
+
+          unawaited(
+            _processInstantReadout(
+              victronDevice,
+            ),
+          );
+        }
+
         unawaited(
-          _processInstantReadout(
+          _autoHandleKnownDevice(
             victronDevice,
           ),
         );
       }
 
-      unawaited(
-        _autoHandleKnownDevice(
-          victronDevice,
-        ),
-      );
-    }
-
-    return uniqueDevices.values.toList()
-      ..sort(
-        (a, b) =>
-            b.rssi.compareTo(a.rssi),
-      );
-  });
-}
+      return uniqueDevices.values.toList()
+        ..sort(
+          (a, b) => b.rssi.compareTo(a.rssi),
+        );
+    });
+  }
 
   static VictronDeviceType _identifyDeviceType({
-  required String combinedName,
-  required bool hasInstantReadout,
-  int? modelId,
-  int? recordType,
-}) {
-  // =========================================================
-  // INSTANT READOUT RECORD TYPE
-  // =========================================================
-  //
-  // This is preferred over the Bluetooth name because
-  // Victron devices can be renamed by the user.
+    required String combinedName,
+    required bool hasInstantReadout,
+    int? modelId,
+    int? recordType,
+  }) {
+    // =========================================================
+    // INSTANT READOUT RECORD TYPE
+    // =========================================================
+    //
+    // This is preferred over the Bluetooth name because
+    // Victron devices can be renamed by the user.
 
-  if (hasInstantReadout &&
-      recordType != null) {
-    switch (recordType) {
-      // Battery Monitor:
-      // SmartShunt / BMV family
-      case 0x02:
-        return VictronDeviceType.smartShunt;
+    if (hasInstantReadout && recordType != null) {
+      switch (recordType) {
+        // Battery Monitor:
+        // SmartShunt / BMV family
+        case 0x02:
+          return VictronDeviceType.smartShunt;
 
-      // Solar Charger:
-      // SmartSolar MPPT family
-      case 0x01:
-        return VictronDeviceType.smartSolar;
+        // Solar Charger:
+        // SmartSolar MPPT family
+        case 0x01:
+          return VictronDeviceType.smartSolar;
 
-      // DC/DC converter family.
-      //
-      // Exact Orion Smart vs Orion XS identification
-      // can later be refined using modelId.
-      case 0x04:
-        if (combinedName.contains('orion xs')) {
-          return VictronDeviceType.orionXs;
-        }
+        // DC/DC converter family.
+        //
+        // Exact Orion Smart vs Orion XS identification
+        // can later be refined using modelId.
+        case 0x04:
+          if (combinedName.contains('orion xs')) {
+            return VictronDeviceType.orionXs;
+          }
 
-        return VictronDeviceType.orionSmart;
+          return VictronDeviceType.orionSmart;
 
-      // AC Charger:
-      // Blue Smart Charger family
-      case 0x08:
-        return VictronDeviceType.blueSmartCharger;
+        // AC Charger:
+        // Blue Smart Charger family
+        case 0x08:
+          return VictronDeviceType.blueSmartCharger;
+      }
     }
+
+    // =========================================================
+    // NAME FALLBACK
+    // =========================================================
+    //
+    // Used for legacy devices or advertisements where the
+    // Instant Readout record type is unavailable.
+
+    if (combinedName.contains('smartshunt') ||
+        combinedName.contains('smart shunt') ||
+        combinedName.contains('bmv')) {
+      return VictronDeviceType.smartShunt;
+    }
+
+    if (combinedName.contains('smartsolar') ||
+        combinedName.contains('smart solar') ||
+        combinedName.contains('mppt')) {
+      return VictronDeviceType.smartSolar;
+    }
+
+    if (combinedName.contains('orion xs')) {
+      return VictronDeviceType.orionXs;
+    }
+
+    if (combinedName.contains('orion')) {
+      return VictronDeviceType.orionSmart;
+    }
+
+    if (combinedName.contains('bsc') ||
+        combinedName.contains('blue smart') ||
+        combinedName.contains('charger')) {
+      return VictronDeviceType.blueSmartCharger;
+    }
+
+    return VictronDeviceType.unknown;
   }
 
-  // =========================================================
-  // NAME FALLBACK
-  // =========================================================
-  //
-  // Used for legacy devices or advertisements where the
-  // Instant Readout record type is unavailable.
-
-  if (combinedName.contains('smartshunt') ||
-      combinedName.contains('smart shunt') ||
-      combinedName.contains('bmv')) {
-    return VictronDeviceType.smartShunt;
-  }
-
-  if (combinedName.contains('smartsolar') ||
-      combinedName.contains('smart solar') ||
-      combinedName.contains('mppt')) {
-    return VictronDeviceType.smartSolar;
-  }
-
-  if (combinedName.contains('orion xs')) {
-    return VictronDeviceType.orionXs;
-  }
-
-  if (combinedName.contains('orion')) {
-    return VictronDeviceType.orionSmart;
-  }
-
-  if (combinedName.contains('bsc') ||
-      combinedName.contains('blue smart') ||
-      combinedName.contains('charger')) {
-    return VictronDeviceType.blueSmartCharger;
-  }
-
-  return VictronDeviceType.unknown;
-}
   Future<void> _processInstantReadout(
     VictronDevice device,
   ) async {
-    final String deviceId =
-        device.device.remoteId.str;
+    final String deviceId = device.device.remoteId.str;
 
     if (_processingInstantReadout.contains(deviceId)) {
       return;
@@ -273,11 +253,9 @@ class VictronBluetoothService {
     _processingInstantReadout.add(deviceId);
 
     try {
-      final String? encryptionKey =
-          await _keyService.getKey(deviceId);
+      final String? encryptionKey = await _keyService.getKey(deviceId);
 
-      if (encryptionKey == null ||
-          encryptionKey.isEmpty) {
+      if (encryptionKey == null || encryptionKey.isEmpty) {
         return;
       }
 
@@ -285,23 +263,20 @@ class VictronBluetoothService {
         return;
       }
 
-      final VictronInstantReadoutResult result =
-          _instantDecoder.decode(
+      final VictronInstantReadoutResult result = _instantDecoder.decode(
         manufacturerData: device.manufacturerData,
         encryptionKey: encryptionKey,
         deviceType: device.type,
       );
 
-      final VictronLiveData current =
-          liveDevices.value[deviceId] ??
-              VictronLiveData(
-                serial: deviceId,
-                name: device.displayName,
-                updatedAt: DateTime.now(),
-              );
+      final VictronLiveData current = liveDevices.value[deviceId] ??
+          VictronLiveData(
+            serial: deviceId,
+            name: device.displayName,
+            updatedAt: DateTime.now(),
+          );
 
-      final VictronLiveData decoded =
-          _resultToLiveData(
+      final VictronLiveData decoded = _resultToLiveData(
         current: current,
         device: device,
         result: result,
@@ -337,8 +312,7 @@ class VictronBluetoothService {
     required VictronDevice device,
     required VictronInstantReadoutResult result,
   }) {
-    final Map<String, dynamic> values =
-        result.values;
+    final Map<String, dynamic> values = result.values;
 
     switch (device.type) {
       // =========================================================
@@ -348,62 +322,39 @@ class VictronBluetoothService {
         return current.copyWith(
           serial: device.device.remoteId.str,
           name: device.displayName,
-
-          batteryVoltage:
-              _doubleValue(
+          batteryVoltage: _doubleValue(
             values['batteryVoltage'],
           ),
-
-          batteryCurrent:
-              _doubleValue(
+          batteryCurrent: _doubleValue(
             values['batteryCurrent'],
           ),
-
-          power:
-              _doubleValue(
+          power: _doubleValue(
             values['batteryPower'],
           ),
-
-          stateOfCharge:
-              _doubleValue(
+          stateOfCharge: _doubleValue(
             values['stateOfCharge'],
           ),
-
-          temperature:
-              _doubleValue(
+          temperature: _doubleValue(
             values['temperature'],
           ),
-
-          consumedAh:
-              _doubleValue(
+          consumedAh: _doubleValue(
             values['consumedAh'],
           ),
-
-          remainingMinutes:
-              _intValue(
+          remainingMinutes: _intValue(
             values['remainingMinutes'],
           ),
-
-          starterVoltage:
-              _doubleValue(
+          starterVoltage: _doubleValue(
             values['starterVoltage'],
           ),
-
-          midpointVoltage:
-              _doubleValue(
+          midpointVoltage: _doubleValue(
             values['midpointVoltage'],
           ),
-
-          alarmCode:
-              _intValue(
+          alarmCode: _intValue(
             values['alarmCode'],
           ),
-
-          auxMode:
-              _intValue(
+          auxMode: _intValue(
             values['auxMode'],
           ),
-
           updatedAt: DateTime.now(),
         );
 
@@ -411,18 +362,15 @@ class VictronBluetoothService {
       // SMARTSOLAR MPPT
       // =========================================================
       case VictronDeviceType.smartSolar:
-        final double? batteryVoltage =
-            _doubleValue(
+        final double? batteryVoltage = _doubleValue(
           values['batteryVoltage'],
         );
 
-        final double? chargeCurrent =
-            _doubleValue(
+        final double? chargeCurrent = _doubleValue(
           values['chargeCurrent'],
         );
 
-        final double? solarPower =
-            _doubleValue(
+        final double? solarPower = _doubleValue(
           values['solarPower'],
         );
 
@@ -435,74 +383,41 @@ class VictronBluetoothService {
          *
          * ONLY when PV voltage is available.
          */
-        final double? pvVoltage =
-            _doubleValue(
+        final double? pvVoltage = _doubleValue(
           values['pvVoltage'],
         );
 
         final double? pvCurrent =
-            pvVoltage != null &&
-                    pvVoltage > 0 &&
-                    solarPower != null
+            pvVoltage != null && pvVoltage > 0 && solarPower != null
                 ? solarPower / pvVoltage
                 : current.pvCurrent;
 
         final double? outputPower =
-            batteryVoltage != null &&
-                    chargeCurrent != null
-                ? batteryVoltage *
-                    chargeCurrent
+            batteryVoltage != null && chargeCurrent != null
+                ? batteryVoltage * chargeCurrent
                 : current.power;
 
         return current.copyWith(
-          serial:
-              device.device.remoteId.str,
-
-          name:
-              device.displayName,
-
-          batteryVoltage:
-              batteryVoltage,
-
-          batteryCurrent:
-              chargeCurrent,
-
-          chargeCurrent:
-              chargeCurrent,
-
-          power:
-              outputPower,
-
-          pvVoltage:
-              pvVoltage,
-
-          pvCurrent:
-              pvCurrent,
-
-          pvPower:
-              solarPower,
-
-          yieldToday:
-              _yieldWhToKwh(
+          serial: device.device.remoteId.str,
+          name: device.displayName,
+          batteryVoltage: batteryVoltage,
+          batteryCurrent: chargeCurrent,
+          chargeCurrent: chargeCurrent,
+          power: outputPower,
+          pvVoltage: pvVoltage,
+          pvCurrent: pvCurrent,
+          pvPower: solarPower,
+          yieldToday: _yieldWhToKwh(
             values['yieldTodayWh'],
           ),
-
-          loadCurrent:
-              _doubleValue(
+          loadCurrent: _doubleValue(
             values['loadCurrent'],
           ),
-
-          chargerError:
-              _intValue(
+          chargerError: _intValue(
             values['chargerError'],
           ),
-
-          chargeState:
-              values['chargeState']
-                  ?.toString(),
-
-          updatedAt:
-              DateTime.now(),
+          chargeState: values['chargeState']?.toString(),
+          updatedAt: DateTime.now(),
         );
 
       // =========================================================
@@ -518,76 +433,47 @@ class VictronBluetoothService {
          * without inventing measurements.
          */
         return current.copyWith(
-          serial:
-              device.device.remoteId.str,
-
-          name:
-              device.displayName,
-
-          updatedAt:
-              DateTime.now(),
+          serial: device.device.remoteId.str,
+          name: device.displayName,
+          updatedAt: DateTime.now(),
         );
 
       // =========================================================
       // BLUE SMART CHARGER
       // =========================================================
       case VictronDeviceType.blueSmartCharger:
-        final double? batteryVoltage =
-            _doubleValue(
+        final double? batteryVoltage = _doubleValue(
           values['batteryVoltage'],
         );
 
-        final double? chargeCurrent =
-            _doubleValue(
+        final double? chargeCurrent = _doubleValue(
           values['chargeCurrent'],
         );
 
         final double? calculatedPower =
-            batteryVoltage != null &&
-                    chargeCurrent != null
-                ? batteryVoltage *
-                    chargeCurrent
+            batteryVoltage != null && chargeCurrent != null
+                ? batteryVoltage * chargeCurrent
                 : null;
 
         return current.copyWith(
-          serial:
-              device.device.remoteId.str,
-
-          name:
-              device.displayName,
-
-          batteryVoltage:
-              batteryVoltage,
-
-          batteryCurrent:
-              chargeCurrent,
-
-          chargeCurrent:
-              chargeCurrent,
-
-          power:
-              _doubleValue(
+          serial: device.device.remoteId.str,
+          name: device.displayName,
+          batteryVoltage: batteryVoltage,
+          batteryCurrent: chargeCurrent,
+          chargeCurrent: chargeCurrent,
+          power: _doubleValue(
                 values['power'],
               ) ??
               calculatedPower ??
               current.power,
-
-          temperature:
-              _doubleValue(
+          temperature: _doubleValue(
             values['temperature'],
           ),
-
-          chargeState:
-              values['chargeState']
-                  ?.toString(),
-
-          chargerError:
-              _intValue(
+          chargeState: values['chargeState']?.toString(),
+          chargerError: _intValue(
             values['chargerError'],
           ),
-
-          updatedAt:
-              DateTime.now(),
+          updatedAt: DateTime.now(),
         );
 
       // =========================================================
@@ -595,17 +481,13 @@ class VictronBluetoothService {
       // =========================================================
       case VictronDeviceType.unknown:
         return current.copyWith(
-          serial:
-              device.device.remoteId.str,
-
-          name:
-              device.displayName,
-
-          updatedAt:
-              DateTime.now(),
+          serial: device.device.remoteId.str,
+          name: device.displayName,
+          updatedAt: DateTime.now(),
         );
     }
   }
+
   double? _doubleValue(dynamic value) {
     if (value == null) {
       return null;
@@ -625,7 +507,8 @@ class VictronBluetoothService {
 
     return null;
   }
-    int? _intValue(dynamic value) {
+
+  int? _intValue(dynamic value) {
     if (value == null) {
       return null;
     }
@@ -642,8 +525,7 @@ class VictronBluetoothService {
   }
 
   double? _yieldWhToKwh(dynamic value) {
-    final double? wh =
-        _doubleValue(value);
+    final double? wh = _doubleValue(value);
 
     if (wh == null) {
       return null;
@@ -683,29 +565,23 @@ class VictronBluetoothService {
     VictronLiveData data, {
     VictronDevice? device,
   }) {
-    final EntityService entityService =
-        EntityService.instance;
+    final EntityService entityService = EntityService.instance;
 
     final DeviceEntityLinkService linkService =
         DeviceEntityLinkService.instance;
 
-    final DeviceRegistryService registry =
-        DeviceRegistryService.instance;
+    final DeviceRegistryService registry = DeviceRegistryService.instance;
 
     // Device identity is based on Bluetooth ID, not the user-renamed
     // Victron device name. Renaming a SmartShunt therefore does not
     // create a new Rustler GX device or new entity IDs.
-    final String deviceKey =
-        _entitySlug(deviceId);
+    final String deviceKey = _entitySlug(deviceId);
 
-    final String registryDeviceId =
-        'victron:$deviceKey';
+    final String registryDeviceId = 'victron:$deviceKey';
 
-    final String sourcePrefix =
-        'victron.$deviceKey';
+    final String sourcePrefix = 'victron.$deviceKey';
 
-    final RustlerDevice? existingDevice =
-        registry.getDevice(registryDeviceId);
+    final RustlerDevice? existingDevice = registry.getDevice(registryDeviceId);
 
     linkService.registerDevice(
       RustlerDevice(
@@ -722,8 +598,7 @@ class VictronBluetoothService {
         source: EntitySources.victron,
         available: true,
         updatedAt: data.updatedAt,
-        entityIds: existingDevice?.entityIds ??
-            const <String>[],
+        entityIds: existingDevice?.entityIds ?? const <String>[],
       ),
     );
 
@@ -745,8 +620,7 @@ class VictronBluetoothService {
       required String name,
       required double? value,
       String? unit,
-      RustlerEntityType type =
-          RustlerEntityType.sensor,
+      RustlerEntityType type = RustlerEntityType.sensor,
     }) {
       if (value == null) {
         return;
@@ -1050,9 +924,7 @@ class VictronBluetoothService {
         return 'Orion XS';
 
       case VictronDeviceType.unknown:
-        return device.modelId == null
-            ? null
-            : device.modelIdHex;
+        return device.modelId == null ? null : device.modelIdHex;
     }
   }
 
@@ -1071,135 +943,119 @@ class VictronBluetoothService {
   }
 
   Future<void> _autoHandleKnownDevice(
-  VictronDevice device,
-) async {
-  final String deviceId =
-      device.device.remoteId.str;
+    VictronDevice device,
+  ) async {
+    final String deviceId = device.device.remoteId.str;
 
-  final bool known =
-      await _keyService.isKnownDevice(
-    deviceId,
-  );
-
-  if (!known) {
-    return;
-  }
-
-  // =========================================================
-  // INSTANT READOUT
-  // =========================================================
-  //
-  // Devices with a stored key don't need a permanent GATT
-  // connection. _processInstantReadout() already handles
-  // their advertisements automatically.
-
-  if (device.hasInstantReadout) {
-    final String? key =
-        await _keyService.getKey(
+    final bool known = await _keyService.isKnownDevice(
       deviceId,
     );
 
-    if (key != null &&
-        key.isNotEmpty) {
-      return;
-    }
-  }
-
-  // =========================================================
-  // LEGACY / GATT AUTO CONNECT
-  // =========================================================
-
-  final VictronDevice? currentlyConnected =
-      connectedDevice.value;
-
-  if (currentlyConnected != null) {
-    final String currentId =
-        currentlyConnected.device.remoteId.str;
-
-    if (currentId == deviceId) {
+    if (!known) {
       return;
     }
 
-    // The current adapter architecture supports one active
-    // GATT device at a time. Do not kick another known
-    // device off just because another advertisement arrived.
-    return;
-  }
+    // =========================================================
+    // INSTANT READOUT
+    // =========================================================
+    //
+    // Devices with a stored key don't need a permanent GATT
+    // connection. _processInstantReadout() already handles
+    // their advertisements automatically.
 
-  if (_autoConnectingDevices.contains(
-    deviceId,
-  )) {
-    return;
-  }
+    if (device.hasInstantReadout) {
+      final String? key = await _keyService.getKey(
+        deviceId,
+      );
 
-  final DateTime now =
-      DateTime.now();
+      if (key != null && key.isNotEmpty) {
+        return;
+      }
+    }
 
-  final DateTime? lastAttempt =
-      _lastAutoConnectAttempt[
-    deviceId
-  ];
+    // =========================================================
+    // LEGACY / GATT AUTO CONNECT
+    // =========================================================
 
-  if (lastAttempt != null &&
-      now.difference(lastAttempt) <
-          _autoConnectRetryInterval) {
-    return;
-  }
+    final VictronDevice? currentlyConnected = connectedDevice.value;
 
-  _lastAutoConnectAttempt[deviceId] =
-      now;
+    if (currentlyConnected != null) {
+      final String currentId = currentlyConnected.device.remoteId.str;
 
-  _autoConnectingDevices.add(
-    deviceId,
-  );
+      if (currentId == deviceId) {
+        return;
+      }
 
-  try {
-    debugPrint(
-      'AUTO CONNECT known device: '
-      '${device.displayName}',
-    );
+      // The current adapter architecture supports one active
+      // GATT device at a time. Do not kick another known
+      // device off just because another advertisement arrived.
+      return;
+    }
 
-    await connect(
-      device,
-    );
+    if (_autoConnectingDevices.contains(
+      deviceId,
+    )) {
+      return;
+    }
 
-    debugPrint(
-      'AUTO CONNECT success: '
-      '${device.displayName}',
-    );
-  } catch (error) {
-    debugPrint(
-      'AUTO CONNECT failed '
-      '${device.displayName}: $error',
-    );
-  } finally {
-    _autoConnectingDevices.remove(
+    final DateTime now = DateTime.now();
+
+    final DateTime? lastAttempt = _lastAutoConnectAttempt[deviceId];
+
+    if (lastAttempt != null &&
+        now.difference(lastAttempt) < _autoConnectRetryInterval) {
+      return;
+    }
+
+    _lastAutoConnectAttempt[deviceId] = now;
+
+    _autoConnectingDevices.add(
       deviceId,
     );
+
+    try {
+      debugPrint(
+        'AUTO CONNECT known device: '
+        '${device.displayName}',
+      );
+
+      await connect(
+        device,
+      );
+
+      debugPrint(
+        'AUTO CONNECT success: '
+        '${device.displayName}',
+      );
+    } catch (error) {
+      debugPrint(
+        'AUTO CONNECT failed '
+        '${device.displayName}: $error',
+      );
+    } finally {
+      _autoConnectingDevices.remove(
+        deviceId,
+      );
+    }
   }
-}
-   
+
   Future<void> _ensureBluetoothPermissions() async {
     if (!Platform.isAndroid) {
       return;
     }
 
-    final Map<Permission, PermissionStatus> statuses =
-        await <Permission>[
+    final Map<Permission, PermissionStatus> statuses = await <Permission>[
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
     ].request();
 
     final PermissionStatus scanStatus =
-        statuses[Permission.bluetoothScan] ??
-            PermissionStatus.denied;
+        statuses[Permission.bluetoothScan] ?? PermissionStatus.denied;
 
     final PermissionStatus connectStatus =
-        statuses[Permission.bluetoothConnect] ??
-            PermissionStatus.denied;
+        statuses[Permission.bluetoothConnect] ?? PermissionStatus.denied;
 
-    if (scanStatus.isPermanentlyDenied ||
-        connectStatus.isPermanentlyDenied) {
+    if (scanStatus.isPermanentlyDenied || connectStatus.isPermanentlyDenied) {
       throw Exception(
         'Bluetooth permission is permanently denied. '
         'Open Android Settings > Apps > Rustler GX > '
@@ -1207,8 +1063,7 @@ class VictronBluetoothService {
       );
     }
 
-    if (!scanStatus.isGranted ||
-        !connectStatus.isGranted) {
+    if (!scanStatus.isGranted || !connectStatus.isGranted) {
       throw Exception(
         'Bluetooth permission is required to scan '
         'and connect to nearby devices.',
@@ -1251,151 +1106,125 @@ class VictronBluetoothService {
   Future<void> connect(
     VictronDevice victronDevice,
   ) async {
-  final String deviceId =
-      victronDevice.device.remoteId.str;
+    final String deviceId = victronDevice.device.remoteId.str;
 
-  // If this exact GATT device is already connected,
-  // there is nothing to do.
-  if (connectedDevice
-          .value
-          ?.device
-          .remoteId
-          .str ==
-      deviceId) {
-    return;
-  }
-
-  await disconnect();
-  await stopScan();
-
-  // =========================================================
-  // INSTANT READOUT
-  // =========================================================
-
-  if (victronDevice.hasInstantReadout) {
-    final String? key =
-        await _keyService.getKey(
-      deviceId,
-    );
-
-    if (key != null &&
-        key.isNotEmpty) {
-      debugPrint(
-        'Using Instant Readout for '
-        '${victronDevice.displayName}',
-      );
-
-      await _keyService.rememberDevice(
-        deviceId,
-      );
-
-      await _processInstantReadout(
-        victronDevice,
-      );
-
-      connectedDevice.value =
-          victronDevice;
-
+    // If this exact GATT device is already connected,
+    // there is nothing to do.
+    if (connectedDevice.value?.device.remoteId.str == deviceId) {
       return;
     }
 
-    // MPPT / SmartShunt / Orion need the Instant Readout
-    // key. Don't attempt the Legacy Blue Smart adapter.
-    if (victronDevice.type !=
-        VictronDeviceType.blueSmartCharger) {
-      throw UnsupportedError(
-        'Encryption key required for '
-        '${victronDevice.displayName}',
+    await disconnect();
+    await stopScan();
+
+    // =========================================================
+    // INSTANT READOUT
+    // =========================================================
+
+    if (victronDevice.hasInstantReadout) {
+      final String? key = await _keyService.getKey(
+        deviceId,
+      );
+
+      if (key != null && key.isNotEmpty) {
+        debugPrint(
+          'Using Instant Readout for '
+          '${victronDevice.displayName}',
+        );
+
+        await _keyService.rememberDevice(
+          deviceId,
+        );
+
+        await _processInstantReadout(
+          victronDevice,
+        );
+
+        connectedDevice.value = victronDevice;
+
+        return;
+      }
+
+      // MPPT / SmartShunt / Orion need the Instant Readout
+      // key. Don't attempt the Legacy Blue Smart adapter.
+      if (victronDevice.type != VictronDeviceType.blueSmartCharger) {
+        throw UnsupportedError(
+          'Encryption key required for '
+          '${victronDevice.displayName}',
+        );
+      }
+
+      // Blue Smart can still use our Legacy GATT path
+      // when no Instant Readout key is stored.
+      debugPrint(
+        'No Instant Readout key for '
+        '${victronDevice.displayName}; '
+        'using Legacy GATT',
       );
     }
 
-    // Blue Smart can still use our Legacy GATT path
-    // when no Instant Readout key is stored.
+    // =========================================================
+    // LEGACY GATT
+    // =========================================================
+
     debugPrint(
-      'No Instant Readout key for '
-      '${victronDevice.displayName}; '
-      'using Legacy GATT',
+      'Connecting to '
+      '${victronDevice.displayName}',
+    );
+
+    _activeAdapter = _createAdapter(
+      victronDevice,
+    );
+
+    _liveDataSubscription = _activeAdapter!.liveData.listen(
+      (data) {
+        final VictronLiveData identified = data.copyWith(
+          serial: deviceId,
+          name: victronDevice.displayName,
+          updatedAt: DateTime.now(),
+        );
+
+        _updateLiveDevice(
+          deviceId,
+          identified,
+          device: victronDevice,
+        );
+      },
+    );
+
+    _connectionSubscription = victronDevice.device.connectionState.listen(
+      (state) {
+        debugPrint(
+          'Connection state: $state',
+        );
+
+        if (state == BluetoothConnectionState.connected) {
+          connectedDevice.value = victronDevice;
+        }
+
+        if (state == BluetoothConnectionState.disconnected) {
+          if (connectedDevice.value?.device.remoteId.str == deviceId) {
+            connectedDevice.value = null;
+          }
+        }
+      },
+    );
+
+    await _activeAdapter!.connect();
+
+    // Only remember it once setup actually succeeded.
+    await _keyService.rememberDevice(
+      deviceId,
+    );
+
+    connectedDevice.value = victronDevice;
+
+    debugPrint(
+      'Device remembered: '
+      '${victronDevice.displayName}',
     );
   }
 
-  // =========================================================
-  // LEGACY GATT
-  // =========================================================
-
-  debugPrint(
-    'Connecting to '
-    '${victronDevice.displayName}',
-  );
-
-  _activeAdapter =
-      _createAdapter(
-    victronDevice,
-  );
-
-  _liveDataSubscription =
-      _activeAdapter!.liveData.listen(
-    (data) {
-      final VictronLiveData identified =
-          data.copyWith(
-        serial: deviceId,
-        name: victronDevice.displayName,
-        updatedAt: DateTime.now(),
-      );
-
-      _updateLiveDevice(
-        deviceId,
-        identified,
-        device: victronDevice,
-      );
-    },
-  );
-
-  _connectionSubscription =
-      victronDevice
-          .device
-          .connectionState
-          .listen(
-    (state) {
-      debugPrint(
-        'Connection state: $state',
-      );
-
-      if (state ==
-          BluetoothConnectionState.connected) {
-        connectedDevice.value =
-            victronDevice;
-      }
-
-      if (state ==
-          BluetoothConnectionState.disconnected) {
-        if (connectedDevice
-                .value
-                ?.device
-                .remoteId
-                .str ==
-            deviceId) {
-          connectedDevice.value =
-              null;
-        }
-      }
-    },
-  );
-
-  await _activeAdapter!.connect();
-
-  // Only remember it once setup actually succeeded.
-  await _keyService.rememberDevice(
-    deviceId,
-  );
-
-  connectedDevice.value =
-      victronDevice;
-
-  debugPrint(
-    'Device remembered: '
-    '${victronDevice.displayName}',
-  );
-}
   VictronAdapter _createAdapter(
     VictronDevice victronDevice,
   ) {
@@ -1447,8 +1276,7 @@ class VictronBluetoothService {
     final List<RustlerDevice> victronDevices =
         DeviceRegistryService.instance.devices.value.values
             .where(
-              (device) =>
-                  device.source == EntitySources.victron,
+              (device) => device.source == EntitySources.victron,
             )
             .toList();
 

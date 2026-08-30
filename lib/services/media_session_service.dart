@@ -8,11 +8,9 @@ import '../models/media_playback_data.dart';
 class MediaSessionService {
   MediaSessionService._();
 
-  static final MediaSessionService instance =
-      MediaSessionService._();
+  static final MediaSessionService instance = MediaSessionService._();
 
-  static const MethodChannel _channel =
-      MethodChannel(
+  static const MethodChannel _channel = MethodChannel(
     'rustler_gx/media',
   );
 
@@ -41,21 +39,17 @@ class MediaSessionService {
   Future<void> refresh() async {
     try {
       final Map<dynamic, dynamic>? data =
-          await _channel.invokeMapMethod<
-              dynamic,
-              dynamic>(
+          await _channel.invokeMapMethod<dynamic, dynamic>(
         'getPlayback',
       );
 
       if (data == null) {
-        playback.value =
-            MediaPlaybackData.empty();
+        playback.value = MediaPlaybackData.empty();
 
         return;
       }
 
-      playback.value =
-          MediaPlaybackData.fromMap(
+      playback.value = MediaPlaybackData.fromMap(
         data,
       );
     } catch (error) {

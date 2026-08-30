@@ -29,17 +29,13 @@ class DeviceWireModel {
     return DeviceWireModel(
       id: device.id,
       name: device.name,
-      manufacturer:
-          device.manufacturer,
+      manufacturer: device.manufacturer,
       model: device.model,
       type: device.type.name,
       source: device.source,
       available: device.available,
-      updatedAt:
-          device.updatedAt
-              .toIso8601String(),
-      entityIds:
-          List<String>.from(
+      updatedAt: device.updatedAt.toIso8601String(),
+      entityIds: List<String>.from(
         device.entityIds,
       ),
     );
@@ -56,12 +52,10 @@ class DeviceWireModel {
       ),
       source: source,
       available: available,
-      updatedAt:
-          DateTime.parse(
+      updatedAt: DateTime.parse(
         updatedAt,
       ),
-      entityIds:
-          List<String>.from(
+      entityIds: List<String>.from(
         entityIds,
       ),
     );
@@ -71,8 +65,7 @@ class DeviceWireModel {
     return <String, dynamic>{
       'id': id,
       'name': name,
-      'manufacturer':
-          manufacturer,
+      'manufacturer': manufacturer,
       'model': model,
       'type': type,
       'source': source,
@@ -86,48 +79,28 @@ class DeviceWireModel {
     Map<String, dynamic> json,
   ) {
     return DeviceWireModel(
-      id:
-          json['id']?.toString() ??
-              '',
-      name:
-          json['name']?.toString() ??
-              'Unknown Device',
-      manufacturer:
-          json['manufacturer']
-                  ?.toString() ??
-              'Unknown',
-      model:
-          json['model']?.toString(),
-      type:
-          json['type']?.toString() ??
-              'unknown',
-      source:
-          json['source']?.toString() ??
-              'unknown',
-      available:
-          json['available'] as bool? ??
-              false,
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? 'Unknown Device',
+      manufacturer: json['manufacturer']?.toString() ?? 'Unknown',
+      model: json['model']?.toString(),
+      type: json['type']?.toString() ?? 'unknown',
+      source: json['source']?.toString() ?? 'unknown',
+      available: json['available'] as bool? ?? false,
       updatedAt:
-          json['updatedAt']
-                  ?.toString() ??
-              DateTime.now()
-                  .toIso8601String(),
-      entityIds:
-          (json['entityIds'] as List?)
-                  ?.map(
-                    (item) =>
-                        item.toString(),
-                  )
-                  .toList() ??
-              <String>[],
+          json['updatedAt']?.toString() ?? DateTime.now().toIso8601String(),
+      entityIds: (json['entityIds'] as List?)
+              ?.map(
+                (item) => item.toString(),
+              )
+              .toList() ??
+          <String>[],
     );
   }
 
   static RustlerDeviceType _typeFromString(
     String value,
   ) {
-    for (final RustlerDeviceType type
-        in RustlerDeviceType.values) {
+    for (final RustlerDeviceType type in RustlerDeviceType.values) {
       if (type.name == value) {
         return type;
       }

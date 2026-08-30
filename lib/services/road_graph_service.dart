@@ -8,24 +8,20 @@ import '../models/road_graph_models.dart';
 class RoadGraphService {
   RoadGraphService._();
 
-  static final RoadGraphService instance =
-      RoadGraphService._();
+  static final RoadGraphService instance = RoadGraphService._();
 
   Database? _database;
 
-  bool get ready =>
-      _database != null;
+  bool get ready => _database != null;
 
   Future<void> initialise() async {
     if (_database != null) {
       return;
     }
 
-    final Directory support =
-        await getApplicationSupportDirectory();
+    final Directory support = await getApplicationSupportDirectory();
 
-    final Directory directory =
-        Directory(
+    final Directory directory = Directory(
       '${support.path}/navigation',
     );
 
@@ -35,11 +31,9 @@ class RoadGraphService {
       );
     }
 
-    final String path =
-        '${directory.path}/rustler_roads.db';
+    final String path = '${directory.path}/rustler_roads.db';
 
-    _database =
-        sqlite3.open(
+    _database = sqlite3.open(
       path,
     );
 
@@ -47,8 +41,7 @@ class RoadGraphService {
   }
 
   void _createTables() {
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
     db.execute(
       '''
@@ -108,11 +101,9 @@ class RoadGraphService {
   }
 
   bool get hasRoadData {
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final ResultSet rows =
-        db.select(
+    final ResultSet rows = db.select(
       '''
       SELECT COUNT(*) AS count
       FROM road_nodes;
@@ -123,18 +114,15 @@ class RoadGraphService {
       return false;
     }
 
-    final int count =
-        rows.first['count'] as int;
+    final int count = rows.first['count'] as int;
 
     return count > 0;
   }
 
   int get nodeCount {
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final ResultSet rows =
-        db.select(
+    final ResultSet rows = db.select(
       '''
       SELECT COUNT(*) AS count
       FROM road_nodes;
@@ -145,11 +133,9 @@ class RoadGraphService {
   }
 
   int get edgeCount {
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final ResultSet rows =
-        db.select(
+    final ResultSet rows = db.select(
       '''
       SELECT COUNT(*) AS count
       FROM road_edges;
@@ -162,11 +148,9 @@ class RoadGraphService {
   RoadNode? getNode(
     int id,
   ) {
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final ResultSet rows =
-        db.select(
+    final ResultSet rows = db.select(
       '''
       SELECT *
       FROM road_nodes
@@ -190,24 +174,20 @@ class RoadGraphService {
   Map<int, RoadNode> getNodes(
     Iterable<int> ids,
   ) {
-    final List<int> list =
-        ids.toSet().toList();
+    final List<int> list = ids.toSet().toList();
 
     if (list.isEmpty) {
       return <int, RoadNode>{};
     }
 
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final String placeholders =
-        List<String>.filled(
+    final String placeholders = List<String>.filled(
       list.length,
       '?',
     ).join(',');
 
-    final ResultSet rows =
-        db.select(
+    final ResultSet rows = db.select(
       '''
       SELECT *
       FROM road_nodes
@@ -217,20 +197,16 @@ class RoadGraphService {
     );
 
     return <int, RoadNode>{
-      for (final Row row in rows)
-        row['id'] as int:
-            _nodeFromRow(row),
+      for (final Row row in rows) row['id'] as int: _nodeFromRow(row),
     };
   }
 
   List<RoadEdge> getOutgoingEdges(
     int nodeId,
   ) {
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    final ResultSet rows =
-        db.select(
+    final ResultSet rows = db.select(
       '''
       SELECT *
       FROM road_edges
@@ -251,14 +227,11 @@ class RoadGraphService {
   RoadNode? findNearestNode(
     double latitude,
     double longitude, {
-    double searchRadiusDegrees =
-        0.03,
+    double searchRadiusDegrees = 0.03,
   }) {
-    final Database db =
-        _requireDatabase();
+    final Database db = _requireDatabase();
 
-    ResultSet rows =
-        db.select(
+    ResultSet rows = db.select(
       '''
       SELECT *,
         (
@@ -280,20 +253,15 @@ class RoadGraphService {
         latitude,
         longitude,
         longitude,
-        latitude -
-            searchRadiusDegrees,
-        latitude +
-            searchRadiusDegrees,
-        longitude -
-            searchRadiusDegrees,
-        longitude +
-            searchRadiusDegrees,
+        latitude - searchRadiusDegrees,
+        latitude + searchRadiusDegrees,
+        longitude - searchRadiusDegrees,
+        longitude + searchRadiusDegrees,
       ],
     );
 
     if (rows.isEmpty) {
-      rows =
-          db.select(
+      rows = db.select(
         '''
         SELECT *,
           (
@@ -329,14 +297,9 @@ class RoadGraphService {
     Row row,
   ) {
     return RoadNode(
-      id:
-          row['id'] as int,
-      latitude:
-          (row['latitude'] as num)
-              .toDouble(),
-      longitude:
-          (row['longitude'] as num)
-              .toDouble(),
+      id: row['id'] as int,
+      latitude: (row['latitude'] as num).toDouble(),
+      longitude: (row['longitude'] as num).toDouble(),
     );
   }
 
@@ -344,28 +307,18 @@ class RoadGraphService {
     Row row,
   ) {
     return RoadEdge(
-      id:
-          row['id'] as int,
-      fromNode:
-          row['from_node'] as int,
-      toNode:
-          row['to_node'] as int,
-      distanceMetres:
-          (row['distance_metres'] as num)
-              .toDouble(),
-      speedKmh:
-          (row['speed_kmh'] as num)
-              .toDouble(),
-      roadName:
-          row['road_name'] as String?,
-      oneWay:
-          row['one_way'] == 1,
+      id: row['id'] as int,
+      fromNode: row['from_node'] as int,
+      toNode: row['to_node'] as int,
+      distanceMetres: (row['distance_metres'] as num).toDouble(),
+      speedKmh: (row['speed_kmh'] as num).toDouble(),
+      roadName: row['road_name'] as String?,
+      oneWay: row['one_way'] == 1,
     );
   }
 
   Database _requireDatabase() {
-    final Database? db =
-        _database;
+    final Database? db = _database;
 
     if (db == null) {
       throw StateError(

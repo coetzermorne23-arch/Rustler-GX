@@ -23,31 +23,24 @@ enum HubConnectionState {
 class HubClientService {
   HubClientService._();
 
-  static final HubClientService instance =
-      HubClientService._();
+  static final HubClientService instance = HubClientService._();
 
-  final EntityService _entityService =
-      EntityService.instance;
+  final EntityService _entityService = EntityService.instance;
 
-  final DeviceRegistryService _deviceRegistry =
-      DeviceRegistryService.instance;
+  final DeviceRegistryService _deviceRegistry = DeviceRegistryService.instance;
 
-  final RustlerGxConfigService _config =
-      RustlerGxConfigService.instance;
+  final RustlerGxConfigService _config = RustlerGxConfigService.instance;
 
-  final ValueNotifier<HubConnectionState>
-      connectionState =
+  final ValueNotifier<HubConnectionState> connectionState =
       ValueNotifier<HubConnectionState>(
     HubConnectionState.disconnected,
   );
 
-  final ValueNotifier<String?> lastError =
-      ValueNotifier<String?>(
+  final ValueNotifier<String?> lastError = ValueNotifier<String?>(
     null,
   );
 
-  final ValueNotifier<DateTime?> lastMessageAt =
-      ValueNotifier<DateTime?>(
+  final ValueNotifier<DateTime?> lastMessageAt = ValueNotifier<DateTime?>(
     null,
   );
 
@@ -59,23 +52,18 @@ class HubClientService {
   bool _shouldReconnect = false;
   bool _connecting = false;
 
-  static const Duration _reconnectDelay =
-      Duration(
+  static const Duration _reconnectDelay = Duration(
     seconds: 5,
   );
 
-  static const Duration _pingInterval =
-      Duration(
+  static const Duration _pingInterval = Duration(
     seconds: 20,
   );
 
-  bool get isConnected =>
-      connectionState.value ==
-      HubConnectionState.connected;
+  bool get isConnected => connectionState.value == HubConnectionState.connected;
 
   Future<void> connect() async {
-    if (_connecting ||
-        isConnected) {
+    if (_connecting || isConnected) {
       return;
     }
 
@@ -85,22 +73,18 @@ class HubClientService {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
 
-    connectionState.value =
-        HubConnectionState.connecting;
+    connectionState.value = HubConnectionState.connecting;
 
     lastError.value = null;
 
     try {
-      final Uri uri =
-          await _config
-              .getHubWebSocketUri();
+      final Uri uri = await _config.getHubWebSocketUri();
 
       debugPrint(
         'Connecting to Rustler GX Hub: $uri',
       );
 
-      final WebSocket socket =
-          await WebSocket.connect(
+      final WebSocket socket = await WebSocket.connect(
         uri.toString(),
       ).timeout(
         const Duration(
@@ -110,8 +94,7 @@ class HubClientService {
 
       _socket = socket;
 
-      connectionState.value =
-          HubConnectionState.connected;
+      connectionState.value = HubConnectionState.connected;
 
       lastError.value = null;
 
@@ -148,11 +131,9 @@ class HubClientService {
         'Connected to Rustler GX Hub',
       );
     } catch (error) {
-      lastError.value =
-          error.toString();
+      lastError.value = error.toString();
 
-      connectionState.value =
-          HubConnectionState.disconnected;
+      connectionState.value = HubConnectionState.disconnected;
 
       debugPrint(
         'Hub connection failed: $error',
@@ -171,12 +152,10 @@ class HubClientService {
       return;
     }
 
-    lastMessageAt.value =
-        DateTime.now();
+    lastMessageAt.value = DateTime.now();
 
     try {
-      final HubMessage message =
-          HubMessage.decode(
+      final HubMessage message = HubMessage.decode(
         rawMessage,
       );
 
@@ -210,9 +189,7 @@ class HubClientService {
             HubMessage(
               type: 'pong',
               data: {
-                'timestamp':
-                    DateTime.now()
-                        .toIso8601String(),
+                'timestamp': DateTime.now().toIso8601String(),
               },
             ),
           );
@@ -241,32 +218,27 @@ class HubClientService {
   void _handleDevicesMessage(
     HubMessage message,
   ) {
-    final dynamic rawItems =
-        message.data['items'];
+    final dynamic rawItems = message.data['items'];
 
     if (rawItems is! List) {
       return;
     }
 
-    final Set<String> receivedIds =
-        <String>{};
+    final Set<String> receivedIds = <String>{};
 
-    for (final dynamic item
-        in rawItems) {
+    for (final dynamic item in rawItems) {
       if (item is! Map) {
         continue;
       }
 
       try {
-        final DeviceWireModel wire =
-            DeviceWireModel.fromJson(
+        final DeviceWireModel wire = DeviceWireModel.fromJson(
           Map<String, dynamic>.from(
             item,
           ),
         );
 
-        final RustlerDevice device =
-            _convertRemoteDevice(
+        final RustlerDevice device = _convertRemoteDevice(
           wire.toDevice(),
         );
 
@@ -294,8 +266,7 @@ class HubClientService {
     HubMessage message,
   ) {
     try {
-      final DeviceWireModel wire =
-          DeviceWireModel.fromJson(
+      final DeviceWireModel wire = DeviceWireModel.fromJson(
         message.data,
       );
 
@@ -316,12 +287,9 @@ class HubClientService {
     RustlerDevice device,
   ) {
     final String remoteDeviceId =
-        device.id.startsWith('hub.')
-            ? device.id
-            : 'hub.${device.id}';
+        device.id.startsWith('hub.') ? device.id : 'hub.${device.id}';
 
-    final List<String> remoteEntityIds =
-        device.entityIds.map(
+    final List<String> remoteEntityIds = device.entityIds.map(
       (
         String id,
       ) {
@@ -336,41 +304,31 @@ class HubClientService {
     return RustlerDevice(
       id: remoteDeviceId,
       name: device.name,
-      manufacturer:
-          device.manufacturer,
+      manufacturer: device.manufacturer,
       model: device.model,
       type: device.type,
-      source:
-          'hub:${device.source}',
-      available:
-          device.available,
-      updatedAt:
-          device.updatedAt,
-      entityIds:
-          remoteEntityIds,
+      source: 'hub:${device.source}',
+      available: device.available,
+      updatedAt: device.updatedAt,
+      entityIds: remoteEntityIds,
     );
   }
 
   void _markMissingHubDevicesUnavailable(
     Set<String> receivedIds,
   ) {
-    final List<RustlerDevice> remote =
-        _deviceRegistry
-            .devices
-            .value
-            .values
-            .where(
-              (
-                RustlerDevice device,
-              ) =>
-                  device.id.startsWith(
-                'hub.',
-              ),
-            )
-            .toList();
+    final List<RustlerDevice> remote = _deviceRegistry.devices.value.values
+        .where(
+          (
+            RustlerDevice device,
+          ) =>
+              device.id.startsWith(
+            'hub.',
+          ),
+        )
+        .toList();
 
-    for (final RustlerDevice device
-        in remote) {
+    for (final RustlerDevice device in remote) {
       if (receivedIds.contains(
         device.id,
       )) {
@@ -393,32 +351,27 @@ class HubClientService {
   void _handleEntitiesMessage(
     HubMessage message,
   ) {
-    final dynamic rawItems =
-        message.data['items'];
+    final dynamic rawItems = message.data['items'];
 
     if (rawItems is! List) {
       return;
     }
 
-    final Set<String> receivedIds =
-        <String>{};
+    final Set<String> receivedIds = <String>{};
 
-    for (final dynamic rawItem
-        in rawItems) {
+    for (final dynamic rawItem in rawItems) {
       if (rawItem is! Map) {
         continue;
       }
 
       try {
-        final EntityWireModel wire =
-            EntityWireModel.fromJson(
+        final EntityWireModel wire = EntityWireModel.fromJson(
           Map<String, dynamic>.from(
             rawItem,
           ),
         );
 
-        final RustlerEntity remoteEntity =
-            _convertRemoteEntity(
+        final RustlerEntity remoteEntity = _convertRemoteEntity(
           wire.toEntity(),
         );
 
@@ -446,8 +399,7 @@ class HubClientService {
     HubMessage message,
   ) {
     try {
-      final EntityWireModel wire =
-          EntityWireModel.fromJson(
+      final EntityWireModel wire = EntityWireModel.fromJson(
         message.data,
       );
 
@@ -468,9 +420,7 @@ class HubClientService {
     RustlerEntity entity,
   ) {
     final String remoteId =
-        entity.id.startsWith('hub.')
-            ? entity.id
-            : 'hub.${entity.id}';
+        entity.id.startsWith('hub.') ? entity.id : 'hub.${entity.id}';
 
     return RustlerEntity(
       id: remoteId,
@@ -478,35 +428,27 @@ class HubClientService {
       type: entity.type,
       value: entity.value,
       unit: entity.unit,
-      source:
-          'hub:${entity.source}',
-      available:
-          entity.available,
-      updatedAt:
-          entity.updatedAt,
+      source: 'hub:${entity.source}',
+      available: entity.available,
+      updatedAt: entity.updatedAt,
     );
   }
 
   void _markMissingHubEntitiesUnavailable(
     Set<String> receivedIds,
   ) {
-    final List<RustlerEntity> remote =
-        _entityService
-            .entities
-            .value
-            .values
-            .where(
-              (
-                RustlerEntity entity,
-              ) =>
-                  entity.id.startsWith(
-                'hub.',
-              ),
-            )
-            .toList();
+    final List<RustlerEntity> remote = _entityService.entities.value.values
+        .where(
+          (
+            RustlerEntity entity,
+          ) =>
+              entity.id.startsWith(
+            'hub.',
+          ),
+        )
+        .toList();
 
-    for (final RustlerEntity entity
-        in remote) {
+    for (final RustlerEntity entity in remote) {
       if (receivedIds.contains(
         entity.id,
       )) {
@@ -529,11 +471,9 @@ class HubClientService {
   void _send(
     HubMessage message,
   ) {
-    final WebSocket? socket =
-        _socket;
+    final WebSocket? socket = _socket;
 
-    if (socket == null ||
-        !isConnected) {
+    if (socket == null || !isConnected) {
       return;
     }
 
@@ -551,8 +491,7 @@ class HubClientService {
   void _startPingTimer() {
     _pingTimer?.cancel();
 
-    _pingTimer =
-        Timer.periodic(
+    _pingTimer = Timer.periodic(
       _pingInterval,
       (_) {
         sendPing();
@@ -565,9 +504,7 @@ class HubClientService {
       HubMessage(
         type: 'ping',
         data: {
-          'timestamp':
-              DateTime.now()
-                  .toIso8601String(),
+          'timestamp': DateTime.now().toIso8601String(),
         },
       ),
     );
@@ -580,8 +517,7 @@ class HubClientService {
   void _handleSocketError(
     Object error,
   ) {
-    lastError.value =
-        error.toString();
+    lastError.value = error.toString();
 
     debugPrint(
       'Hub socket error: $error',
@@ -597,8 +533,7 @@ class HubClientService {
     _markAllHubDataUnavailable();
 
     if (!_shouldReconnect) {
-      connectionState.value =
-          HubConnectionState.disconnected;
+      connectionState.value = HubConnectionState.disconnected;
 
       return;
     }
@@ -611,13 +546,11 @@ class HubClientService {
       return;
     }
 
-    if (_reconnectTimer?.isActive ??
-        false) {
+    if (_reconnectTimer?.isActive ?? false) {
       return;
     }
 
-    connectionState.value =
-        HubConnectionState.reconnecting;
+    connectionState.value = HubConnectionState.reconnecting;
 
     _reconnectTimer = Timer(
       _reconnectDelay,
@@ -632,23 +565,18 @@ class HubClientService {
   }
 
   void _markAllHubDataUnavailable() {
-    final List<RustlerEntity> entities =
-        _entityService
-            .entities
-            .value
-            .values
-            .where(
-              (
-                RustlerEntity entity,
-              ) =>
-                  entity.id.startsWith(
-                'hub.',
-              ),
-            )
-            .toList();
+    final List<RustlerEntity> entities = _entityService.entities.value.values
+        .where(
+          (
+            RustlerEntity entity,
+          ) =>
+              entity.id.startsWith(
+            'hub.',
+          ),
+        )
+        .toList();
 
-    for (final RustlerEntity entity
-        in entities) {
+    for (final RustlerEntity entity in entities) {
       _entityService.upsert(
         entity.copyWith(
           available: false,
@@ -657,23 +585,18 @@ class HubClientService {
       );
     }
 
-    final List<RustlerDevice> devices =
-        _deviceRegistry
-            .devices
-            .value
-            .values
-            .where(
-              (
-                RustlerDevice device,
-              ) =>
-                  device.id.startsWith(
-                'hub.',
-              ),
-            )
-            .toList();
+    final List<RustlerDevice> devices = _deviceRegistry.devices.value.values
+        .where(
+          (
+            RustlerDevice device,
+          ) =>
+              device.id.startsWith(
+            'hub.',
+          ),
+        )
+        .toList();
 
-    for (final RustlerDevice device
-        in devices) {
+    for (final RustlerDevice device in devices) {
       _deviceRegistry.upsertDevice(
         device.copyWith(
           available: false,
@@ -692,8 +615,7 @@ class HubClientService {
     _pingTimer?.cancel();
     _pingTimer = null;
 
-    final WebSocket? socket =
-        _socket;
+    final WebSocket? socket = _socket;
 
     _socket = null;
 
@@ -703,8 +625,7 @@ class HubClientService {
       } catch (_) {}
     }
 
-    connectionState.value =
-        HubConnectionState.disconnected;
+    connectionState.value = HubConnectionState.disconnected;
 
     _markAllHubDataUnavailable();
 

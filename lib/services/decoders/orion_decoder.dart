@@ -38,8 +38,7 @@ class OrionDecoder extends DeviceDecoder {
           chargeCurrent: amps,
           outputCurrent: amps,
           outputPower: _calculatePower(
-            current.outputVoltage ??
-                current.batteryVoltage,
+            current.outputVoltage ?? current.batteryVoltage,
             amps,
           ),
         );

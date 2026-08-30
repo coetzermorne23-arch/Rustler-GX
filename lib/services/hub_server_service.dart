@@ -14,28 +14,22 @@ import 'entity_service.dart';
 class HubServerService {
   HubServerService._();
 
-  static final HubServerService instance =
-      HubServerService._();
+  static final HubServerService instance = HubServerService._();
 
-  final EntityService entities =
-      EntityService.instance;
+  final EntityService entities = EntityService.instance;
 
-  final DeviceRegistryService devices =
-      DeviceRegistryService.instance;
+  final DeviceRegistryService devices = DeviceRegistryService.instance;
 
   HttpServer? _server;
 
-  final Set<WebSocket> _clients =
-      <WebSocket>{};
+  final Set<WebSocket> _clients = <WebSocket>{};
 
   VoidCallback? _entityListener;
   VoidCallback? _deviceListener;
 
-  bool get isRunning =>
-      _server != null;
+  bool get isRunning => _server != null;
 
-  int? get port =>
-      _server?.port;
+  int? get port => _server?.port;
 
   Future<void> start({
     int port = 8765,
@@ -80,8 +74,7 @@ class HubServerService {
   }
 
   Future<void> _listen() async {
-    final HttpServer? server =
-        _server;
+    final HttpServer? server = _server;
 
     if (server == null) {
       return;
@@ -99,15 +92,12 @@ class HubServerService {
 
         try {
           request.response
-            ..statusCode =
-                HttpStatus.internalServerError
-            ..headers.contentType =
-                ContentType.json
+            ..statusCode = HttpStatus.internalServerError
+            ..headers.contentType = ContentType.json
             ..write(
               jsonEncode(
                 {
-                  'error':
-                      error.toString(),
+                  'error': error.toString(),
                 },
               ),
             );
@@ -121,25 +111,18 @@ class HubServerService {
   Future<void> _handleRequest(
     HttpRequest request,
   ) async {
-    final String path =
-        request.uri.path;
+    final String path = request.uri.path;
 
     if (path == '/status') {
       await _jsonResponse(
         request,
         {
-          'name':
-              'Rustler GX Hub',
+          'name': 'Rustler GX Hub',
           'online': true,
-          'devices':
-              devices.devices.value.length,
-          'entities':
-              entities.entities.value.length,
-          'clients':
-              _clients.length,
-          'timestamp':
-              DateTime.now()
-                  .toIso8601String(),
+          'devices': devices.devices.value.length,
+          'entities': entities.entities.value.length,
+          'clients': _clients.length,
+          'timestamp': DateTime.now().toIso8601String(),
         },
       );
 
@@ -173,8 +156,7 @@ class HubServerService {
     }
 
     request.response
-      ..statusCode =
-          HttpStatus.notFound
+      ..statusCode = HttpStatus.notFound
       ..write(
         'Rustler GX Hub',
       );
@@ -186,8 +168,7 @@ class HubServerService {
     HttpRequest request,
     Object value,
   ) async {
-    request.response.headers.contentType =
-        ContentType.json;
+    request.response.headers.contentType = ContentType.json;
 
     request.response.write(
       jsonEncode(
@@ -198,24 +179,20 @@ class HubServerService {
     await request.response.close();
   }
 
-  List<Map<String, dynamic>>
-      _entityJsonList() {
+  List<Map<String, dynamic>> _entityJsonList() {
     return entities.entities.value.values
         .map(
-          (entity) =>
-              EntityWireModel.fromEntity(
+          (entity) => EntityWireModel.fromEntity(
             entity,
           ).toJson(),
         )
         .toList();
   }
 
-  List<Map<String, dynamic>>
-      _deviceJsonList() {
+  List<Map<String, dynamic>> _deviceJsonList() {
     return devices.devices.value.values
         .map(
-          (device) =>
-              DeviceWireModel.fromDevice(
+          (device) => DeviceWireModel.fromDevice(
             device,
           ).toJson(),
         )
@@ -225,13 +202,11 @@ class HubServerService {
   Future<void> _upgradeWebSocket(
     HttpRequest request,
   ) async {
-    if (!WebSocketTransformer
-        .isUpgradeRequest(
+    if (!WebSocketTransformer.isUpgradeRequest(
       request,
     )) {
       request.response
-        ..statusCode =
-            HttpStatus.badRequest
+        ..statusCode = HttpStatus.badRequest
         ..write(
           'WebSocket upgrade required',
         );
@@ -241,8 +216,7 @@ class HubServerService {
       return;
     }
 
-    final WebSocket socket =
-        await WebSocketTransformer.upgrade(
+    final WebSocket socket = await WebSocketTransformer.upgrade(
       request,
     );
 
@@ -259,8 +233,7 @@ class HubServerService {
       HubMessage(
         type: 'devices',
         data: {
-          'items':
-              _deviceJsonList(),
+          'items': _deviceJsonList(),
         },
       ).encode(),
     );
@@ -269,8 +242,7 @@ class HubServerService {
       HubMessage(
         type: 'entities',
         data: {
-          'items':
-              _entityJsonList(),
+          'items': _entityJsonList(),
         },
       ).encode(),
     );
@@ -314,8 +286,7 @@ class HubServerService {
     }
 
     try {
-      final HubMessage message =
-          HubMessage.decode(
+      final HubMessage message = HubMessage.decode(
         raw,
       );
 
@@ -325,9 +296,7 @@ class HubServerService {
             HubMessage(
               type: 'pong',
               data: {
-                'timestamp':
-                    DateTime.now()
-                        .toIso8601String(),
+                'timestamp': DateTime.now().toIso8601String(),
               },
             ).encode(),
           );
@@ -338,8 +307,7 @@ class HubServerService {
             HubMessage(
               type: 'devices',
               data: {
-                'items':
-                    _deviceJsonList(),
+                'items': _deviceJsonList(),
               },
             ).encode(),
           );
@@ -350,8 +318,7 @@ class HubServerService {
             HubMessage(
               type: 'entities',
               data: {
-                'items':
-                    _entityJsonList(),
+                'items': _entityJsonList(),
               },
             ).encode(),
           );
@@ -365,12 +332,10 @@ class HubServerService {
   }
 
   Future<void> _broadcastEntities() async {
-    final String message =
-        HubMessage(
+    final String message = HubMessage(
       type: 'entities',
       data: {
-        'items':
-            _entityJsonList(),
+        'items': _entityJsonList(),
       },
     ).encode();
 
@@ -380,12 +345,10 @@ class HubServerService {
   }
 
   Future<void> _broadcastDevices() async {
-    final String message =
-        HubMessage(
+    final String message = HubMessage(
       type: 'devices',
       data: {
-        'items':
-            _deviceJsonList(),
+        'items': _deviceJsonList(),
       },
     ).encode();
 
@@ -401,11 +364,9 @@ class HubServerService {
       return;
     }
 
-    final List<WebSocket> dead =
-        <WebSocket>[];
+    final List<WebSocket> dead = <WebSocket>[];
 
-    for (final WebSocket socket
-        in _clients) {
+    for (final WebSocket socket in _clients) {
       try {
         socket.add(
           message,
@@ -417,8 +378,7 @@ class HubServerService {
       }
     }
 
-    for (final WebSocket socket
-        in dead) {
+    for (final WebSocket socket in dead) {
       _clients.remove(
         socket,
       );
@@ -430,11 +390,9 @@ class HubServerService {
   }
 
   Future<void> stop() async {
-    final VoidCallback? entityListener =
-        _entityListener;
+    final VoidCallback? entityListener = _entityListener;
 
-    final VoidCallback? deviceListener =
-        _deviceListener;
+    final VoidCallback? deviceListener = _deviceListener;
 
     if (entityListener != null) {
       entities.entities.removeListener(
@@ -451,8 +409,7 @@ class HubServerService {
     _entityListener = null;
     _deviceListener = null;
 
-    for (final WebSocket socket
-        in _clients) {
+    for (final WebSocket socket in _clients) {
       try {
         await socket.close();
       } catch (_) {}
@@ -460,8 +417,7 @@ class HubServerService {
 
     _clients.clear();
 
-    final HttpServer? server =
-        _server;
+    final HttpServer? server = _server;
 
     _server = null;
 
