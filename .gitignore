@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Rustler GX offline map build data
+map_build/*.osm.pbf
+
+# Python virtual environments
+tools/osm_env/
+**/__pycache__/
+*.pyc
