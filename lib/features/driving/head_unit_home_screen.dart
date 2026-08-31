@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
+import '../../models/media_playback_data.dart';
 import '../../services/gps_service.dart';
 import '../../services/media_launcher_service.dart';
+import '../../services/media_session_service.dart';
 
 import 'driving_screen.dart';
 import 'offline_navigation_screen.dart';
@@ -21,7 +23,9 @@ class HeadUnitHomeScreen extends StatefulWidget {
 class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
   final GpsService gps = GpsService.instance;
 
-  final MediaLauncherService media = MediaLauncherService.instance;
+  final MediaLauncherService mediaLauncher = MediaLauncherService.instance;
+
+  final MediaSessionService mediaSession = MediaSessionService.instance;
 
   int selectedPage = 0;
 
@@ -34,6 +38,7 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
     super.initState();
 
     gps.start();
+    mediaSession.start();
 
     clockTimer = Timer.periodic(
       const Duration(
@@ -103,9 +108,29 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
     return position.speed * 3.6;
   }
 
+  String _durationText(
+    int milliseconds,
+  ) {
+    if (milliseconds <= 0) {
+      return '0:00';
+    }
+
+    final Duration duration = Duration(
+      milliseconds: milliseconds,
+    );
+
+    final int minutes = duration.inMinutes;
+
+    final int seconds = duration.inSeconds.remainder(
+      60,
+    );
+
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
   Future<void> _openMusic() async {
     try {
-      await media.openYouTubeMusic();
+      await mediaLauncher.openYouTubeMusic();
     } catch (_) {
       if (!mounted) {
         return;
@@ -145,6 +170,12 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
         },
       ),
     );
+  }
+
+  void _openGx() {
+    Navigator.of(
+      context,
+    ).pop();
   }
 
   @override
@@ -285,7 +316,7 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
           ),
           Expanded(
             flex: 4,
-            child: _buildLauncherPanel(),
+            child: _buildRightPanel(),
           ),
         ],
       ),
@@ -322,7 +353,7 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
             borderRadius: BorderRadius.circular(
               24,
             ),
-            onTap: _openNavigation,
+            onTap: _openDriving,
             child: Padding(
               padding: const EdgeInsets.all(
                 28,
@@ -332,7 +363,7 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
                   const Row(
                     children: [
                       Icon(
-                        Icons.navigation,
+                        Icons.speed,
                         size: 30,
                       ),
                       SizedBox(
@@ -405,10 +436,18 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
     );
   }
 
-  Widget _buildLauncherPanel() {
+  Widget _buildRightPanel() {
     return Column(
       children: [
         Expanded(
+          flex: 6,
+          child: _buildMediaPanel(),
+        ),
+        const SizedBox(
+          height: 14,
+        ),
+        Expanded(
+          flex: 4,
           child: Row(
             children: [
               Expanded(
@@ -424,48 +463,270 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
               ),
               Expanded(
                 child: _LauncherButton(
-                  icon: Icons.music_note,
-                  title: 'MUSIC',
-                  subtitle: 'YouTube Music',
-                  onTap: _openMusic,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(
-          height: 14,
-        ),
-        Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                child: _LauncherButton(
-                  icon: Icons.speed,
-                  title: 'DRIVE',
-                  subtitle: 'GPS telemetry',
-                  onTap: _openDriving,
-                ),
-              ),
-              const SizedBox(
-                width: 14,
-              ),
-              Expanded(
-                child: _LauncherButton(
                   icon: Icons.dashboard_customize,
                   title: 'GX',
                   subtitle: 'Vehicle systems',
-                  onTap: () {
-                    Navigator.of(
-                      context,
-                    ).pop();
-                  },
+                  onTap: _openGx,
                 ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMediaPanel() {
+    return ValueListenableBuilder<bool>(
+      valueListenable: mediaSession.notificationAccess,
+      builder: (
+        context,
+        hasAccess,
+        child,
+      ) {
+        if (!hasAccess) {
+          return _buildMediaPermissionPanel();
+        }
+
+        return ValueListenableBuilder<MediaPlaybackData>(
+          valueListenable: mediaSession.playback,
+          builder: (
+            context,
+            playback,
+            child,
+          ) {
+            return Material(
+              color: const Color(
+                0xFF11171A,
+              ),
+              borderRadius: BorderRadius.circular(
+                20,
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(
+                  20,
+                ),
+                onTap: _openMusic,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(
+                    20,
+                    16,
+                    20,
+                    14,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      20,
+                    ),
+                    border: Border.all(
+                      color: const Color(
+                        0xFF263238,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.music_note,
+                            size: 22,
+                          ),
+                          const SizedBox(
+                            width: 8,
+                          ),
+                          const Text(
+                            'NOW PLAYING',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                          const Spacer(),
+                          if (playback.playing)
+                            const Icon(
+                              Icons.graphic_eq,
+                              size: 20,
+                            ),
+                        ],
+                      ),
+                      const SizedBox(
+                        height: 12,
+                      ),
+                      Text(
+                        playback.displayTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 4,
+                      ),
+                      Text(
+                        playback.displayArtist,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white60,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (playback.hasMedia) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            10,
+                          ),
+                          child: LinearProgressIndicator(
+                            value: playback.progress,
+                            minHeight: 5,
+                            backgroundColor: const Color(
+                              0xFF263238,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 5,
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              _durationText(
+                                playback.positionMs,
+                              ),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.white54,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              _durationText(
+                                playback.durationMs,
+                              ),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.white54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(
+                        height: 6,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _MediaButton(
+                            icon: Icons.skip_previous_rounded,
+                            onTap: () {
+                              mediaSession.previous();
+                            },
+                          ),
+                          const SizedBox(
+                            width: 16,
+                          ),
+                          _MediaButton(
+                            icon: playback.playing
+                                ? Icons.pause_rounded
+                                : Icons.play_arrow_rounded,
+                            large: true,
+                            onTap: () {
+                              mediaSession.playPause();
+                            },
+                          ),
+                          const SizedBox(
+                            width: 16,
+                          ),
+                          _MediaButton(
+                            icon: Icons.skip_next_rounded,
+                            onTap: () {
+                              mediaSession.next();
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMediaPermissionPanel() {
+    return Material(
+      color: const Color(
+        0xFF11171A,
+      ),
+      borderRadius: BorderRadius.circular(
+        20,
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(
+          20,
+        ),
+        onTap: () {
+          mediaSession.openAccessSettings();
+        },
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(
+            20,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(
+              20,
+            ),
+            border: Border.all(
+              color: const Color(
+                0xFF263238,
+              ),
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.music_off_rounded,
+                size: 42,
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              const Text(
+                'MEDIA ACCESS REQUIRED',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const SizedBox(
+                height: 5,
+              ),
+              const Text(
+                'Tap to enable Notification Access',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.white54,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -527,11 +788,7 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
             icon: Icons.dashboard_customize,
             label: 'GX',
             selected: false,
-            onTap: () {
-              Navigator.of(
-                context,
-              ).pop();
-            },
+            onTap: _openGx,
           ),
         ],
       ),
@@ -608,7 +865,7 @@ class _LauncherButton extends StatelessWidget {
         onTap: onTap,
         child: Container(
           padding: const EdgeInsets.all(
-            20,
+            16,
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(
@@ -625,32 +882,75 @@ class _LauncherButton extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                size: 50,
+                size: 38,
               ),
               const SizedBox(
-                height: 14,
+                height: 9,
               ),
               Text(
                 title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
+                  letterSpacing: 1.1,
                 ),
               ),
               const SizedBox(
-                height: 4,
+                height: 3,
               ),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   color: Colors.white54,
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MediaButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool large;
+
+  const _MediaButton({
+    required this.icon,
+    required this.onTap,
+    this.large = false,
+  });
+
+  @override
+  Widget build(
+    BuildContext context,
+  ) {
+    final double size = large ? 48 : 38;
+
+    return Material(
+      color: large
+          ? Theme.of(
+              context,
+            ).colorScheme.primary
+          : const Color(
+              0xFF1C2529,
+            ),
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: size,
+          height: size,
+          child: Icon(
+            icon,
+            size: large ? 30 : 24,
+            color: large ? Colors.black : Colors.white,
           ),
         ),
       ),
