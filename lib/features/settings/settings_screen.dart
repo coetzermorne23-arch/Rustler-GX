@@ -3,261 +3,84 @@ import 'package:flutter/material.dart';
 import '../../models/victron_device.dart';
 import '../../services/bluetooth_service.dart';
 import '../../services/victron_key_service.dart';
-import '../device_capabilities_screen.dart';
+import '../../services/device_profile_service.dart';
+import '../../services/head_unit_runtime_service.dart';
+import '../../services/head_unit_service.dart';
+import '../../services/media_session_service.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../driving/head_unit_home_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        const Text(
-          'Settings',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        const SizedBox(height: 6),
-
-        const Text(
-          'Configure Rustler GX integrations, '
-          'dashboard and device features.',
-          style: TextStyle(
-            color: Colors.white70,
-          ),
-        ),
-
-        const SizedBox(height: 24),
-
-        // ===================================================
-        // CONNECTIONS
-        // ===================================================
-
-        const _SectionTitle(
-          title: 'Connections',
-        ),
-
-        _SettingsTile(
-          icon: Icons.bluetooth,
-          title: 'Bluetooth & Victron',
-          subtitle: 'Bluetooth devices, Victron setup and encryption keys',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const VictronSettingsScreen(),
-              ),
-            );
-          },
-        ),
-
-        _SettingsTile(
-          icon: Icons.extension,
-          title: 'Device Capabilities',
-          subtitle: 'Bluetooth, Hub, GPS, media and dashboard capabilities',
-          onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => const DeviceCapabilitiesScreen(),
-              ),
-            );
-          },
-        ),
-
-        const SizedBox(height: 22),
-
-        // ===================================================
-        // DASHBOARD
-        // ===================================================
-
-        const _SectionTitle(
-          title: 'Dashboard',
-        ),
-
-        const _SettingsTile(
-          icon: Icons.dashboard_customize,
-          title: 'Dashboard & Pages',
-          subtitle: 'Widgets, dashboard pages and layouts',
-        ),
-
-        const SizedBox(height: 22),
-
-        // ===================================================
-        // HEAD UNIT
-        // ===================================================
-
-        const _SectionTitle(
-          title: 'Head Unit',
-        ),
-
-        const _SettingsTile(
-          icon: Icons.navigation,
-          title: 'GPS & Navigation',
-          subtitle: 'GPS source, navigation and driving features',
-        ),
-
-        const _SettingsTile(
-          icon: Icons.music_note,
-          title: 'Media',
-          subtitle: 'Music apps and dashboard media controls',
-        ),
-
-        const SizedBox(height: 22),
-
-        // ===================================================
-        // SYSTEM
-        // ===================================================
-
-        const _SectionTitle(
-          title: 'System',
-        ),
-
-        const _SettingsTile(
-          icon: Icons.extension,
-          title: 'Device Capabilities',
-          subtitle: 'Bluetooth, Hub, GPS, media and dashboard capabilities',
-        ),
-
-        const _SettingsTile(
-          icon: Icons.cloud_outlined,
-          title: 'Remote Access',
-          subtitle: 'Optional internet-based remote monitoring',
-        ),
-
-        const _SettingsTile(
-          icon: Icons.info_outline,
-          title: 'About Rustler GX',
-          subtitle: 'Version and system information',
-        ),
-
-        const SizedBox(height: 30),
-      ],
-    );
-  }
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-// ===========================================================
-// SETTINGS SECTION TITLE
-// ===========================================================
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-
-  const _SectionTitle({
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        left: 4,
-        bottom: 8,
-      ),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.1,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      ),
-    );
-  }
-}
-
-// ===========================================================
-// SETTINGS TILE
-// ===========================================================
-
-class _SettingsTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback? onTap;
-
-  const _SettingsTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(
-        bottom: 10,
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          size: 28,
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(
-            top: 3,
-          ),
-          child: Text(
-            subtitle,
-          ),
-        ),
-        trailing: onTap == null
-            ? const Icon(
-                Icons.lock_clock,
-                size: 20,
-              )
-            : const Icon(
-                Icons.chevron_right,
-              ),
-        onTap: onTap,
-      ),
-    );
-  }
-}
-
-// ===========================================================
-// VICTRON SETTINGS
-// ===========================================================
-
-class VictronSettingsScreen extends StatefulWidget {
-  const VictronSettingsScreen({
-    super.key,
-  });
-
-  @override
-  State<VictronSettingsScreen> createState() => _VictronSettingsScreenState();
-}
-
-class _VictronSettingsScreenState extends State<VictronSettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> {
   final VictronBluetoothService bluetooth = VictronBluetoothService.instance;
 
   final VictronKeyService keyService = VictronKeyService.instance;
 
+  final DeviceProfileService profile = DeviceProfileService.instance;
+
+  final HeadUnitRuntimeService runtime = HeadUnitRuntimeService.instance;
+
+  final HeadUnitService headUnit = HeadUnitService.instance;
+
+  final MediaSessionService media = MediaSessionService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+
+    profile.initialise();
+    media.checkAccess();
+  }
+
+  Future<void> _switchToRanger() async {
+    await profile.setRangerHeadUnit();
+    await runtime.start();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        builder: (_) => const HeadUnitHomeScreen(),
+      ),
+      (_) => false,
+    );
+  }
+
+  Future<void> _switchToStandard() async {
+    await profile.setStandard();
+    await runtime.leaveHeadUnitMode();
+    await headUnit.normalSystemUi();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        builder: (_) => const DashboardScreen(),
+      ),
+      (_) => false,
+    );
+  }
+
+  Future<void> _openNotificationAccess() async {
+    await media.openAccessSettings();
+  }
+
   Future<void> _editKey(
     VictronDevice device,
   ) async {
-    final String deviceId = device.device.remoteId.str;
+    final deviceId = device.device.remoteId.str;
 
-    final String? existingKey = await keyService.getKey(
-      deviceId,
-    );
+    final existingKey = await keyService.getKey(deviceId);
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
-    final bool? changed = await showDialog<bool>(
+    final changed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -275,100 +98,180 @@ class _VictronSettingsScreenState extends State<VictronSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Bluetooth & Victron',
-        ),
-      ),
-      body: StreamBuilder<List<VictronDevice>>(
-        stream: bluetooth.devices,
-        builder: (
-          context,
-          snapshot,
-        ) {
-          final List<VictronDevice> devices =
-              snapshot.data ?? const <VictronDevice>[];
+    return StreamBuilder<List<VictronDevice>>(
+      stream: bluetooth.devices,
+      builder: (context, snapshot) {
+        final devices = snapshot.data ?? const [];
 
-          return ListView(
-            padding: const EdgeInsets.all(
-              16,
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            const Text(
+              'Settings',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            children: [
-              const Text(
-                'Victron Devices',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                'Manage Victron Instant Readout '
-                'encryption keys stored on this device.',
-                style: TextStyle(
-                  color: Colors.white70,
-                ),
-              ),
-              const SizedBox(height: 18),
-              if (devices.isEmpty)
-                const Card(
+            const SizedBox(height: 18),
+            ValueListenableBuilder<RustlerDeviceProfile>(
+              valueListenable: profile.profile,
+              builder: (context, activeProfile, child) {
+                final bool ranger =
+                    activeProfile == RustlerDeviceProfile.rangerHeadUnit;
+
+                return Card(
                   child: Padding(
-                    padding: EdgeInsets.all(18),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.bluetooth_searching,
-                          size: 38,
-                        ),
-                        SizedBox(height: 12),
-                        Text(
-                          'No Victron devices detected.',
+                        const Text(
+                          'Device profile',
                           style: TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 5),
+                        const SizedBox(height: 8),
                         Text(
-                          'Scan for BT devices first. '
-                          'Detected Victron devices '
-                          'will appear here.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
+                          ranger
+                              ? 'RANGER_GX head unit mode is active.'
+                              : 'Standard Rustler GX mode is active.',
+                          style: const TextStyle(
                             color: Colors.white70,
                           ),
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            FilledButton.icon(
+                              onPressed: ranger ? null : _switchToRanger,
+                              icon: const Icon(
+                                Icons.directions_car_filled,
+                              ),
+                              label: const Text(
+                                'USE RANGER_GX',
+                              ),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: ranger ? _switchToStandard : null,
+                              icon: const Icon(
+                                Icons.phone_android,
+                              ),
+                              label: const Text(
+                                'USE STANDARD',
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                )
-              else
-                ...devices.map(
-                  (device) => _DeviceKeyCard(
-                    device: device,
-                    keyService: keyService,
-                    onEditKey: () => _editKey(
-                      device,
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Head unit media access',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Rustler GX needs Android notification access '
+                      'to read and control YouTube Music playback.',
+                      style: TextStyle(
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ValueListenableBuilder<bool>(
+                      valueListenable: media.notificationAccess,
+                      builder: (context, access, child) {
+                        return Row(
+                          children: [
+                            Icon(
+                              access
+                                  ? Icons.check_circle
+                                  : Icons.warning_amber_rounded,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                access
+                                    ? 'Media access ready'
+                                    : 'Media access not enabled',
+                              ),
+                            ),
+                            OutlinedButton(
+                              onPressed: _openNotificationAccess,
+                              child: Text(
+                                access ? 'OPEN SETTINGS' : 'ENABLE',
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 22),
+            const Text(
+              'Victron encryption keys',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Keys are stored locally on this device.',
+              style: TextStyle(
+                color: Colors.white70,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (devices.isEmpty)
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(18),
+                  child: Text(
+                    'Scan for Victron devices first. '
+                    'Detected devices will appear here.',
                   ),
                 ),
-            ],
-          );
-        },
-      ),
+              )
+            else
+              ...devices.map(
+                (device) => _DeviceKeyCard(
+                  device: device,
+                  keyService: keyService,
+                  onEditKey: () => _editKey(device),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
 
-// ===========================================================
-// DEVICE KEY CARD
-// ===========================================================
-
 class _DeviceKeyCard extends StatelessWidget {
   final VictronDevice device;
-
   final VictronKeyService keyService;
-
   final VoidCallback onEditKey;
 
   const _DeviceKeyCard({
@@ -379,16 +282,14 @@ class _DeviceKeyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String deviceId = device.device.remoteId.str;
+    final deviceId = device.device.remoteId.str;
 
     return Card(
       margin: const EdgeInsets.only(
         bottom: 12,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(
-          16,
-        ),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -412,20 +313,15 @@ class _DeviceKeyCard extends StatelessWidget {
               future: keyService.hasKey(
                 deviceId,
               ),
-              builder: (
-                context,
-                snapshot,
-              ) {
-                final bool hasKey = snapshot.data ?? false;
+              builder: (context, snapshot) {
+                final hasKey = snapshot.data ?? false;
 
                 return Row(
                   children: [
                     Icon(
                       hasKey ? Icons.key : Icons.key_off,
                     ),
-                    const SizedBox(
-                      width: 8,
-                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         hasKey ? 'Encryption key saved' : 'No encryption key',
@@ -448,13 +344,8 @@ class _DeviceKeyCard extends StatelessWidget {
   }
 }
 
-// ===========================================================
-// KEY DIALOG
-// ===========================================================
-
 class _KeyDialog extends StatefulWidget {
   final VictronDevice device;
-
   final String? existingKey;
 
   const _KeyDialog({
@@ -472,7 +363,6 @@ class _KeyDialogState extends State<_KeyDialog> {
   late final TextEditingController controller;
 
   bool obscure = true;
-
   bool saving = false;
 
   @override
@@ -487,21 +377,12 @@ class _KeyDialogState extends State<_KeyDialog> {
   @override
   void dispose() {
     controller.dispose();
-
     super.dispose();
   }
 
   Future<void> _save() async {
-    final String value = controller.text
-        .replaceAll(
-          ' ',
-          '',
-        )
-        .replaceAll(
-          ':',
-          '',
-        )
-        .trim();
+    final value =
+        controller.text.replaceAll(' ', '').replaceAll(':', '').trim();
 
     if (!RegExp(
       r'^[0-9a-fA-F]{32}$',
@@ -528,18 +409,14 @@ class _KeyDialogState extends State<_KeyDialog> {
         encryptionKey: value,
       );
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       Navigator.pop(
         context,
         true,
       );
     } catch (error) {
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
       setState(() {
         saving = false;
@@ -564,9 +441,7 @@ class _KeyDialogState extends State<_KeyDialog> {
       widget.device.device.remoteId.str,
     );
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     Navigator.pop(
       context,

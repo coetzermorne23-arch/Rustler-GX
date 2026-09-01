@@ -30,11 +30,14 @@ class MediaSessionService {
   Timer? _timer;
 
   bool _refreshing = false;
+  int _ticks = 0;
 
   bool get running => _timer != null;
 
   Future<void> start() async {
     if (_timer != null) {
+      await checkAccess();
+      await refresh();
       return;
     }
 
@@ -45,8 +48,14 @@ class MediaSessionService {
       const Duration(
         milliseconds: 750,
       ),
-      (_) {
-        refresh();
+      (_) async {
+        _ticks++;
+
+        if (_ticks % 5 == 0) {
+          await checkAccess();
+        }
+
+        await refresh();
       },
     );
   }
@@ -57,6 +66,8 @@ class MediaSessionService {
             'hasNotificationAccess',
           ) ??
           false;
+
+      error.value = null;
     } catch (exception) {
       notificationAccess.value = false;
 
@@ -82,9 +93,6 @@ class MediaSessionService {
 
       if (data == null) {
         playback.value = MediaPlaybackData.empty();
-
-        error.value = null;
-
         return;
       }
 
@@ -93,8 +101,6 @@ class MediaSessionService {
       );
 
       error.value = null;
-    } on MissingPluginException {
-      error.value = 'Media controls are only available on Android.';
     } catch (exception) {
       error.value = exception.toString();
 
@@ -108,9 +114,14 @@ class MediaSessionService {
   }
 
   Future<bool> hasAccess() async {
-    await checkAccess();
-
-    return notificationAccess.value;
+    try {
+      return await _channel.invokeMethod<bool>(
+            'hasNotificationAccess',
+          ) ??
+          false;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void> openAccessSettings() async {
@@ -120,120 +131,81 @@ class MediaSessionService {
       );
     } catch (exception) {
       debugPrint(
-        'Could not open notification access settings: '
-        '$exception',
+        'Could not open notification '
+        'access settings: $exception',
       );
     }
   }
 
   Future<void> playPause() async {
-    try {
-      await _channel.invokeMethod(
-        'playPause',
-      );
-
-      await _delayedRefresh();
-    } catch (exception) {
-      debugPrint(
-        'Play/pause failed: '
-        '$exception',
-      );
-    }
+    await _invokeControl(
+      'playPause',
+    );
   }
 
   Future<void> play() async {
-    try {
-      await _channel.invokeMethod(
-        'play',
-      );
-
-      await _delayedRefresh();
-    } catch (exception) {
-      debugPrint(
-        'Play failed: '
-        '$exception',
-      );
-    }
+    await _invokeControl(
+      'play',
+    );
   }
 
   Future<void> pause() async {
-    try {
-      await _channel.invokeMethod(
-        'pause',
-      );
-
-      await _delayedRefresh();
-    } catch (exception) {
-      debugPrint(
-        'Pause failed: '
-        '$exception',
-      );
-    }
+    await _invokeControl(
+      'pause',
+    );
   }
 
   Future<void> next() async {
-    try {
-      await _channel.invokeMethod(
-        'next',
-      );
-
-      await _delayedRefresh();
-    } catch (exception) {
-      debugPrint(
-        'Next failed: '
-        '$exception',
-      );
-    }
+    await _invokeControl(
+      'next',
+    );
   }
 
   Future<void> previous() async {
-    try {
-      await _channel.invokeMethod(
-        'previous',
-      );
-
-      await _delayedRefresh();
-    } catch (exception) {
-      debugPrint(
-        'Previous failed: '
-        '$exception',
-      );
-    }
+    await _invokeControl(
+      'previous',
+    );
   }
 
   Future<void> seekTo(
-    int milliseconds,
+    int positionMs,
   ) async {
     try {
       await _channel.invokeMethod(
         'seekTo',
         <String, dynamic>{
-          'positionMs': milliseconds,
+          'positionMs': positionMs,
         },
       );
 
-      await _delayedRefresh();
+      await refresh();
     } catch (exception) {
       debugPrint(
-        'Seek failed: '
+        'Media seek failed: $exception',
+      );
+    }
+  }
+
+  Future<void> _invokeControl(
+    String method,
+  ) async {
+    try {
+      await _channel.invokeMethod(
+        method,
+      );
+
+      await refresh();
+    } catch (exception) {
+      debugPrint(
+        'Media control $method failed: '
         '$exception',
       );
     }
   }
 
-  Future<void> _delayedRefresh() async {
-    await Future<void>.delayed(
-      const Duration(
-        milliseconds: 150,
-      ),
-    );
-
-    await refresh();
-  }
-
   Future<void> stop() async {
     _timer?.cancel();
-
     _timer = null;
+    _ticks = 0;
   }
 }

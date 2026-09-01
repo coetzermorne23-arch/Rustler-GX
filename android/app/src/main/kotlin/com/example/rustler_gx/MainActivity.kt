@@ -8,6 +8,7 @@ import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.Bundle
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.NonNull
@@ -44,15 +45,81 @@ class MainActivity : FlutterActivity() {
                 MEDIA_SESSION_SERVICE
             ) as MediaSessionManager
 
-        keepScreenOn()
-        immersiveMode()
     }
 
-    override fun onResume() {
-        super.onResume()
+    override fun dispatchKeyEvent(
+        event: KeyEvent
+    ): Boolean {
+        if (
+            event.action != KeyEvent.ACTION_DOWN ||
+            event.repeatCount != 0
+        ) {
+            return super.dispatchKeyEvent(event)
+        }
 
-        keepScreenOn()
-        immersiveMode()
+        val controller =
+            getPreferredController()
+
+        when (event.keyCode) {
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+            KeyEvent.KEYCODE_HEADSETHOOK -> {
+                if (controller == null) {
+                    return super.dispatchKeyEvent(event)
+                }
+
+                val state =
+                    controller.playbackState?.state
+
+                if (
+                    state ==
+                    PlaybackState.STATE_PLAYING
+                ) {
+                    controller.transportControls.pause()
+                } else {
+                    controller.transportControls.play()
+                }
+
+                return true
+            }
+
+            KeyEvent.KEYCODE_MEDIA_PLAY -> {
+                if (controller == null) {
+                    return super.dispatchKeyEvent(event)
+                }
+
+                controller.transportControls.play()
+                return true
+            }
+
+            KeyEvent.KEYCODE_MEDIA_PAUSE -> {
+                if (controller == null) {
+                    return super.dispatchKeyEvent(event)
+                }
+
+                controller.transportControls.pause()
+                return true
+            }
+
+            KeyEvent.KEYCODE_MEDIA_NEXT -> {
+                if (controller == null) {
+                    return super.dispatchKeyEvent(event)
+                }
+
+                controller.transportControls.skipToNext()
+                return true
+            }
+
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
+                if (controller == null) {
+                    return super.dispatchKeyEvent(event)
+                }
+
+                controller.transportControls.skipToPrevious()
+                return true
+            }
+        }
+
+        return super.dispatchKeyEvent(event)
     }
 
     override fun configureFlutterEngine(

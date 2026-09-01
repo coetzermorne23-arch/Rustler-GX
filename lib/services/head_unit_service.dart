@@ -17,14 +17,12 @@ class HeadUnitService {
   Future<void> initialise() async {
     if (defaultTargetPlatform != TargetPlatform.android) {
       ready.value = false;
-
       return;
     }
 
     try {
-      await _channel.invokeMethod(
-        'keepScreenOn',
-      );
+      await keepScreenOn();
+      await immersiveMode();
 
       ready.value = true;
     } catch (_) {
@@ -66,5 +64,14 @@ class HeadUnitService {
         'keepScreenOn',
       );
     } catch (_) {}
+  }
+
+  Future<void> restoreHeadUnitUi() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+
+    await keepScreenOn();
+    await immersiveMode();
   }
 }

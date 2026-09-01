@@ -51,3 +51,9 @@ map_build/*.osm.pbf
 tools/osm_env/
 **/__pycache__/
 *.pyc
+
+# Rustler GX generated offline map files
+map_output/
+map_build/
+*.mbtiles
+*.osm.pbf

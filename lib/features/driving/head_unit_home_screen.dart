@@ -7,6 +7,9 @@ import '../../models/media_playback_data.dart';
 import '../../services/gps_service.dart';
 import '../../services/media_launcher_service.dart';
 import '../../services/media_session_service.dart';
+import '../../services/head_unit_runtime_service.dart';
+
+import '../dashboard/dashboard_screen.dart';
 
 import 'driving_screen.dart';
 import 'offline_navigation_screen.dart';
@@ -20,12 +23,15 @@ class HeadUnitHomeScreen extends StatefulWidget {
   State<HeadUnitHomeScreen> createState() => _HeadUnitHomeScreenState();
 }
 
-class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
+class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
+    with WidgetsBindingObserver {
   final GpsService gps = GpsService.instance;
 
   final MediaLauncherService mediaLauncher = MediaLauncherService.instance;
 
   final MediaSessionService mediaSession = MediaSessionService.instance;
+
+  final HeadUnitRuntimeService runtime = HeadUnitRuntimeService.instance;
 
   int selectedPage = 0;
 
@@ -37,8 +43,11 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
   void initState() {
     super.initState();
 
-    gps.start();
-    mediaSession.start();
+    WidgetsBinding.instance.addObserver(
+      this,
+    );
+
+    runtime.start();
 
     clockTimer = Timer.periodic(
       const Duration(
@@ -58,9 +67,22 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(
+      this,
+    );
+
     clockTimer?.cancel();
 
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(
+    AppLifecycleState state,
+  ) {
+    if (state == AppLifecycleState.resumed) {
+      runtime.resume();
+    }
   }
 
   String _twoDigits(
@@ -173,9 +195,11 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
   }
 
   void _openGx() {
-    Navigator.of(
-      context,
-    ).pop();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const DashboardScreen(),
+      ),
+    );
   }
 
   @override
@@ -235,7 +259,7 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen> {
             width: 12,
           ),
           const Text(
-            'RUSTLER GX',
+            'RANGER_GX',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,

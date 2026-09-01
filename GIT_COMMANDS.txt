@@ -1,0 +1,11 @@
+# After copying these files into ~/rustler_gx and after flutter analyze is clean:
+
+cd ~/rustler_gx
+
+git status
+
+git add README.md ROADMAP.md SUPPORT.md CONTRIBUTING.md PATREON_COPY.md LICENSE
+
+git commit -m "Add project documentation and Patreon support"
+
+git push origin main
