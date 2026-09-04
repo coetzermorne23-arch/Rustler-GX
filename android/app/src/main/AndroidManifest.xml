@@ -57,7 +57,7 @@
         android:required="false" />
 
     <application
-        android:label="Rustler GX"
+        android:label="RigOS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
@@ -122,7 +122,7 @@
 
         <service
             android:name=".MediaNotificationListener"
-            android:label="Rustler GX Media Control"
+            android:label="RigOS Media Control"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
 

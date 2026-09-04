@@ -65,9 +65,9 @@ class RigOsSettingsScreen extends StatelessWidget {
             'HOME role, boot/wake, USB, steering/call platform',
             () => _open(context, const HeadUnitSettingsScreen())),
         _Tile(
-            Icons.apps_outage,
-            'Head-unit app cleanup',
-            'List stock launcher apps and open Android App Info to disable/force-stop bloat safely',
+            Icons.speed_rounded,
+            'Head Unit → Performance',
+            'Set RigOS HOME • disable stock launcher • bloat cleanup • package diagnostics • restore',
             () => _open(context, const HeadUnitAppCleanupScreen())),
         const SizedBox(height: 18),
         const Card(

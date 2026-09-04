@@ -74,7 +74,7 @@ class BootReceiver :
                     pendingResult.finish()
                 }
             },
-            5000
+            250
         )
     }
 }

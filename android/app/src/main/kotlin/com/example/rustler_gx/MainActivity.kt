@@ -26,6 +26,8 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class MainActivity : FlutterActivity() {
 
@@ -263,19 +265,55 @@ class MainActivity : FlutterActivity() {
                     result.success(HeadUnitPlatform.storageVolumes(this))
                 }
 
-                "launcherApps" -> {
-                    val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+                "launcherApps", "installedApps" -> {
                     val pm = packageManager
-                    val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PackageManager.MATCH_ALL else 0
-                    val apps = pm.queryIntentActivities(intent, flags).map { info ->
-                        val ai = info.activityInfo.applicationInfo
-                        mapOf(
-                            "packageName" to info.activityInfo.packageName,
-                            "label" to info.loadLabel(pm).toString(),
-                            "system" to ((ai.flags and ApplicationInfo.FLAG_SYSTEM) != 0)
-                        )
-                    }.distinctBy { it["packageName"] }.sortedBy { (it["label"] as String).lowercase() }
-                    result.success(apps)
+                    val launcherIntent = Intent(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_LAUNCHER)
+                    val homeIntent = Intent(Intent.ACTION_MAIN)
+                        .addCategory(Intent.CATEGORY_HOME)
+                    val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        PackageManager.MATCH_ALL else 0
+                    val launcherPackages = pm.queryIntentActivities(launcherIntent, flags)
+                        .map { it.activityInfo.packageName }.toSet()
+                    val homePackages = pm.queryIntentActivities(homeIntent, flags)
+                        .map { it.activityInfo.packageName }.toSet()
+                    val packages = pm.getInstalledApplications(0)
+                        .filter { launcherPackages.contains(it.packageName) || homePackages.contains(it.packageName) }
+                        .map { ai ->
+                            mapOf(
+                                "packageName" to ai.packageName,
+                                "label" to pm.getApplicationLabel(ai).toString(),
+                                "system" to ((ai.flags and ApplicationInfo.FLAG_SYSTEM) != 0),
+                                "enabled" to ai.enabled,
+                                "homeCandidate" to homePackages.contains(ai.packageName)
+                            )
+                        }
+                        .sortedBy { (it["label"] as String).lowercase() }
+                    result.success(packages)
+                }
+
+                "rootAvailable" -> {
+                    result.success(runRootCommand("id").first)
+                }
+
+                "disablePackage" -> {
+                    val target = call.argument<String>("packageName")
+                    if (target.isNullOrBlank() || target == packageName) {
+                        result.success("BLOCKED: invalid/self package")
+                    } else {
+                        val (ok, output) = runRootCommand("pm disable-user --user 0 $target")
+                        result.success(if (ok) "OK: $output" else "NO_PRIVILEGE: $output")
+                    }
+                }
+
+                "enablePackage" -> {
+                    val target = call.argument<String>("packageName")
+                    if (target.isNullOrBlank()) {
+                        result.success("BLOCKED: invalid package")
+                    } else {
+                        val (ok, output) = runRootCommand("pm enable $target")
+                        result.success(if (ok) "OK: $output" else "NO_PRIVILEGE: $output")
+                    }
                 }
 
                 "openAppDetails" -> {
@@ -311,6 +349,20 @@ class MainActivity : FlutterActivity() {
                     result.notImplemented()
                 }
             }
+        }
+    }
+
+    private fun runRootCommand(command: String): Pair<Boolean, String> {
+        return try {
+            val process = Runtime.getRuntime().exec(arrayOf("su", "-c", command))
+            val stdout = BufferedReader(InputStreamReader(process.inputStream))
+                .readText().trim()
+            val stderr = BufferedReader(InputStreamReader(process.errorStream))
+                .readText().trim()
+            val exit = process.waitFor()
+            Pair(exit == 0, if (stdout.isNotBlank()) stdout else stderr)
+        } catch (e: Exception) {
+            Pair(false, e.message ?: "root unavailable")
         }
     }
 
