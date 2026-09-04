@@ -143,6 +143,21 @@ class EntitiesScreen extends StatelessWidget {
 
       case RustlerEntityType.media:
         return Icons.music_note;
+
+      case RustlerEntityType.light:
+        return Icons.lightbulb_outline;
+
+      case RustlerEntityType.location:
+        return Icons.location_on_outlined;
+
+      case RustlerEntityType.tank:
+        return Icons.water_drop_outlined;
+
+      case RustlerEntityType.relay:
+        return Icons.electrical_services;
+
+      case RustlerEntityType.unknown:
+        return Icons.device_unknown;
     }
   }
 }

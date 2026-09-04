@@ -1,14 +1,14 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-
 import 'app.dart';
 import 'services/capability_runtime_service.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await CapabilityRuntimeService.instance.initialize();
-
-  runApp(
-    const RustlerGXApp(),
+  unawaited(
+    CapabilityRuntimeService.instance.initialize().catchError((Object error) {
+      debugPrint('RigOS background runtime init failed: $error');
+    }),
   );
+  runApp(const RustlerGXApp());
 }

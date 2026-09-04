@@ -574,7 +574,7 @@ class VictronBluetoothService {
 
     // Device identity is based on Bluetooth ID, not the user-renamed
     // Victron device name. Renaming a SmartShunt therefore does not
-    // create a new Rustler GX device or new entity IDs.
+    // create a new RigOS device or new entity IDs.
     final String deviceKey = _entitySlug(deviceId);
 
     final String registryDeviceId = 'victron:$deviceKey';
@@ -1058,7 +1058,7 @@ class VictronBluetoothService {
     if (scanStatus.isPermanentlyDenied || connectStatus.isPermanentlyDenied) {
       throw Exception(
         'Bluetooth permission is permanently denied. '
-        'Open Android Settings > Apps > Rustler GX > '
+        'Open Android Settings > Apps > RigOS > '
         'Permissions and allow Nearby devices.',
       );
     }
@@ -1092,7 +1092,7 @@ class VictronBluetoothService {
 
     await FlutterBluePlus.stopScan();
 
-    debugPrint('Rustler GX Bluetooth scan started');
+    debugPrint('RigOS Bluetooth scan started');
 
     await FlutterBluePlus.startScan(
       timeout: const Duration(seconds: 15),

@@ -1186,7 +1186,7 @@ class _NoOfflineMap extends StatelessWidget {
             const SizedBox(
               width: 480,
               child: Text(
-                'Select the Rustler GX South Africa vector MBTiles map. '
+                'Select the RigOS South Africa vector MBTiles map. '
                 'After import the map is stored locally on the head unit '
                 'and does not require mobile data or Wi-Fi.',
                 textAlign: TextAlign.center,

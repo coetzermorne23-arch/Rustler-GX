@@ -8,31 +8,61 @@ class EntityService {
   static final EntityService instance = EntityService._();
 
   final ValueNotifier<Map<String, RustlerEntity>> entities =
-      ValueNotifier<Map<String, RustlerEntity>>({});
+      ValueNotifier<Map<String, RustlerEntity>>(<String, RustlerEntity>{});
 
   void upsert(RustlerEntity entity) {
-    final updated = Map<String, RustlerEntity>.from(
-      entities.value,
-    );
-
+    final Map<String, RustlerEntity> updated =
+        Map<String, RustlerEntity>.from(entities.value);
     updated[entity.id] = entity;
-
     entities.value = updated;
   }
 
-  RustlerEntity? get(String id) {
-    return entities.value[id];
-  }
+  void remove(String entityId) {
+    if (!entities.value.containsKey(entityId)) {
+      return;
+    }
 
-  void remove(String id) {
-    final updated = Map<String, RustlerEntity>.from(entities.value);
-
-    updated.remove(id);
-
+    final Map<String, RustlerEntity> updated =
+        Map<String, RustlerEntity>.from(entities.value);
+    updated.remove(entityId);
     entities.value = updated;
   }
 
-  void clear() {
-    entities.value = {};
+  void clearSource(String source) {
+    final Map<String, RustlerEntity> updated =
+        Map<String, RustlerEntity>.from(entities.value)
+          ..removeWhere((_, entity) => entity.source == source);
+    entities.value = updated;
+  }
+
+  RustlerEntity? getEntity(String entityId) => entities.value[entityId];
+
+  List<RustlerEntity> bySource(String source) {
+    return entities.value.values
+        .where((entity) => entity.source == source)
+        .toList(growable: false);
+  }
+
+  List<RustlerEntity> byType(RustlerEntityType type) {
+    return entities.value.values
+        .where((entity) => entity.type == type)
+        .toList(growable: false);
+  }
+
+  void setSourceAvailability(String source, bool available) {
+    final Map<String, RustlerEntity> updated =
+        Map<String, RustlerEntity>.from(entities.value);
+
+    for (final MapEntry<String, RustlerEntity> entry
+        in entities.value.entries) {
+      if (entry.value.source == source) {
+        updated[entry.key] = entry.value.copyWith(
+          available: available,
+          updatedAt: DateTime.now(),
+        );
+      }
+    }
+
+    entities.value = updated;
   }
 }

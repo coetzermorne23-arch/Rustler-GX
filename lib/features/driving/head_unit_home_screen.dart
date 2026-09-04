@@ -4,15 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../models/media_playback_data.dart';
+import '../../models/vehicle_obd_data.dart';
+import '../../models/head_unit_platform_state.dart';
 import '../../services/gps_service.dart';
-import '../../services/media_launcher_service.dart';
 import '../../services/media_session_service.dart';
 import '../../services/head_unit_runtime_service.dart';
-
-import '../dashboard/dashboard_screen.dart';
+import '../../services/head_unit_platform_service.dart';
+import '../../services/installation_identity_service.dart';
+import '../../services/vehicle_data_service.dart';
+import '../../services/obd_service.dart';
+import '../settings/rigos_settings_screen.dart';
 
 import 'driving_screen.dart';
 import 'offline_navigation_screen.dart';
+import 'gps_custom_screen.dart';
+import 'media_source_screen.dart';
+import 'obd_dashboard_screen.dart';
 
 class HeadUnitHomeScreen extends StatefulWidget {
   const HeadUnitHomeScreen({
@@ -27,11 +34,11 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
     with WidgetsBindingObserver {
   final GpsService gps = GpsService.instance;
 
-  final MediaLauncherService mediaLauncher = MediaLauncherService.instance;
-
   final MediaSessionService mediaSession = MediaSessionService.instance;
 
   final HeadUnitRuntimeService runtime = HeadUnitRuntimeService.instance;
+
+  final HeadUnitPlatformService platform = HeadUnitPlatformService.instance;
 
   int selectedPage = 0;
 
@@ -48,6 +55,7 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
     );
 
     runtime.start();
+    unawaited(ObdService.instance.start());
 
     clockTimer = Timer.periodic(
       const Duration(
@@ -151,33 +159,17 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
   }
 
   Future<void> _openMusic() async {
-    try {
-      await mediaLauncher.openYouTubeMusic();
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'YouTube Music could not be opened.',
-          ),
-        ),
-      );
-    }
-  }
-
-  void _openNavigation() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (
-          context,
-        ) {
-          return const OfflineNavigationScreen();
-        },
+        builder: (_) => const MediaSourceScreen(),
+      ),
+    );
+  }
+
+  void _openGpsDetails() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const GpsCustomScreen(),
       ),
     );
   }
@@ -194,11 +186,9 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
     );
   }
 
-  void _openGx() {
+  void _openSettings() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const DashboardScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (_) => const RigOsSettingsScreen()),
     );
   }
 
@@ -211,20 +201,31 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
         0xFF080B0D,
       ),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            _buildTopBar(),
-            Expanded(
-              child: IndexedStack(
-                index: selectedPage,
-                children: [
-                  _buildHome(),
-                  const OfflineNavigationScreen(),
-                  const DrivingScreen(),
-                ],
-              ),
+            Column(
+              children: [
+                _buildTopBar(),
+                Expanded(
+                  child: IndexedStack(
+                    index: selectedPage,
+                    children: [
+                      _buildHome(),
+                      const OfflineNavigationScreen(),
+                      const DrivingScreen(),
+                    ],
+                  ),
+                ),
+                _buildBottomBar(),
+              ],
             ),
-            _buildBottomBar(),
+            ValueListenableBuilder<HeadUnitCallState>(
+              valueListenable: platform.call,
+              builder: (context, call, child) {
+                if (!call.active) return const SizedBox.shrink();
+                return Positioned.fill(child: _buildCallOverlay(call));
+              },
+            ),
           ],
         ),
       ),
@@ -259,14 +260,37 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
             width: 12,
           ),
           const Text(
-            'RANGER_GX',
+            'RigOS',
             style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 2,
+                fontSize: 22, fontWeight: FontWeight.w900, letterSpacing: 1.4),
+          ),
+          const SizedBox(width: 10),
+          FutureBuilder<String>(
+            future: InstallationIdentityService.instance.getInstallationName(),
+            builder: (context, snapshot) => Text(
+              snapshot.data == null || snapshot.data == 'RigOS'
+                  ? ''
+                  : snapshot.data!,
+              style: const TextStyle(fontSize: 11, color: Colors.white38),
             ),
           ),
           const Spacer(),
+          ValueListenableBuilder<List<HeadUnitStorageVolume>>(
+            valueListenable: platform.storageVolumes,
+            builder: (context, volumes, child) {
+              final bool usb = platform.hasUsbMusicStorage;
+              return Row(
+                children: [
+                  Icon(usb ? Icons.usb : Icons.usb_off, size: 18),
+                  const SizedBox(width: 5),
+                  Text(usb ? 'USB' : 'YT MUSIC',
+                      style: const TextStyle(
+                          fontSize: 10, fontWeight: FontWeight.bold)),
+                  const SizedBox(width: 18),
+                ],
+              );
+            },
+          ),
           ValueListenableBuilder<Position?>(
             valueListenable: gps.position,
             builder: (
@@ -274,30 +298,38 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
               position,
               child,
             ) {
-              return Row(
-                children: [
-                  Icon(
-                    position == null ? Icons.gps_off : Icons.gps_fixed,
-                    size: 20,
-                  ),
-                  const SizedBox(
-                    width: 7,
-                  ),
-                  Text(
-                    position == null
-                        ? 'GPS'
-                        : '${_speedKmh(position).round()} km/h',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+              return InkWell(
+                onTap: _openGpsDetails,
+                borderRadius: BorderRadius.circular(16),
+                child: Row(
+                  children: [
+                    Icon(
+                      position == null ? Icons.gps_off : Icons.gps_fixed,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    const SizedBox(
+                      width: 7,
+                    ),
+                    Text(
+                      position == null
+                          ? 'GPS'
+                          : '${_speedKmh(position).round()} km/h',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           ),
-          const SizedBox(
-            width: 28,
+          const SizedBox(width: 14),
+          IconButton(
+            tooltip: 'RigOS Settings',
+            onPressed: _openSettings,
+            icon: const Icon(Icons.settings_rounded),
           ),
+          const SizedBox(width: 8),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -320,6 +352,57 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCallOverlay(HeadUnitCallState call) {
+    return ColoredBox(
+      color: const Color(0xE6080B0D),
+      child: Center(
+        child: Container(
+          width: 560,
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: const Color(0xFF11171A),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFF3D4B52)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.call, size: 52),
+              const SizedBox(height: 14),
+              Text(call.title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 25, fontWeight: FontWeight.w900)),
+              if (call.text.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(call.text,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white60)),
+              ],
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FilledButton.icon(
+                    onPressed: platform.answerCall,
+                    icon: const Icon(Icons.call),
+                    label: const Text('ANSWER'),
+                  ),
+                  const SizedBox(width: 18),
+                  OutlinedButton.icon(
+                    onPressed: platform.declineCall,
+                    icon: const Icon(Icons.call_end),
+                    label: const Text('DECLINE / END'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -472,31 +555,97 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
         ),
         Expanded(
           flex: 4,
-          child: Row(
-            children: [
-              Expanded(
-                child: _LauncherButton(
-                  icon: Icons.navigation,
-                  title: 'NAVIGATION',
-                  subtitle: 'Offline maps',
-                  onTap: _openNavigation,
-                ),
-              ),
-              const SizedBox(
-                width: 14,
-              ),
-              Expanded(
-                child: _LauncherButton(
-                  icon: Icons.dashboard_customize,
-                  title: 'GX',
-                  subtitle: 'Vehicle systems',
-                  onTap: _openGx,
-                ),
-              ),
-            ],
-          ),
+          child: _buildObdQuickPanel(),
         ),
       ],
+    );
+  }
+
+  Widget _buildObdQuickPanel() {
+    return ValueListenableBuilder<VehicleObdData>(
+      valueListenable: VehicleDataService.instance.data,
+      builder: (context, data, _) => Material(
+        color: const Color(0xFF11171A),
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const ObdDashboardScreen()),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF263238)),
+            ),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Icon(
+                    data.connected
+                        ? Icons.bluetooth_connected
+                        : Icons.bluetooth_disabled,
+                    size: 20),
+                const SizedBox(width: 8),
+                const Text('OBD LIVE',
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.4)),
+                const Spacer(),
+                Text(data.connected ? 'CONNECTED' : 'NOT CONNECTED',
+                    style: TextStyle(
+                        fontSize: 10,
+                        color: data.connected
+                            ? Colors.greenAccent
+                            : Colors.white38)),
+              ]),
+              const Spacer(),
+              Row(children: [
+                Expanded(
+                    child: _MiniInfo(
+                        title: 'RPM',
+                        value: data.rpm == null
+                            ? '--'
+                            : data.rpm!.round().toString())),
+                Expanded(
+                    child: _MiniInfo(
+                        title: 'BOOST',
+                        value: data.boostBar == null
+                            ? '--'
+                            : '${data.boostBar!.toStringAsFixed(2)} bar')),
+                Expanded(
+                    child: _MiniInfo(
+                        title: 'COOLANT',
+                        value: data.coolantTemperatureC == null
+                            ? '--'
+                            : '${data.coolantTemperatureC!.round()}°C')),
+              ]),
+              const SizedBox(height: 10),
+              Row(children: [
+                Expanded(
+                    child: _MiniInfo(
+                        title: 'BATTERY',
+                        value: data.batteryVoltage == null
+                            ? '--'
+                            : '${data.batteryVoltage!.toStringAsFixed(1)} V')),
+                Expanded(
+                    child: _MiniInfo(
+                        title: 'LOAD',
+                        value: data.engineLoadPercent == null
+                            ? '--'
+                            : '${data.engineLoadPercent!.round()}%')),
+                Expanded(
+                    child: _MiniInfo(
+                        title: 'SPEED',
+                        value: data.vehicleSpeedKmh == null
+                            ? '--'
+                            : '${data.vehicleSpeedKmh!.round()} km/h')),
+              ]),
+            ]),
+          ),
+        ),
+      ),
     );
   }
 
@@ -809,10 +958,10 @@ class _HeadUnitHomeScreenState extends State<HeadUnitHomeScreen>
             onTap: _openMusic,
           ),
           _BottomButton(
-            icon: Icons.dashboard_customize,
-            label: 'GX',
+            icon: Icons.settings_rounded,
+            label: 'SETTINGS',
             selected: false,
-            onTap: _openGx,
+            onTap: _openSettings,
           ),
         ],
       ),

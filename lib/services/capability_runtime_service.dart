@@ -81,7 +81,7 @@ class CapabilityRuntimeService {
     );
 
     debugPrint(
-      'Rustler GX capabilities active: '
+      'RigOS capabilities active: '
       '${capabilities.map((e) => e.name).join(', ')}',
     );
   }

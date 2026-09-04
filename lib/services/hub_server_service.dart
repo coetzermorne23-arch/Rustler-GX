@@ -44,7 +44,7 @@ class HubServerService {
     );
 
     debugPrint(
-      'Rustler GX Hub running on port '
+      'RigOS Hub running on port '
       '${_server!.port}',
     );
 
@@ -117,7 +117,7 @@ class HubServerService {
       await _jsonResponse(
         request,
         {
-          'name': 'Rustler GX Hub',
+          'name': 'RigOS Hub',
           'online': true,
           'devices': devices.devices.value.length,
           'entities': entities.entities.value.length,
@@ -158,7 +158,7 @@ class HubServerService {
     request.response
       ..statusCode = HttpStatus.notFound
       ..write(
-        'Rustler GX Hub',
+        'RigOS Hub',
       );
 
     await request.response.close();
@@ -428,7 +428,7 @@ class HubServerService {
     }
 
     debugPrint(
-      'Rustler GX Hub stopped',
+      'RigOS Hub stopped',
     );
   }
 }

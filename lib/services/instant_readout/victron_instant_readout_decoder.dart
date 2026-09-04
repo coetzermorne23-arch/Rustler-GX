@@ -282,7 +282,7 @@ class VictronInstantReadoutDecoder {
       values['outputVoltage1'] = voltage1;
       values['outputCurrent1'] = current1;
 
-      // Rustler GX generic charger fields.
+      // RigOS generic charger fields.
       values['batteryVoltage'] = voltage1;
       values['chargeCurrent'] = current1;
 

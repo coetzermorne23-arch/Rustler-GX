@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../models/rustler_device.dart';
@@ -9,6 +11,8 @@ import '../../services/bluetooth_service.dart';
 import '../../services/device_entity_link_service.dart';
 import '../../services/device_registry_service.dart';
 import '../../services/entity_service.dart';
+import '../../services/integrations/integration_manager_service.dart';
+import '../integrations/integrations_screen.dart';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({
@@ -29,6 +33,9 @@ class _DevicesScreenState extends State<DevicesScreen>
 
   final DeviceEntityLinkService links = DeviceEntityLinkService.instance;
 
+  final IntegrationManagerService integrations =
+      IntegrationManagerService.instance;
+
   late final TabController tabController;
 
   bool _isScanning = false;
@@ -41,6 +48,8 @@ class _DevicesScreenState extends State<DevicesScreen>
       length: 2,
       vsync: this,
     );
+
+    unawaited(integrations.start());
   }
 
   @override
@@ -122,6 +131,19 @@ class _DevicesScreenState extends State<DevicesScreen>
         title: const Text(
           'Devices',
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const IntegrationsScreen(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.hub),
+            tooltip: 'Integrations',
+          ),
+        ],
         bottom: TabBar(
           controller: tabController,
           tabs: const [
@@ -184,15 +206,17 @@ class _DevicesScreenState extends State<DevicesScreen>
 
           return FloatingActionButton.extended(
             onPressed: () {
-              tabController.animateTo(
-                0,
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const IntegrationsScreen(),
+                ),
               );
             },
             icon: const Icon(
-              Icons.add,
+              Icons.add_link,
             ),
             label: const Text(
-              'ADD DEVICE',
+              'ADD / MANAGE',
             ),
           );
         },
@@ -814,7 +838,7 @@ class _NoConfiguredDevices extends StatelessWidget {
             ),
             Text(
               'Use the Nearby tab to add '
-              'a device to Rustler GX.',
+              'a device to RigOS.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white70,
@@ -950,7 +974,7 @@ String _rustlerDeviceTypeLabel(
       return 'Sensor';
 
     case RustlerDeviceType.hub:
-      return 'Rustler GX Hub';
+      return 'RigOS Hub';
 
     case RustlerDeviceType.unknown:
       return 'Device';
@@ -1026,6 +1050,21 @@ IconData _entityIcon(
 
     case RustlerEntityType.sensor:
       return Icons.sensors;
+
+    case RustlerEntityType.light:
+      return Icons.lightbulb_outline;
+
+    case RustlerEntityType.location:
+      return Icons.location_on_outlined;
+
+    case RustlerEntityType.tank:
+      return Icons.water_drop_outlined;
+
+    case RustlerEntityType.relay:
+      return Icons.electrical_services;
+
+    case RustlerEntityType.unknown:
+      return Icons.device_unknown;
   }
 }
 

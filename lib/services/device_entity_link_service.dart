@@ -8,87 +8,58 @@ class DeviceEntityLinkService {
 
   static final DeviceEntityLinkService instance = DeviceEntityLinkService._();
 
-  final DeviceRegistryService devices = DeviceRegistryService.instance;
+  final DeviceRegistryService _devices = DeviceRegistryService.instance;
+  final EntityService _entities = EntityService.instance;
 
-  final EntityService entities = EntityService.instance;
+  EntityService get entities => _entities;
 
-  void registerDevice(
-    RustlerDevice device,
-  ) {
-    devices.upsertDevice(
-      device,
-    );
+  void registerDevice(RustlerDevice device) {
+    _devices.upsert(device);
   }
 
   void publishEntity({
     required String deviceId,
     required RustlerEntity entity,
   }) {
-    entities.upsert(
-      entity,
-    );
-
-    devices.attachEntity(
-      deviceId: deviceId,
-      entityId: entity.id,
-    );
+    _entities.upsert(entity);
+    _devices.attachEntity(deviceId, entity.id);
   }
 
-  List<RustlerEntity> entitiesForDevice(
-    String deviceId,
-  ) {
-    final RustlerDevice? device = devices.getDevice(
-      deviceId,
-    );
+  void removeEntity({
+    required String deviceId,
+    required String entityId,
+  }) {
+    _entities.remove(entityId);
+    _devices.detachEntity(deviceId, entityId);
+  }
 
+  List<RustlerEntity> entitiesForDevice(String deviceId) {
+    final RustlerDevice? device = _devices.getDevice(deviceId);
     if (device == null) {
-      return <RustlerEntity>[];
+      return const <RustlerEntity>[];
     }
 
-    final List<RustlerEntity> result = <RustlerEntity>[];
-
-    for (final String entityId in device.entityIds) {
-      final RustlerEntity? entity = entities.get(
-        entityId,
-      );
-
-      if (entity != null) {
-        result.add(
-          entity,
-        );
-      }
-    }
-
-    return result;
+    return device.entityIds
+        .map(_entities.getEntity)
+        .whereType<RustlerEntity>()
+        .toList(growable: false);
   }
 
-  void setDeviceAvailability(
-    String deviceId,
-    bool available,
-  ) {
-    devices.setAvailable(
-      deviceId,
-      available,
-    );
+  void setDeviceAvailability(String deviceId, bool available) {
+    _devices.setAvailable(deviceId, available);
 
-    final RustlerDevice? device = devices.getDevice(
-      deviceId,
-    );
-
+    final RustlerDevice? device = _devices.getDevice(deviceId);
     if (device == null) {
       return;
     }
 
     for (final String entityId in device.entityIds) {
-      final RustlerEntity? entity = entities.get(
-        entityId,
-      );
-
+      final RustlerEntity? entity = _entities.getEntity(entityId);
       if (entity == null) {
         continue;
       }
 
-      entities.upsert(
+      _entities.upsert(
         entity.copyWith(
           available: available,
           updatedAt: DateTime.now(),

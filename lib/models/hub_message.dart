@@ -40,7 +40,7 @@ class HubMessage {
 
     if (decoded is! Map) {
       throw const FormatException(
-        'Invalid Rustler GX Hub message.',
+        'Invalid RigOS Hub message.',
       );
     }
 

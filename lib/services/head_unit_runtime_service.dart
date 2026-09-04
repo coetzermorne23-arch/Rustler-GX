@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'gps_service.dart';
 import 'head_unit_service.dart';
+import 'head_unit_platform_service.dart';
 import 'media_session_service.dart';
 
 class HeadUnitRuntimeService {
@@ -15,6 +16,8 @@ class HeadUnitRuntimeService {
 
   final MediaSessionService media = MediaSessionService.instance;
 
+  final HeadUnitPlatformService platform = HeadUnitPlatformService.instance;
+
   final ValueNotifier<bool> running = ValueNotifier<bool>(
     false,
   );
@@ -25,7 +28,14 @@ class HeadUnitRuntimeService {
     await Future.wait<void>([
       gps.start(),
       media.start(),
+      platform.start(),
     ]);
+
+    // Ranger head-unit default source is always YouTube Music. If Android
+    // already has a YT Music session this resumes it immediately. On a cold
+    // boot native Android briefly starts YT Music, sends PLAY, then returns
+    // RigOS to the foreground.
+    await media.startDefaultMedia();
 
     running.value = true;
   }
@@ -35,6 +45,7 @@ class HeadUnitRuntimeService {
 
     await media.checkAccess();
     await media.refresh();
+    await platform.refresh();
 
     if (!running.value) {
       await start();

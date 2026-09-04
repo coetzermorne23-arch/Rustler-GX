@@ -34,7 +34,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             const Text(
-              'Victron System',
+              'RigOS Energy & Devices',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -81,7 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rustler GX'),
+        title: const Text('RigOS'),
         actions: [
           if (_selectedIndex == 0)
             IconButton(

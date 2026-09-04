@@ -14,7 +14,7 @@ class RustlerGXApp extends StatelessWidget {
     BuildContext context,
   ) {
     return MaterialApp(
-      title: 'Rustler GX',
+      title: 'RigOS',
       debugShowCheckedModeBanner: false,
       theme: rustlerTheme,
       home: const SplashScreen(),

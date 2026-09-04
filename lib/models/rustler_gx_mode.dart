@@ -40,13 +40,13 @@ extension RustlerGxCapabilityExtension on RustlerGxCapability {
         return 'Scan and connect to nearby Bluetooth devices.';
 
       case RustlerGxCapability.hubClient:
-        return 'Receive data from a Rustler GX Hub.';
+        return 'Receive data from a RigOS Hub.';
 
       case RustlerGxCapability.hubServer:
-        return 'Provide device data to other Rustler GX clients.';
+        return 'Provide device data to other RigOS clients.';
 
       case RustlerGxCapability.dashboard:
-        return 'Show the local Rustler GX dashboard.';
+        return 'Show the local RigOS dashboard.';
 
       case RustlerGxCapability.gps:
         return 'Use this device GPS and location hardware.';

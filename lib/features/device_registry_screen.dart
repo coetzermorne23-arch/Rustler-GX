@@ -4,6 +4,7 @@ import '../models/rustler_device.dart';
 import '../models/rustler_entity.dart';
 import '../services/device_entity_link_service.dart';
 import '../services/device_registry_service.dart';
+import '../services/integrations/entity_control_service.dart';
 
 class DeviceRegistryScreen extends StatelessWidget {
   const DeviceRegistryScreen({super.key});
@@ -14,7 +15,7 @@ class DeviceRegistryScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rustler GX Devices'),
+        title: const Text('RigOS Devices'),
       ),
       body: ValueListenableBuilder<Map<String, RustlerDevice>>(
         valueListenable: registry.devices,
@@ -206,7 +207,7 @@ class _DeviceCard extends StatelessWidget {
   }
 }
 
-class _EntityRow extends StatelessWidget {
+class _EntityRow extends StatefulWidget {
   final RustlerEntity entity;
 
   const _EntityRow({
@@ -214,10 +215,63 @@ class _EntityRow extends StatelessWidget {
   });
 
   @override
+  State<_EntityRow> createState() => _EntityRowState();
+}
+
+class _EntityRowState extends State<_EntityRow> {
+  final EntityControlService controls = EntityControlService.instance;
+  bool busy = false;
+
+  RustlerEntity get entity => widget.entity;
+
+  Future<void> _setBool(bool value) async {
+    if (busy) return;
+    setState(() => busy = true);
+    try {
+      await controls.setValue(entity, value);
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Control failed: $error')),
+      );
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final String value = entity.unit == null
         ? '${entity.value}'
         : '${entity.value} ${entity.unit}';
+    final bool controllable = controls.canControl(entity);
+
+    if (controllable && entity.value is bool) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                entity.name,
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
+            if (busy)
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Switch(
+                value: entity.value as bool,
+                onChanged: entity.available ? _setBool : null,
+              ),
+          ],
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
@@ -226,16 +280,17 @@ class _EntityRow extends StatelessWidget {
           Expanded(
             child: Text(
               entity.name,
-              style: const TextStyle(
-                color: Colors.white70,
-              ),
+              style: const TextStyle(color: Colors.white70),
             ),
           ),
+          if (!entity.available)
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Icon(Icons.cloud_off, size: 15),
+            ),
           Text(
             value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
       ),

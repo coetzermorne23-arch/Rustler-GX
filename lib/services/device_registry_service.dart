@@ -8,125 +8,92 @@ class DeviceRegistryService {
   static final DeviceRegistryService instance = DeviceRegistryService._();
 
   final ValueNotifier<Map<String, RustlerDevice>> devices =
-      ValueNotifier<Map<String, RustlerDevice>>(
-    <String, RustlerDevice>{},
-  );
+      ValueNotifier<Map<String, RustlerDevice>>(<String, RustlerDevice>{});
 
-  RustlerDevice? getDevice(
-    String deviceId,
-  ) {
-    return devices.value[deviceId];
-  }
-
-  void upsertDevice(
-    RustlerDevice device,
-  ) {
-    final updated = Map<String, RustlerDevice>.from(
-      devices.value,
-    );
-
+  void upsert(RustlerDevice device) {
+    final Map<String, RustlerDevice> updated =
+        Map<String, RustlerDevice>.from(devices.value);
     updated[device.id] = device;
-
     devices.value = updated;
   }
 
-  void removeDevice(
-    String deviceId,
-  ) {
-    final updated = Map<String, RustlerDevice>.from(
-      devices.value,
-    );
-
-    updated.remove(
-      deviceId,
-    );
-
-    devices.value = updated;
+  void upsertDevice(RustlerDevice device) {
+    upsert(device);
   }
 
-  void setAvailable(
-    String deviceId,
-    bool available,
-  ) {
-    final RustlerDevice? existing = devices.value[deviceId];
-
-    if (existing == null) {
+  void remove(String deviceId) {
+    if (!devices.value.containsKey(deviceId)) {
       return;
     }
 
-    upsertDevice(
-      existing.copyWith(
+    final Map<String, RustlerDevice> updated =
+        Map<String, RustlerDevice>.from(devices.value);
+    updated.remove(deviceId);
+    devices.value = updated;
+  }
+
+  RustlerDevice? getDevice(String deviceId) => devices.value[deviceId];
+
+  List<RustlerDevice> bySource(String source) {
+    return devices.value.values
+        .where((device) => device.source == source)
+        .toList(growable: false);
+  }
+
+  List<RustlerDevice> byType(RustlerDeviceType type) {
+    return devices.value.values
+        .where((device) => device.type == type)
+        .toList(growable: false);
+  }
+
+  void setAvailable(String deviceId, bool available) {
+    final RustlerDevice? device = devices.value[deviceId];
+    if (device == null) {
+      return;
+    }
+
+    upsert(
+      device.copyWith(
         available: available,
         updatedAt: DateTime.now(),
       ),
     );
   }
 
-  void attachEntity({
-    required String deviceId,
-    required String entityId,
-  }) {
-    final RustlerDevice? existing = devices.value[deviceId];
-
-    if (existing == null) {
+  void attachEntity(String deviceId, String entityId) {
+    final RustlerDevice? device = devices.value[deviceId];
+    if (device == null || device.entityIds.contains(entityId)) {
       return;
     }
 
-    final List<String> entityIds = List<String>.from(
-      existing.entityIds,
-    );
-
-    if (!entityIds.contains(
-      entityId,
-    )) {
-      entityIds.add(
-        entityId,
-      );
-    }
-
-    upsertDevice(
-      existing.copyWith(
-        entityIds: entityIds,
+    upsert(
+      device.copyWith(
+        entityIds: <String>[...device.entityIds, entityId],
         updatedAt: DateTime.now(),
       ),
     );
   }
 
-  void detachEntity({
-    required String deviceId,
-    required String entityId,
-  }) {
-    final RustlerDevice? existing = devices.value[deviceId];
-
-    if (existing == null) {
+  void detachEntity(String deviceId, String entityId) {
+    final RustlerDevice? device = devices.value[deviceId];
+    if (device == null) {
       return;
     }
 
-    final List<String> entityIds = List<String>.from(
-      existing.entityIds,
-    );
-
-    entityIds.remove(
-      entityId,
-    );
-
-    upsertDevice(
-      existing.copyWith(
-        entityIds: entityIds,
+    upsert(
+      device.copyWith(
+        entityIds: device.entityIds
+            .where((id) => id != entityId)
+            .toList(growable: false),
         updatedAt: DateTime.now(),
       ),
     );
   }
 
-  List<RustlerDevice> get availableDevices {
-    return devices.value.values
-        .where(
-          (device) => device.available,
-        )
-        .toList();
-  }
-
-  void clear() {
-    devices.value = <String, RustlerDevice>{};
+  void clearSource(String source) {
+    final Map<String, RustlerDevice> updated =
+        Map<String, RustlerDevice>.from(devices.value)
+          ..removeWhere((_, device) => device.source == source);
+    devices.value = updated;
   }
 }

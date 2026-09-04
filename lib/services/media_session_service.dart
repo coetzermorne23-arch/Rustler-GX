@@ -137,6 +137,14 @@ class MediaSessionService {
     }
   }
 
+  Future<bool> startDefaultMedia() async {
+    try {
+      return await _channel.invokeMethod<bool>('startDefaultMedia') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> playPause() async {
     await _invokeControl(
       'playPause',

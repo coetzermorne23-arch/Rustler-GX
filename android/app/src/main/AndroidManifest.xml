@@ -61,7 +61,8 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        android:directBootAware="true">
 
         <!-- ================================================== -->
         <!-- MAIN RUSTLER GX ACTIVITY -->
@@ -85,6 +86,14 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Optional dedicated head-unit launcher role. Only becomes the
+                 HOME app after the user explicitly selects Ranger GX. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
 
         </activity>

@@ -81,7 +81,7 @@ class HubDiscoveryService {
       );
 
       debugPrint(
-        'Rustler GX discovery listening on UDP '
+        'RigOS discovery listening on UDP '
         '$discoveryPort',
       );
     } catch (error) {
@@ -122,7 +122,7 @@ class HubDiscoveryService {
 
       final String id = data['id']?.toString() ?? '';
 
-      final String name = data['name']?.toString() ?? 'Rustler GX Hub';
+      final String name = data['name']?.toString() ?? 'RigOS Hub';
 
       final int? port = _parsePort(
         data['port'],
@@ -216,7 +216,7 @@ class HubDiscoveryService {
     hubs.value = <DiscoveredHub>[];
 
     debugPrint(
-      'Rustler GX discovery listener stopped',
+      'RigOS discovery listener stopped',
     );
   }
 
@@ -256,7 +256,7 @@ class HubDiscoveryService {
     _broadcastAnnouncement();
 
     debugPrint(
-      'Rustler GX Hub discovery broadcasting',
+      'RigOS Hub discovery broadcasting',
     );
   }
 
@@ -313,7 +313,7 @@ class HubDiscoveryService {
     _hubPort = null;
 
     debugPrint(
-      'Rustler GX Hub discovery broadcasting stopped',
+      'RigOS Hub discovery broadcasting stopped',
     );
   }
 

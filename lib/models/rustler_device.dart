@@ -18,30 +18,26 @@ class RustlerDevice {
   final String name;
   final String manufacturer;
   final String? model;
-
   final RustlerDeviceType type;
-
   final String source;
-
   final bool available;
-
   final DateTime updatedAt;
-
   final List<String> entityIds;
 
   const RustlerDevice({
     required this.id,
     required this.name,
     required this.manufacturer,
-    required this.model,
+    this.model,
     required this.type,
     required this.source,
     required this.available,
     required this.updatedAt,
-    required this.entityIds,
+    this.entityIds = const <String>[],
   });
 
   RustlerDevice copyWith({
+    String? id,
     String? name,
     String? manufacturer,
     String? model,
@@ -52,7 +48,7 @@ class RustlerDevice {
     List<String>? entityIds,
   }) {
     return RustlerDevice(
-      id: id,
+      id: id ?? this.id,
       name: name ?? this.name,
       manufacturer: manufacturer ?? this.manufacturer,
       model: model ?? this.model,

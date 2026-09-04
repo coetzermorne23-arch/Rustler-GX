@@ -277,7 +277,7 @@ class _DeviceCapabilitiesScreenState extends State<DeviceCapabilitiesScreen> {
           _CapabilityTile(
             icon: Icons.cloud_download_outlined,
             title: 'Hub Client',
-            subtitle: 'Receive data from another Rustler GX Hub.',
+            subtitle: 'Receive data from another RigOS Hub.',
             value: _enabled(
               RustlerGxCapability.hubClient,
             ),

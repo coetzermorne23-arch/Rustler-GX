@@ -37,7 +37,7 @@ class InstallationIdentityService {
     return await _preferences.getString(
           _installationNameKey,
         ) ??
-        'Rustler GX Hub';
+        'Ranger Rango';
   }
 
   Future<void> setInstallationName(
@@ -69,6 +69,6 @@ class InstallationIdentityService {
         )
         .join();
 
-    return 'rgx-$randomPart';
+    return 'rigos-$randomPart';
   }
 }

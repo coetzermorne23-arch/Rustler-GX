@@ -81,7 +81,7 @@ class HubClientService {
       final Uri uri = await _config.getHubWebSocketUri();
 
       debugPrint(
-        'Connecting to Rustler GX Hub: $uri',
+        'Connecting to RigOS Hub: $uri',
       );
 
       final WebSocket socket = await WebSocket.connect(
@@ -128,7 +128,7 @@ class HubClientService {
       );
 
       debugPrint(
-        'Connected to Rustler GX Hub',
+        'Connected to RigOS Hub',
       );
     } catch (error) {
       lastError.value = error.toString();
@@ -630,7 +630,7 @@ class HubClientService {
     _markAllHubDataUnavailable();
 
     debugPrint(
-      'Rustler GX Hub client stopped',
+      'RigOS Hub client stopped',
     );
   }
 

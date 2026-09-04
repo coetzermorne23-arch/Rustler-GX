@@ -183,7 +183,7 @@ class _HubSettingsScreenState extends State<HubSettingsScreen> {
       return Scaffold(
         appBar: AppBar(
           title: const Text(
-            'Rustler GX Hub',
+            'RigOS Hub',
           ),
         ),
         body: const Center(
@@ -195,7 +195,7 @@ class _HubSettingsScreenState extends State<HubSettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Rustler GX Hub',
+          'RigOS Hub',
         ),
       ),
       body: ListView(
@@ -210,7 +210,7 @@ class _HubSettingsScreenState extends State<HubSettingsScreen> {
           ),
           const SizedBox(height: 6),
           const Text(
-            'Rustler GX automatically searches '
+            'RigOS automatically searches '
             'for hubs on the local network.',
             style: TextStyle(
               color: Colors.white70,
@@ -239,7 +239,7 @@ class _HubSettingsScreenState extends State<HubSettingsScreen> {
                         ),
                         Expanded(
                           child: Text(
-                            'Searching for Rustler GX hubs...',
+                            'Searching for RigOS hubs...',
                           ),
                         ),
                       ],

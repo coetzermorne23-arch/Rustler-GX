@@ -9,6 +9,8 @@ import '../../services/head_unit_service.dart';
 import '../../services/media_session_service.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../driving/head_unit_home_screen.dart';
+import 'head_unit_settings_screen.dart';
+import 'rigos_settings_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -114,6 +116,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 18),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.tune_rounded),
+                title: const Text('RigOS main settings'),
+                subtitle: const Text(
+                    'Identity, profiles, pairing, energy flow, GPS, OBD, SRNE and head-unit settings.'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                      builder: (_) => const RigOsSettingsScreen()),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
             ValueListenableBuilder<RustlerDeviceProfile>(
               valueListenable: profile.profile,
               builder: (context, activeProfile, child) {
@@ -137,7 +153,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Text(
                           ranger
                               ? 'RANGER_GX head unit mode is active.'
-                              : 'Standard Rustler GX mode is active.',
+                              : 'Standard RigOS mode is active.',
                           style: const TextStyle(
                             color: Colors.white70,
                           ),
@@ -175,6 +191,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 12),
             Card(
+              child: ListTile(
+                leading: const Icon(Icons.settings_input_component),
+                title: const Text('RigOS head-unit platform'),
+                subtitle: const Text(
+                  'Launcher, boot/wake, USB, steering controls and call bridge.',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const HeadUnitSettingsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -189,7 +223,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'Rustler GX needs Android notification access '
+                      'RigOS needs Android notification access '
                       'to read and control YouTube Music playback.',
                       style: TextStyle(
                         color: Colors.white70,

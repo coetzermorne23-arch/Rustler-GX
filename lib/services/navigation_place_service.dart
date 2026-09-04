@@ -222,7 +222,7 @@ class NavigationPlaceService {
         databasePath.value = null;
 
         throw StateError(
-          'This is not a valid Rustler GX navigation database.',
+          'This is not a valid RigOS navigation database.',
         );
       }
 

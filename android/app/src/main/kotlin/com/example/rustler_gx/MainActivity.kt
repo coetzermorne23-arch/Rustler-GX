@@ -1,12 +1,22 @@
 package com.example.rustler_gx
 
 import android.content.ComponentName
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.GnssStatus
+import android.location.LocationManager
+import android.net.Uri
+import android.content.pm.ApplicationInfo
+import android.os.Build
+import androidx.core.app.ActivityCompat
 import android.content.Intent
 import android.media.MediaMetadata
 import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.KeyEvent
 import android.view.View
@@ -26,12 +36,56 @@ class MainActivity : FlutterActivity() {
         private const val HEAD_UNIT_CHANNEL =
             "rustler_gx/head_unit"
 
+        private const val GNSS_CHANNEL =
+            "rustler_gx/gnss"
+
         private const val YOUTUBE_MUSIC =
             "com.google.android.apps.youtube.music"
     }
 
     private lateinit var mediaSessionManager:
         MediaSessionManager
+
+    private var gnssSnapshot: List<Map<String, Any>> = emptyList()
+    private var gnssCallback: GnssStatus.Callback? = null
+
+    private fun startGnssStatus() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) return
+
+        val locationManager =
+            getSystemService(LOCATION_SERVICE) as LocationManager
+
+        if (gnssCallback != null) return
+
+        gnssCallback = object : GnssStatus.Callback() {
+            override fun onSatelliteStatusChanged(status: GnssStatus) {
+                val data = ArrayList<Map<String, Any>>(status.satelliteCount)
+                for (i in 0 until status.satelliteCount) {
+                    data.add(
+                        mapOf(
+                            "svid" to status.getSvid(i),
+                            "constellation" to status.getConstellationType(i),
+                            "cn0" to status.getCn0DbHz(i).toDouble(),
+                            "elevation" to status.getElevationDegrees(i).toDouble(),
+                            "azimuth" to status.getAzimuthDegrees(i).toDouble(),
+                            "usedInFix" to status.usedInFix(i)
+                        )
+                    )
+                }
+                gnssSnapshot = data
+            }
+        }
+
+        locationManager.registerGnssStatusCallback(
+            gnssCallback!!,
+            Handler(Looper.getMainLooper())
+        )
+    }
 
     override fun onCreate(
         savedInstanceState: Bundle?
@@ -122,6 +176,11 @@ class MainActivity : FlutterActivity() {
         return super.dispatchKeyEvent(event)
     }
 
+    override fun onResume() {
+        super.onResume()
+        startGnssStatus()
+    }
+
     override fun configureFlutterEngine(
         @NonNull flutterEngine:
             FlutterEngine
@@ -143,6 +202,21 @@ class MainActivity : FlutterActivity() {
                 call,
                 result
             )
+        }
+
+        MethodChannel(
+            flutterEngine
+                .dartExecutor
+                .binaryMessenger,
+            GNSS_CHANNEL
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "snapshot" -> {
+                    startGnssStatus()
+                    result.success(gnssSnapshot)
+                }
+                else -> result.notImplemented()
+            }
         }
 
         MethodChannel(
@@ -174,10 +248,63 @@ class MainActivity : FlutterActivity() {
 
                 "normalSystemUi" -> {
                     normalSystemUi()
+                    result.success(true)
+                }
 
-                    result.success(
-                        true
-                    )
+                "isDefaultHome" -> {
+                    result.success(HeadUnitPlatform.isHomeApp(this))
+                }
+
+                "requestHomeRole" -> {
+                    result.success(HeadUnitPlatform.requestHomeRole(this))
+                }
+
+                "storageVolumes" -> {
+                    result.success(HeadUnitPlatform.storageVolumes(this))
+                }
+
+                "launcherApps" -> {
+                    val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+                    val pm = packageManager
+                    val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PackageManager.MATCH_ALL else 0
+                    val apps = pm.queryIntentActivities(intent, flags).map { info ->
+                        val ai = info.activityInfo.applicationInfo
+                        mapOf(
+                            "packageName" to info.activityInfo.packageName,
+                            "label" to info.loadLabel(pm).toString(),
+                            "system" to ((ai.flags and ApplicationInfo.FLAG_SYSTEM) != 0)
+                        )
+                    }.distinctBy { it["packageName"] }.sortedBy { (it["label"] as String).lowercase() }
+                    result.success(apps)
+                }
+
+                "openAppDetails" -> {
+                    val packageName = call.argument<String>("packageName")
+                    if (packageName.isNullOrBlank()) {
+                        result.success(false)
+                    } else {
+                        try {
+                            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.parse("package:$packageName")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            })
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.error("APP_DETAILS", e.message, null)
+                        }
+                    }
+                }
+
+                "getCallState" -> {
+                    result.success(CallNotificationBridge.data())
+                }
+
+                "answerCall" -> {
+                    result.success(CallNotificationBridge.action("answer"))
+                }
+
+                "declineCall" -> {
+                    result.success(CallNotificationBridge.action("decline"))
                 }
 
                 else -> {
@@ -226,9 +353,11 @@ class MainActivity : FlutterActivity() {
         when (call.method) {
 
             "getPlayback" -> {
-                result.success(
-                    getPlaybackData()
-                )
+                result.success(getPlaybackData())
+            }
+
+            "startDefaultMedia" -> {
+                result.success(startDefaultMedia())
             }
 
             "hasNotificationAccess" -> {
@@ -358,6 +487,35 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    private fun startDefaultMedia(): Boolean {
+        val existing = getPreferredController()
+        if (existing?.packageName == YOUTUBE_MUSIC) {
+            existing.transportControls.play()
+            return true
+        }
+
+        val launchIntent = packageManager.getLaunchIntentForPackage(YOUTUBE_MUSIC)
+            ?: return false
+        return try {
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(launchIntent)
+            Handler(Looper.getMainLooper()).postDelayed({
+                getPreferredController()?.transportControls?.play()
+                packageManager.getLaunchIntentForPackage(packageName)?.let { own ->
+                    own.addFlags(
+                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    )
+                    startActivity(own)
+                }
+            }, 1800)
+            true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private fun getPlaybackData():
         Map<String, Any> {
 
@@ -463,8 +621,14 @@ class MainActivity : FlutterActivity() {
                     )
 
             controllers.firstOrNull {
-                it.packageName ==
-                    YOUTUBE_MUSIC
+                it.packageName == YOUTUBE_MUSIC
+            } ?: controllers.firstOrNull { controller ->
+                val name = controller.packageName.lowercase()
+                name.contains("bluetooth") ||
+                    name.contains("btmusic") ||
+                    name.contains("bt.music")
+            } ?: controllers.firstOrNull { controller ->
+                controller.playbackState?.state == PlaybackState.STATE_PLAYING
             } ?: controllers.firstOrNull()
 
         } catch (

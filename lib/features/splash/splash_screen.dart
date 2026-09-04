@@ -147,7 +147,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     icon: Icons.phone_android,
                     title: 'STANDARD',
                     subtitle: 'Phone, tablet or normal '
-                        'Rustler GX use',
+                        'RigOS use',
                     onTap: _chooseStandard,
                   ),
                   const SizedBox(
